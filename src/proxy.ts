@@ -1,9 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const protectedRoutes = ['/dashboard']
-const authRoutes = ['/login', '/signup']
-
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -26,18 +23,8 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
-  const path = request.nextUrl.pathname
-
-  // Redirect unauthenticated users away from protected routes
-  if (!user && protectedRoutes.some((r) => path.startsWith(r))) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-  // Redirect authenticated users away from auth pages
-  if (user && authRoutes.includes(path)) {
-    return NextResponse.redirect(new URL('/', request.url))
-  }
+  // Refresh session so it doesn't expire mid-visit
+  await supabase.auth.getUser()
 
   return supabaseResponse
 }
