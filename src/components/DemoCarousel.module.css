@@ -1,0 +1,71 @@
+.carousel {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 1.5rem;
+}
+
+.track {
+  display: flex;
+  transition: transform 0.45s ease-in-out;
+  will-change: transform;
+}
+
+.slide {
+  flex-shrink: 0;
+  padding: 2rem 1.75rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  border-radius: 1.5rem;
+  box-sizing: border-box;
+}
+
+.terracotta {
+  background: var(--terra-light);
+}
+
+.sage {
+  background: var(--sage-light);
+}
+
+.graphic {
+  font-size: 3.25rem;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.headline {
+  font-size: 1.075rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text-primary);
+}
+
+.subtext {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  padding-top: 1rem;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: none;
+  background: var(--oat-dark);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.dotActive {
+  background: var(--terracotta);
+  transform: scale(1.3);
+}
