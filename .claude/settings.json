@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Review the code that was just written or edited. The tool input is: $ARGUMENTS\n\nDetermine whether the code achieves its outcome in the most effective way — look for: unnecessary lines, redundant logic, steps that can be combined, overly verbose patterns where a simpler one exists. Do NOT suggest adding features, abstractions, or error handling beyond what is already there.\n\nIf the code is already as concise and clear as it can be for this exact outcome: approve it.\nIf there is a meaningfully simpler or more efficient version that produces the identical outcome: block it and explain exactly what should change and why, so Claude can rewrite it.",
+            "continueOnBlock": true,
+            "statusMessage": "Checking code efficiency..."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 # SHAI — Small Happy Appetites, Incorporated!
 ## Claude Code Master Context Document
-## Last updated: June 30 2026
+## Last updated: July 2 2026
 
 ---
 
@@ -10,13 +10,15 @@
 2. Always confirm scope and which files will be touched before making changes
 3. Never use auto-accept mode
 4. One task at a time — finish and confirm before moving on
-5. Check all code for efficiency — no unused imports, no redundant logic, no unnecessary lines
+5. Check all code for efficiency — no unused imports, no redundant logic, no unnecessary lines, confirm it works before committing
 6. If anything in this spec seems technically unsound, flag it — do not build it blindly
-7. Everything built must have monetisation tier-gating from day one
-8. API keys never in code — environment variables only, always
-9. All recommendations must be based on facts, patterns, and market trends — not appeasement
-10. Forward-thinking always — consider quantum computing, AI advances, federated learning, market gaps
-11. If something the founder suggests does not work well technically or commercially — say so clearly and correct it
+7. Everything built must have monetisation tier-gating from day one — nothing rebuilt later
+8. API keys never in code — environment variables only, always, no exceptions
+9. All recommendations must be based on facts, market patterns, and trends — never appeasement
+10. Forward-thinking always — consider quantum computing, AI advances, federated learning, market gaps, emerging technology
+11. If something the founder suggests does not work well technically or commercially — say so clearly and correct it, do not agree to be agreeable
+12. Build the data layer and monetisation hooks into everything from day one — tier flags, analytics events, schema fields — so nothing needs retrofitting later
+13. EU AI Act Article 50 compliance — every screen or flow where SHAI speaks to a user must include a visible AI disclosure: "SHAI is an AI assistant." Build this into the UI from day one, not retrofitted later. Already enforceable as of August 2 2026.
 
 ---
 
