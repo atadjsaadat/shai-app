@@ -1,100 +1,63 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import styles from './DemoCarousel.module.css'
+import { useEffect, useRef, useState } from 'react'
 
 const slides = [
-  {
-    graphic: '🍝',
-    headline: 'Log a meal in under 60 seconds',
-    subtext: 'Just say what they ate. SHAi does the rest.',
-    color: 'terracotta',
-  },
-  {
-    graphic: '🍌',
-    headline: 'See exactly what\'s going in',
-    subtext: 'Iron, calcium, vitamins — tracked automatically against WHO targets.',
-    color: 'sage',
-  },
-  {
-    graphic: '⭐',
-    headline: 'Every first taste, remembered',
-    subtext: 'New foods, clean plates, brave moments. Saved forever in your Win Jar.',
-    color: 'terracotta',
-  },
-  {
-    graphic: '🍼',
-    headline: 'From newborn feeds to first day of school',
-    subtext: 'One place for every feed, nap, meal, and milestone.',
-    color: 'sage',
-  },
+  { graphic: '🍝', headline: 'Log a meal in under 60 seconds', subtext: 'Just say what they ate. SHAi does the rest.', bg: '#F0D5C8' },
+  { graphic: '🍌', headline: "See exactly what's going in", subtext: 'Iron, calcium, vitamins — tracked automatically against WHO targets.', bg: '#D4E8D6' },
+  { graphic: '⭐', headline: 'Every first taste, remembered', subtext: 'New foods, clean plates, brave moments. Saved forever in your Win Jar.', bg: '#F0D5C8' },
+  { graphic: '🍼', headline: 'From newborn feeds to first day of school', subtext: 'One place for every feed, nap, meal, and milestone.', bg: '#D4E8D6' },
 ]
 
 export default function DemoCarousel() {
   const [current, setCurrent] = useState(0)
-  const [slideWidth, setSlideWidth] = useState(0)
-  const carouselRef = useRef<HTMLDivElement>(null)
-  const touchStartX = useRef<number | null>(null)
-
-  useEffect(() => {
-    const el = carouselRef.current
-    if (!el) return
-    setSlideWidth(el.offsetWidth)
-    const observer = new ResizeObserver(() => setSlideWidth(el.offsetWidth))
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
+  const startX = useRef(0)
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrent(prev => (prev + 1) % slides.length)
-    }, 8000)
+      setCurrent(i => (i + 1) % slides.length)
+    }, 4000)
     return () => clearInterval(timer)
   }, [])
 
-  function handleTouchStart(e: React.TouchEvent) {
-    touchStartX.current = e.touches[0].clientX
-  }
-
-  function handleTouchEnd(e: React.TouchEvent) {
-    if (touchStartX.current === null) return
-    const delta = e.changedTouches[0].clientX - touchStartX.current
-    if (delta > 50) setCurrent(prev => (prev - 1 + slides.length) % slides.length)
-    if (delta < -50) setCurrent(prev => (prev + 1) % slides.length)
-    touchStartX.current = null
-  }
-
   return (
     <div
-      ref={carouselRef}
-      className={styles.carousel}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
+      onTouchStart={e => { startX.current = e.touches[0].clientX }}
+      onTouchEnd={e => {
+        const d = e.changedTouches[0].clientX - startX.current
+        if (d < -40) setCurrent(i => (i + 1) % slides.length)
+        if (d > 40) setCurrent(i => (i - 1 + slides.length) % slides.length)
+      }}
+      style={{ touchAction: 'pan-y', userSelect: 'none', display: 'flex', flexDirection: 'column', gap: '1rem' }}
     >
-      <div
-        className={styles.track}
-        style={{ transform: `translateX(-${current * slideWidth}px)` }}
-      >
-        {slides.map((slide, i) => (
-          <div
-            key={i}
-            className={`${styles.slide} ${styles[slide.color]}`}
-            style={{ width: slideWidth || undefined }}
-          >
-            <span className={styles.graphic}>{slide.graphic}</span>
-            <p className={styles.headline}>{slide.headline}</p>
-            <p className={styles.subtext}>{slide.subtext}</p>
-          </div>
-        ))}
+      <div style={{
+        background: slides[current].bg,
+        borderRadius: '1.5rem',
+        padding: '2rem 1.5rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.6rem',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.14)',
+      }}>
+        <span style={{ fontSize: '3rem', lineHeight: 1 }}>{slides[current].graphic}</span>
+        <p style={{ fontSize: '1.05rem', fontWeight: 600, lineHeight: 1.35, color: '#3D2B1F' }}>
+          {slides[current].headline}
+        </p>
+        <p style={{ fontSize: '0.9rem', color: '#7A6255', lineHeight: 1.65 }}>
+          {slides[current].subtext}
+        </p>
       </div>
-      <div className={styles.dots}>
+
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
         {slides.map((_, i) => (
-          <button
-            key={i}
-            className={`${styles.dot} ${i === current ? styles.dotActive : ''}`}
-            onClick={() => setCurrent(i)}
-            aria-label={`Go to slide ${i + 1}`}
-          />
+          <div key={i} style={{
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            background: i === current ? '#C4714A' : '#EDE5D4',
+            transform: i === current ? 'scale(1.3)' : 'scale(1)',
+            transition: 'background 0.25s, transform 0.25s',
+          }} />
         ))}
       </div>
     </div>

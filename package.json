@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "node -e \"const{execSync}=require('child_process');try{const ip=execSync('ipconfig getifaddr en0').toString().trim();console.log('\\n  Phone → http://'+ip+':3000\\n')}catch(e){}\" && next dev -H 0.0.0.0",
+    "build": "NEXT_TURBOPACK=0 next build",
+    "start": "next start -H 0.0.0.0",
     "lint": "eslint"
   },
   "dependencies": {

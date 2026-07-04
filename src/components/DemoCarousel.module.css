@@ -1,23 +1,33 @@
-.carousel {
+.wrapper {
   width: 100%;
-  overflow: hidden;
-  border-radius: 1.5rem;
-}
-
-.track {
   display: flex;
-  transition: transform 0.45s ease-in-out;
-  will-change: transform;
+  flex-direction: column;
+  gap: 1rem;
+  touch-action: pan-y;
+  user-select: none;
 }
 
 .slide {
-  flex-shrink: 0;
-  padding: 2rem 1.75rem 1.75rem;
+  width: 100%;
+  padding: 2rem 1.5rem 1.75rem;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
   border-radius: 1.5rem;
   box-sizing: border-box;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+  animation: fadeSlide 0.3s ease-out;
+}
+
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .terracotta {
@@ -35,7 +45,7 @@
 }
 
 .headline {
-  font-size: 1.075rem;
+  font-size: 1.05rem;
   font-weight: 600;
   line-height: 1.35;
   color: var(--text-primary);
@@ -51,17 +61,13 @@
   display: flex;
   justify-content: center;
   gap: 0.5rem;
-  padding-top: 1rem;
 }
 
 .dot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  border: none;
   background: var(--oat-dark);
-  cursor: pointer;
-  padding: 0;
   transition: background 0.25s ease, transform 0.25s ease;
 }
 

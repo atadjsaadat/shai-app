@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import DemoCarousel from '@/components/DemoCarousel'
 import styles from './page.module.css'
 
@@ -9,9 +8,6 @@ export default function Page() {
         <h1 className={styles.wordmark}>SHAi</h1>
         <p className={styles.tagline}>Small Happy Appetites, Incorporated!</p>
         <DemoCarousel />
-        <Link href="/waitlist" className={styles.cta}>
-          Set this up for your little one
-        </Link>
       </div>
     </main>
   )

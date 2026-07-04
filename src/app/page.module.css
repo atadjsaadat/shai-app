@@ -36,38 +36,3 @@
   margin-top: 0.25rem;
 }
 
-.card {
-  background: var(--oat);
-  border: 1px solid var(--oat-dark);
-  border-radius: 1.25rem;
-  padding: 2rem;
-  margin-top: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.cardLabel {
-  font-size: 1rem;
-  color: var(--text-secondary);
-  font-weight: 600;
-}
-
-.cta {
-  display: block;
-  width: 100%;
-  background: var(--terracotta);
-  color: #fff;
-  text-align: center;
-  padding: 1rem;
-  border-radius: 1rem;
-  font-size: 1rem;
-  font-weight: 700;
-  text-decoration: none;
-  margin-top: 0.5rem;
-  transition: background 0.2s ease;
-}
-
-.cta:hover {
-  background: var(--terra-dark);
-}
