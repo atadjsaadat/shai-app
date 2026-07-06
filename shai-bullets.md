@@ -1041,6 +1041,18 @@ A motion designer with Lottie / After Effects experience. Search "Lottie animati
 
 **Next session starts with:** Bottom nav component → mock data layer → Home dashboard.
 
+### Known bugs — carousel (mobile only)
+
+Tested on phone via local network IP. Two issues:
+
+**Bug 1 — Swipe not working on mobile.**
+The carousel uses `onTouchStart` / `onTouchEnd` to detect horizontal swipes. On mobile browsers, `touchAction: 'pan-y'` may be causing the browser to intercept touch events before they reach the component. Fix: add `e.preventDefault()` on horizontal swipe detection, or switch to a pointer events approach that works cross-platform.
+
+**Bug 2 — Carousel appears stuck on first slide.**
+Likely cause: slides 1 and 3 share the same background colour (#F0D5C8) and slides 2 and 4 share the same background (#D4E8D6). Auto-rotation may be working but the alternating colours make it look like nothing changed. Secondary possible cause: `setInterval` not firing correctly on mobile due to browser background tab throttling. Fix: give each slide a distinct background, and verify rotation with a visible slide counter.
+
+Both bugs to fix at the start of the next session before building new pages.
+
 ---
 
 ## Name — Final (July 5 2026)
