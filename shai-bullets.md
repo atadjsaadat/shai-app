@@ -972,3 +972,22 @@ Documented procedure required to meet GDPR's 72-hour breach notification require
 | AI Act Article 50 disclosure built into UI | From day one in build | Claude Code |
 | AI Act Annex III high-risk classification written opinion | Before public launch | Solicitor |
 | GDPR 72-hour breach response plan | Week 13-14 alongside DPIA | Solicitor |
+
+---
+
+## Name — Final (July 5 2026)
+
+**SHAi** — capital S, H, A, lowercase i.
+
+Full meaning: Small Happy Appetites, Incorporated!
+
+The lowercase i is deliberate — it distinguishes the character/companion from a pure corporate acronym. Signals personality and warmth. The drop on the i gives the wordmark a slightly playful asymmetry without trying too hard.
+
+- Sounds like "Shay" spoken aloud
+- Legal entity: SHAi Ltd. (Malta), future SHAi Plc.
+- The AI companion character is called SHAi
+- In character speech: "Hi, I'm SHAi" — feels like a name, not a product
+- In brand assets and logo: **SHAi** — the mixed case is the brand
+- All code, copy, system prompts, and spec use SHAi not SHAI
+- GitHub repo: shai-app (already renamed)
+- Domain: shai-app.com (already live)

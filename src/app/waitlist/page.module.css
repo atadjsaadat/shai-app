@@ -15,12 +15,8 @@
   gap: 1rem;
 }
 
-.wordmark {
-  font-size: 3.5rem;
-  font-weight: 800;
-  color: var(--terracotta);
-  letter-spacing: -0.02em;
-  line-height: 1;
+.logo {
+  margin: 0 auto;
 }
 
 .tagline {

@@ -1,6 +1,7 @@
-# SHAI — Small Happy Appetites, Incorporated!
+# SHAi — Small Happy Appetites, Incorporated!
 ## Claude Code Master Context Document
-## Last updated: July 2 2026
+## Last updated: July 5 2026
+## IMPORTANT: App name is SHAi — capital S, H, A, lowercase i. Never write SHAI or Shai. Always SHAi.
 
 ---
 
