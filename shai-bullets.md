@@ -262,7 +262,7 @@ B12, B6, Folate, Magnesium, Potassium, Sodium, Sugar, Saturated fat, Omega-6, Io
 - Text-secondary `#7A6255`
 - Text-muted `#B09585`
 
-**Typography:** Nunito — rounded, warm, never harsh.
+**Typography:** Nunito — rounded, warm, never harsh. Exception: Journal page uses a handwritten-style font (e.g. Caveat or Patrick Hand from Google Fonts) to evoke a real diary. Lined background on journal entries — subtle horizontal rules like a notebook page. Cream base, oat lines. Warm, personal, not clinical.
 
 **Food group colour coding:**
 - Fruit `#E8734A`
@@ -519,6 +519,9 @@ appointment_id / child_id / user_id / appointment_type / title / scheduled_at / 
 **Win Jar table:**
 win_id / child_id / logged_by_user_id / logged_at / win_type / food_involved / parent_note / shared / season / child_age_days
 
+**Journal entry table:** *(v2 — not built in v1)*
+journal_id / user_id / child_id / created_at / updated_at / body_text / mood / child_age_days / is_private / tier
+
 **Hydration log table:**
 hydration_id / child_id / logged_at / drink_type / amount_ml / confidence_score / is_illness_day / season / ambient_temp_c / child_age_days
 
@@ -656,6 +659,8 @@ Builds the clinical credibility layer and the B2B revenue stream.
 | Win Jar social sharing | Organic growth mechanic |
 | In-app community moments | Anonymous normalisation messages |
 | Real-time subscriptions (clinician portal only) | Enable for v2 clinician use case |
+| **Journal** | Timestamped parent diary. Handwritten font, lined page UI. Per-child or general. Premium tier. |
+| **Clinician QR code access** | Parent generates a QR code from their profile. Clinician scans it to get a time-limited read-only view of the child's data. No account needed for clinician in v2. Full audit log. Consent-gated. |
 
 **v2 success criteria:** First paying B2B nursery contract, clinician portal live with at least 2 clinical partners, first data partnership deal signed
 
