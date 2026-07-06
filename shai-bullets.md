@@ -975,6 +975,74 @@ Documented procedure required to meet GDPR's 72-hour breach notification require
 
 ---
 
+## Session — July 6 2026
+
+### What was built
+
+**SHAi logo added to home, onboarding, and waitlist pages.**
+- PNG (`SHAi Logo Design Brief-2.png`) is the working asset — 686KB, readable by Claude Code, used in Next.js `<Image>` component
+- SVG (`SHAi Logo Design Brief-3.svg`) is the same raster image wrapped in an SVG container with C2PA metadata — 1MB, not a true vector, not smaller or sharper than the PNG. Use PNG everywhere in the app.
+- Text wordmark (`<h1>SHAi</h1>`) replaced by the logo image on both `src/app/page.tsx` and `src/app/waitlist/page.tsx`
+- `.wordmark` CSS class removed, `.logo` class added (margin: auto, centered)
+
+**Carousel cards fixed to uniform height.**
+- Changed from `minHeight: 180px` (grew with content) to `height: 220px` (fixed, all 4 slides identical)
+- Slide 4 ("From newborn feeds to first day of school") was the longest — 220px fits it cleanly
+
+### Mascot expressions — decisions locked
+
+The SHAi mascot was created in Canva using AI generation. Three expression variants are needed per spec: default smile, thinking (thought bubbles), celebrating (confetti).
+
+**Who can make the expressions:**
+A 2D digital illustrator / character artist. Search Fiverr/Upwork for "character expression sheet" or "mascot variations". Show them the PNG. Ask for 3 expression variants. €50-150, 2-3 days. Full IP ownership preferable given acquisition thesis — if AI-generated origin creates doubt, commission a clean redraw.
+
+**Who can animate:**
+A motion designer with Lottie / After Effects experience. Search "Lottie animation" on Fiverr. €150-400 for 3 animated expression loops.
+
+**Self-serve animation (you can do this yourself):**
+- **Jitter** (jitter.video) — quickest. Drag PNG, add motion, export Lottie JSON. Free tier. Recommended for v1.
+- **LottieFiles Creatorspace** (creatorspace.lottiefiles.com) — similar, browser-based
+- **Rive** (rive.app) — most powerful, steeper learning curve, better for interactive mascot long-term
+
+**Recommended order:**
+1. Commission 3 expression PNGs (character artist) — do this when you have budget
+2. Animate each in Jitter (you, self-serve) — do this before beta
+3. Developer drops Lottie files into app — v1 or v2
+
+**Note:** All self-serve tools animate the static PNG as a whole. Mouth moving / eyes blinking requires separate layers — that needs the character artist first.
+
+**Canva commercial rights:** Confirm Canva AI commercial usage rights before building acquisition-grade brand on it. If any doubt, redraw from scratch with a character artist for clean IP.
+
+### Page build decisions — locked July 6 2026
+
+6 pages to build: Home dashboard, Log meal, Newborn, Trends, Wins, Profile.
+
+| Decision | Choice | Reason |
+|---|---|---|
+| Data layer | Static mock data for now | Supabase tables not yet built. Three-layer architecture means UI untouched when real data wires in. |
+| Log button (bottom nav) | Bottom sheet slides up | Faster than full page nav. Fewer taps. Matches 60-second logging target. Standard pattern for logging apps. |
+| Nutrition strip | Circular progress rings | Visual preference. More compact than horizontal bars. |
+| SHAi rotating messages | Written by Claude from spec | No specific messages provided. Voice follows CLAUDE.md spec exactly. |
+| Home screen default | Toddler mode | Newborn built as separate page. Routing will depend on onboarding: age 0 months → newborn page, toddler age → toddler page. Both pages needed now. |
+| Trends growth graph | Build properly from scratch | Known bug in HTML prototype. Do it right from the start. |
+
+**Build estimate:** ~8 hours total across 3-4 sessions.
+
+| Component | Time |
+|---|---|
+| Shared bottom nav | 20 min |
+| Mock data layer | 20 min |
+| Home dashboard | 1.5 hrs |
+| Log meal + bottom sheet | 1.5 hrs |
+| Newborn (3 tabs) | 1 hr |
+| Trends + growth graph | 2 hrs |
+| Wins | 45 min |
+| Profile | 1 hr |
+
+**Next session starts with:** Bottom nav component → mock data layer → Home dashboard.
+
+---
+
 ## Name — Final (July 5 2026)
 
 **SHAi** — capital S, H, A, lowercase i.
