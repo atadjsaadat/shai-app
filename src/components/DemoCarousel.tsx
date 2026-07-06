@@ -34,6 +34,7 @@ export default function DemoCarousel() {
         background: slides[current].bg,
         borderRadius: '1.5rem',
         padding: '2rem 1.5rem',
+        minHeight: '180px',
         display: 'flex',
         flexDirection: 'column',
         gap: '0.6rem',
