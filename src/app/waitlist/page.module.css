@@ -15,8 +15,12 @@
   gap: 1rem;
 }
 
-.logo {
-  margin: 0 auto;
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .tagline {
