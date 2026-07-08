@@ -53,12 +53,31 @@ export default function OnboardingChat() {
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
+  const [keyboardOffset, setKeyboardOffset] = useState(0)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chatMessages, isTyping])
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    const vv = window.visualViewport
+    if (!vv) return () => { document.body.style.overflow = '' }
+    const update = () => {
+      const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
+      setKeyboardOffset(offset)
+      if (offset > 0) bottomRef.current?.scrollIntoView({ behavior: 'instant' })
+    }
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    return () => {
+      document.body.style.overflow = ''
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+    }
+  }, [])
 
   const submit = async () => {
     const text = input.trim()
@@ -103,7 +122,7 @@ export default function OnboardingChat() {
   const childName = collected.childName
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: '#FDFAF5', maxWidth: 390, margin: '0 auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', paddingBottom: keyboardOffset, boxSizing: 'border-box', background: '#FDFAF5', maxWidth: 390, margin: '0 auto' }}>
       {/* Header */}
       <div style={{
         padding: '0.875rem 1.25rem',
