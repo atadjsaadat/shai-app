@@ -125,6 +125,7 @@ export default function OnboardingChat() {
 
       {/* Chat area */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+        <div style={{ flex: 1 }} />
         {chatMessages.map((msg, i) =>
           msg.role === 'assistant' ? (
             <div key={i} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', maxWidth: '85%' }}>
