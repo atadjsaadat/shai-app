@@ -15,7 +15,6 @@
   gap: 1rem;
 }
 
-
 .brand {
   display: flex;
   flex-direction: column;
@@ -29,10 +28,31 @@
   font-weight: 500;
 }
 
-.description {
-  font-size: 1.0625rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin-top: 0.25rem;
+.card {
+  background: var(--oat);
+  border: 1px solid var(--oat-dark);
+  border-radius: 1.25rem;
+  padding: 2rem;
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  text-align: left;
 }
 
+.cardLabel {
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  font-weight: 700;
+  text-align: center;
+}
+
+.signin {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.signinLink {
+  color: var(--terracotta);
+  font-weight: 600;
+}

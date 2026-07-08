@@ -1,0 +1,143 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 0.75rem;
+  background: var(--cream);
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  border-color: var(--terracotta);
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+.passwordWrapper {
+  position: relative;
+}
+
+.passwordInput {
+  padding-right: 5rem;
+}
+
+.showToggle {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--terracotta);
+  cursor: pointer;
+  padding: 0;
+}
+
+.checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  cursor: pointer;
+}
+
+.checkbox {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 0.1rem;
+  accent-color: var(--terracotta);
+  cursor: pointer;
+}
+
+.checkboxText {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.researchLabel .checkboxText {
+  color: var(--text-muted);
+}
+
+.optional {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.link {
+  color: var(--terracotta);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.button {
+  width: 100%;
+  padding: 0.9rem;
+  background: var(--terracotta);
+  color: white;
+  border: none;
+  border-radius: 0.875rem;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.button:not(:disabled):hover {
+  opacity: 0.9;
+}
+
+.disclosure {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.success {
+  text-align: center;
+  padding: 1rem 0;
+  color: var(--sage-dark);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
