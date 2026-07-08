@@ -52,6 +52,7 @@ export default function OnboardingChat() {
   const [collected, setCollected] = useState<CollectedData>(INITIAL_COLLECTED)
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [isComplete, setIsComplete] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -88,11 +89,7 @@ export default function OnboardingChat() {
       setIsTyping(false)
 
       if (data.complete) {
-        const name = data.collected.childName ?? ''
-        setTimeout(
-          () => router.push(`/onboarding/complete?name=${encodeURIComponent(name)}`),
-          1800,
-        )
+        setIsComplete(true)
       }
     } catch {
       setChatMessages(prev => [
@@ -174,6 +171,27 @@ export default function OnboardingChat() {
             }}>
               <TypingDots />
             </div>
+          </div>
+        )}
+
+        {isComplete && (
+          <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '0.5rem' }}>
+            <button
+              onClick={() => router.push(`/onboarding/complete?name=${encodeURIComponent(collected.childName ?? '')}`)}
+              style={{
+                padding: '0.75rem 2rem',
+                background: '#C4714A',
+                color: 'white',
+                border: 'none',
+                borderRadius: '0.875rem',
+                fontFamily: 'inherit',
+                fontSize: '1rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              Continue
+            </button>
           </div>
         )}
 
