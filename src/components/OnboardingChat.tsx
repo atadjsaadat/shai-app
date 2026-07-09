@@ -19,6 +19,13 @@ const OPENING_API_CONTENT = JSON.stringify({
   complete: false,
 })
 
+// Markers for extracting the message text from the streamed JSON
+const MSG_START = '{"message":"'
+const MSG_END = '","collected"'
+// Hold back this many chars at the tail so a chunk boundary inside MSG_END never
+// shows spurious JSON characters in the streaming bubble.
+const MSG_END_GUARD = MSG_END.length - 1
+
 type ChatMessage = { role: 'user' | 'assistant'; text: string }
 
 function TypingDots() {
@@ -41,6 +48,10 @@ function TypingDots() {
   )
 }
 
+function unescape(raw: string) {
+  return raw.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\"/g, '"').replace(/\\\\/g, '\\')
+}
+
 export default function OnboardingChat() {
   const router = useRouter()
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
@@ -52,14 +63,23 @@ export default function OnboardingChat() {
   const [collected, setCollected] = useState<CollectedData>(INITIAL_COLLECTED)
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [streamingText, setStreamingText] = useState<string | null>(null)
   const [isComplete, setIsComplete] = useState(false)
   const [keyboardOffset, setKeyboardOffset] = useState(0)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // Smooth scroll when a completed message lands or typing dots appear
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chatMessages, isTyping])
+
+  // Instant scroll to follow streaming text as it grows
+  useEffect(() => {
+    if (streamingText !== null) {
+      bottomRef.current?.scrollIntoView({ behavior: 'instant' })
+    }
+  }, [streamingText])
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
@@ -97,24 +117,52 @@ export default function OnboardingChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: nextApiMessages }),
       })
-      const data: OnboardingApiResponse = await res.json()
 
-      setChatMessages(prev => [...prev, { role: 'assistant', text: data.message }])
-      setApiMessages(prev => [
-        ...prev,
-        { role: 'assistant', content: JSON.stringify(data) },
-      ])
-      setCollected(data.collected)
-      setIsTyping(false)
+      if (!res.body) throw new Error('No stream body')
 
-      if (data.complete) {
-        setIsComplete(true)
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let rawBuffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        rawBuffer += decoder.decode(value, { stream: true })
+
+        // Once we have the full MSG_START prefix, start extracting message text
+        if (rawBuffer.startsWith(MSG_START)) {
+          const inner = rawBuffer.slice(MSG_START.length)
+          const endIdx = inner.indexOf(MSG_END)
+          let rawText: string
+          if (endIdx !== -1) {
+            rawText = inner.slice(0, endIdx)
+          } else {
+            // Hold back enough chars that a split MSG_END never leaks into the bubble
+            rawText = inner.length > MSG_END_GUARD ? inner.slice(0, inner.length - MSG_END_GUARD) : ''
+          }
+          setStreamingText(unescape(rawText))
+        }
       }
+
+      rawBuffer += decoder.decode() // flush remaining bytes
+
+      const parsed: OnboardingApiResponse = JSON.parse(rawBuffer)
+
+      // Batch all final state updates together
+      setChatMessages(prev => [...prev, { role: 'assistant', text: parsed.message }])
+      setApiMessages(prev => [...prev, { role: 'assistant', content: rawBuffer.trim() }])
+      setCollected(parsed.collected)
+      setStreamingText(null)
+      setIsTyping(false)
+      if (parsed.complete) setIsComplete(true)
+
     } catch {
       setChatMessages(prev => [
         ...prev,
         { role: 'assistant', text: "Sorry, something went wrong — could you try that again?" },
       ])
+      setStreamingText(null)
       setIsTyping(false)
     }
   }
@@ -158,6 +206,7 @@ export default function OnboardingChat() {
                 fontSize: '0.9375rem',
                 color: '#3D2B1F',
                 lineHeight: 1.55,
+                whiteSpace: 'pre-wrap',
               }}>
                 {msg.text}
               </div>
@@ -179,7 +228,8 @@ export default function OnboardingChat() {
           )
         )}
 
-        {isTyping && (
+        {/* Typing dots — shown only while waiting for first streaming character */}
+        {isTyping && streamingText === null && (
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
             <div style={{ flexShrink: 0, marginBottom: 2 }}>
               <SHAiPresence expression="thinking" size={26} />
@@ -190,6 +240,26 @@ export default function OnboardingChat() {
               padding: '0.75rem 1rem',
             }}>
               <TypingDots />
+            </div>
+          </div>
+        )}
+
+        {/* Live streaming bubble — replaces typing dots once text starts arriving */}
+        {streamingText !== null && (
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', maxWidth: '85%' }}>
+            <div style={{ flexShrink: 0, marginBottom: 2 }}>
+              <SHAiPresence expression="thinking" size={26} />
+            </div>
+            <div style={{
+              background: '#F5F0E8',
+              borderRadius: '1rem 1rem 1rem 0.25rem',
+              padding: '0.75rem 1rem',
+              fontSize: '0.9375rem',
+              color: '#3D2B1F',
+              lineHeight: 1.55,
+              whiteSpace: 'pre-wrap',
+            }}>
+              {streamingText}
             </div>
           </div>
         )}
