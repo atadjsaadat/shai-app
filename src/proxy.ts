@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const PROTECTED = ['/home', '/log', '/trends', '/wins', '/profile', '/onboarding']
+
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -23,8 +25,20 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  // Refresh session so it doesn't expire mid-visit
-  await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const { pathname } = request.nextUrl
+  const isProtected = PROTECTED.some((p) => pathname === p || pathname.startsWith(p + '/'))
+
+  if (!user && isProtected) {
+    return NextResponse.redirect(new URL('/signup', request.url))
+  }
+
+  if (user && pathname === '/signup') {
+    return NextResponse.redirect(new URL('/home', request.url))
+  }
 
   return supabaseResponse
 }

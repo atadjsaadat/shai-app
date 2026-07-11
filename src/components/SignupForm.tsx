@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import styles from './SignupForm.module.css'
 
 export default function SignupForm() {
@@ -12,14 +13,42 @@ export default function SignupForm() {
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [productConsent, setProductConsent] = useState(false)
   const [commercialConsent, setCommercialConsent] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const canSubmit = email.length > 0 && password.length >= 8 && termsAccepted
+  const canSubmit = email.length > 0 && password.length >= 8 && termsAccepted && !loading
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!canSubmit) return
+
+    setLoading(true)
+    setError(null)
+
+    const supabase = createClient()
+    const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
+
+    if (signUpError) {
+      setError(signUpError.message)
+      setLoading(false)
+      return
+    }
+
+    if (data.user) {
+      await supabase
+        .from('profiles')
+        .upsert({
+          id: data.user.id,
+          consent_data_research: productConsent,
+          consent_marketing: commercialConsent,
+        })
+    }
+
+    router.push('/onboarding')
+  }
 
   return (
-    <form
-      onSubmit={e => { e.preventDefault(); if (canSubmit) router.push('/onboarding') }}
-      className={styles.form}
-    >
+    <form onSubmit={handleSubmit} className={styles.form}>
       <div className={styles.field}>
         <label className={styles.label} htmlFor="email">Email</label>
         <input
@@ -103,8 +132,10 @@ export default function SignupForm() {
         </label>
       </div>
 
+      {error && <p className={styles.error}>{error}</p>}
+
       <button type="submit" disabled={!canSubmit} className={styles.button}>
-        Create account
+        {loading ? 'Creating account…' : 'Create account'}
       </button>
 
       <p className={styles.disclosure}>SHAi is an AI assistant.</p>

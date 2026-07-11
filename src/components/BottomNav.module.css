@@ -1,0 +1,75 @@
+.nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--cream);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  height: 62px;
+  border-top: 1px solid var(--oat-dark);
+}
+
+.safeArea {
+  height: env(safe-area-inset-bottom, 0px);
+}
+
+/* Regular tabs */
+.tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--font-nunito), sans-serif;
+  padding: 6px 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.tab.active {
+  color: var(--terracotta);
+}
+
+/* Centre Log slot */
+.logSlot {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 3px;
+  padding-top: 4px;
+}
+
+.logBtn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--terracotta);
+  color: white;
+  border: 3px solid var(--cream);
+  box-shadow: 0 4px 16px rgba(196, 113, 74, 0.38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  margin-top: -28px;
+}
+
+.logLabel {
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--font-nunito), sans-serif;
+  color: var(--terracotta);
+}

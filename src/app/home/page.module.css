@@ -1,0 +1,122 @@
+.page {
+  min-height: 100dvh;
+  background: var(--cream);
+  padding: 60px 20px 0;
+  /* bottom padding clears the nav bar (62px) + elevated button overhang (28px) + safe area */
+  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* ── Top bar ─────────────────────────────────────────── */
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.greeting {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.date {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-top: 3px;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--oat-dark);
+  flex-shrink: 0;
+}
+
+/* ── SHAi card ───────────────────────────────────────── */
+.shaiCard {
+  background: var(--oat);
+  border-radius: 20px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.shaiMessage {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  flex: 1;
+}
+
+/* ── Nutrition section ───────────────────────────────── */
+.sectionLabel {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.nutrientCard {
+  background: var(--oat);
+  border-radius: 18px;
+  padding: 4px 16px 0;
+}
+
+.nutrientRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--oat-dark);
+}
+
+.nutrientRow:last-child {
+  border-bottom: none;
+}
+
+.nutrientName {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  width: 62px;
+  flex-shrink: 0;
+}
+
+.barTrack {
+  flex: 1;
+  height: 6px;
+  background: var(--oat-dark);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.nutrientValue {
+  font-size: 12px;
+  color: var(--text-muted);
+  width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.emptyHint {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 10px;
+  font-weight: 500;
+}

@@ -1,0 +1,405 @@
+/* ── Full-screen container ──────────────────────────── */
+.screen {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  overflow: hidden;
+  background: var(--cream);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Top bar ─────────────────────────────────────────── */
+.topBar {
+  flex-shrink: 0;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--oat-dark);
+  background: var(--cream);
+}
+
+.backBtn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+  border-radius: 8px;
+}
+
+.mealPill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--oat);
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.hardDayBtn {
+  background: none;
+  border: none;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px 4px;
+}
+
+.topBarRight {
+  width: 60px; /* balances layout when hardDayBtn is hidden */
+}
+
+/* ── AI disclosure ───────────────────────────────────── */
+.aiDisclosure {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 5px 16px 2px;
+  font-weight: 500;
+}
+
+/* ── Messages ────────────────────────────────────────── */
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
+  padding: 10px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Extra bottom padding when input is fixed at bottom */
+.messagesChat {
+  padding-bottom: 80px;
+}
+
+.row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.rowUser {
+  flex-direction: row-reverse;
+}
+
+.rowAssistant {
+  flex-direction: row;
+}
+
+.bubble {
+  max-width: 78%;
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: 15px;
+  line-height: 1.55;
+  font-weight: 500;
+}
+
+.bubbleAssistant {
+  background: var(--oat);
+  color: var(--text-primary);
+  border-bottom-left-radius: 4px;
+}
+
+.bubbleUser {
+  background: var(--terracotta);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+/* Typing indicator */
+.typing {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 12px 16px;
+}
+
+.typingDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: bounce 1.2s ease-in-out infinite;
+}
+
+.typingDot:nth-child(2) { animation-delay: 0.2s; }
+.typingDot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
+
+/* ── Chat input (fixed above keyboard) ───────────────── */
+.inputWrap {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--cream);
+  border-top: 1px solid var(--oat-dark);
+  padding: 10px 16px;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.textarea {
+  flex: 1;
+  background: var(--oat);
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 20px;
+  padding: 10px 16px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 15px;
+  color: var(--text-primary);
+  resize: none;
+  outline: none;
+  line-height: 1.4;
+  min-height: 40px;
+  overflow-y: hidden;
+}
+
+.textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.textarea:focus {
+  border-color: var(--terracotta);
+}
+
+.sendBtn {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--terracotta);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+.sendBtn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.sendBtn svg {
+  width: 18px;
+  height: 18px;
+  fill: white;
+}
+
+/* ── Confirm panel ───────────────────────────────────── */
+.confirmPanel {
+  flex-shrink: 0;
+  background: var(--oat);
+  border-top: 1.5px solid var(--oat-dark);
+  padding: 14px 16px;
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
+  max-height: 55vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Food item list */
+.foodList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.foodItem {
+  background: var(--cream);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.foodItemTop {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.foodName {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: capitalize;
+}
+
+.serving {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.macroRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.macroChip {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--c);
+  background: white;
+  border: 1px solid color-mix(in srgb, var(--c) 30%, transparent);
+  border-radius: 20px;
+  padding: 2px 8px;
+}
+
+/* Hard food day card */
+.hardDayCard {
+  background: var(--cream);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hardDayCardText {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  font-weight: 500;
+}
+
+.saveError {
+  font-size: 13px;
+  color: #c0392b;
+  text-align: center;
+  padding: 2px 0;
+  font-weight: 600;
+}
+
+/* Confirm / edit buttons */
+.confirmRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.confirmBtn {
+  flex: 1;
+  background: var(--terracotta);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 13px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.confirmBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.editBtn {
+  background: none;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 14px;
+  padding: 13px 18px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.editBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ── Saved panel ─────────────────────────────────────── */
+.savedPanel {
+  flex-shrink: 0;
+  background: var(--oat);
+  border-top: 1.5px solid var(--oat-dark);
+  padding: 16px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.savedInner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.savedText {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.savedBtns {
+  display: flex;
+  gap: 10px;
+}
+
+.logAnotherBtn {
+  flex: 1;
+  background: none;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 14px;
+  padding: 12px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.doneBtn {
+  flex: 1;
+  background: var(--terracotta);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 12px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}

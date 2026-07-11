@@ -29,7 +29,7 @@ export default function Page() {
             textDecoration: 'none',
           }}
         >
-          Let&apos;s Get Started
+          Set this up for your little one
         </a>
       </div>
     </main>
