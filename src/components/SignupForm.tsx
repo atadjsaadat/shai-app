@@ -25,26 +25,36 @@ export default function SignupForm() {
     setLoading(true)
     setError(null)
 
-    const supabase = createClient()
-    const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
+    try {
+      const supabase = createClient()
+      const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
 
-    if (signUpError) {
-      setError(signUpError.message)
+      if (signUpError) {
+        setError(signUpError.message ?? 'Something went wrong. Please try again.')
+        return
+      }
+
+      if (!data.session) {
+        setError('This email is already registered. Please sign in instead.')
+        return
+      }
+
+      if (data.user) {
+        await supabase
+          .from('profiles')
+          .upsert({
+            id: data.user.id,
+            consent_data_research: productConsent,
+            consent_marketing: commercialConsent,
+          })
+      }
+
+      router.push('/onboarding')
+    } catch {
+      setError('Something went wrong. Please try again.')
+    } finally {
       setLoading(false)
-      return
     }
-
-    if (data.user) {
-      await supabase
-        .from('profiles')
-        .upsert({
-          id: data.user.id,
-          consent_data_research: productConsent,
-          consent_marketing: commercialConsent,
-        })
-    }
-
-    router.push('/onboarding')
   }
 
   return (
