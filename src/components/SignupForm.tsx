@@ -34,11 +34,6 @@ export default function SignupForm() {
         return
       }
 
-      if (!data.session) {
-        setError('This email is already registered. Please sign in instead.')
-        return
-      }
-
       if (data.user) {
         await supabase
           .from('profiles')
