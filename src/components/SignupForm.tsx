@@ -30,7 +30,8 @@ export default function SignupForm() {
       const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
 
       if (signUpError) {
-        setError(signUpError.message ?? 'Something went wrong. Please try again.')
+        const msg = signUpError.message
+        setError(msg && msg !== '{}' && !msg.startsWith('{') && !msg.startsWith('[') ? msg : 'Something went wrong. Please try again.')
         return
       }
 
