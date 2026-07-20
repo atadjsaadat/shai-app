@@ -79,9 +79,31 @@ export default function LogPage() {
   const [phase, setPhase] = useState<Phase>('chatting');
   const [parsedData, setParsedData] = useState<ParseApiResponse | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [childValidated, setChildValidated] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Validate child ID in localStorage exists in DB; if not, clear and redirect to onboarding
+  useEffect(() => {
+    const storedId = localStorage.getItem('shai_active_child_id');
+    if (!storedId) {
+      router.replace('/onboarding');
+      return;
+    }
+    fetch('/api/children')
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.childId) {
+          setChildValidated(true);
+        } else {
+          localStorage.removeItem('shai_active_child_id');
+          localStorage.removeItem('shai_child_name');
+          router.replace('/onboarding');
+        }
+      })
+      .catch(() => setChildValidated(true));
+  }, [router]);
 
   // Personalise opening message from localStorage (set during onboarding)
   useEffect(() => {
@@ -231,6 +253,8 @@ export default function LogPage() {
   };
 
   const isConfirmingOrSaving = phase === 'confirming' || phase === 'saving';
+
+  if (!childValidated) return null;
 
   return (
     <div className={styles.screen}>

@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import styles from './SignupForm.module.css'
 
 export default function LoginForm() {
@@ -23,14 +22,16 @@ export default function LoginForm() {
     setError(null)
 
     try {
-      const supabase = createClient()
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-
-      if (signInError) {
-        setError(signInError.message ?? 'Something went wrong. Please try again.')
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        setError(json.error ?? 'Something went wrong. Please try again.')
         return
       }
-
       router.push('/home')
     } catch {
       setError('Something went wrong. Please try again.')

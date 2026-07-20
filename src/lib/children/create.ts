@@ -1,4 +1,3 @@
-import { createClient } from '@/lib/supabase/client'
 import type { OnboardingData } from '@/lib/onboarding/types'
 
 export async function createChildProfile(
@@ -15,12 +14,9 @@ export async function createChildProfile(
 }
 
 export async function updateResearchConsent(consentDataResearch: boolean): Promise<void> {
-  const supabase = createClient()
-  const { data: userData } = await supabase.auth.getUser()
-  if (!userData.user) return
-
-  await supabase
-    .from('profiles')
-    .update({ consent_data_research: consentDataResearch })
-    .eq('id', userData.user.id)
+  await fetch('/api/auth/consent', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ consentDataResearch }),
+  })
 }

@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import styles from './SignupForm.module.css'
 
 export default function SignupForm() {
@@ -26,25 +25,17 @@ export default function SignupForm() {
     setError(null)
 
     try {
-      const supabase = createClient()
-      const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
-
-      if (signUpError) {
-        const msg = signUpError.message
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, consentDataResearch: productConsent, consentMarketing: commercialConsent }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        const msg = json.error
         setError(msg && msg !== '{}' && !msg.startsWith('{') && !msg.startsWith('[') ? msg : 'Something went wrong. Please try again.')
         return
       }
-
-      if (data.user) {
-        await supabase
-          .from('profiles')
-          .upsert({
-            id: data.user.id,
-            consent_data_research: productConsent,
-            consent_marketing: commercialConsent,
-          })
-      }
-
       router.push('/onboarding')
     } catch {
       setError('Something went wrong. Please try again.')
