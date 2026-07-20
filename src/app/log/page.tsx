@@ -7,12 +7,13 @@ import styles from './page.module.css';
 import { saveFoodLog } from '@/lib/log/save';
 import type { LogMessage, ParseApiResponse, MealType, ParsedFoodItem } from '@/lib/log/types';
 
-const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
+const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack', 'hydration'];
 const MEAL_LABELS: Record<MealType, string> = {
   breakfast: 'Breakfast',
   lunch: 'Lunch',
   dinner: 'Dinner',
   snack: 'Snack',
+  hydration: 'Hydration',
 };
 
 const MACROS: { key: keyof ParsedFoodItem; label: string; unit: string; color: string }[] = [
@@ -72,7 +73,7 @@ export default function LogPage() {
   const router = useRouter();
   const [mealType, setMealType] = useState<MealType>(detectMealType);
   const [messages, setMessages] = useState<LogMessage[]>([
-    { id: '0', role: 'assistant', content: "What did your little one have?" },
+    { id: '0', role: 'assistant', content: "What did your little one have? The more detail the better — ingredients, type, and roughly how much." },
   ]);
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
@@ -109,7 +110,7 @@ export default function LogPage() {
   useEffect(() => {
     const name = localStorage.getItem('shai_child_name');
     if (name) {
-      setMessages([{ id: '0', role: 'assistant', content: `What did ${name} have?` }]);
+      setMessages([{ id: '0', role: 'assistant', content: `What did ${name} have? The more detail the better — ingredients, type, and roughly how much.` }]);
     }
   }, []);
 
@@ -123,10 +124,6 @@ export default function LogPage() {
     el.style.height = 'auto';
     el.style.height = `${Math.min(el.scrollHeight, 80)}px`;
   }, [input]);
-
-  const cycleMealType = () => {
-    setMealType((prev) => MEAL_TYPES[(MEAL_TYPES.indexOf(prev) + 1) % MEAL_TYPES.length]);
-  };
 
   const handleHardFoodDay = () => {
     const userMsg: LogMessage = { id: generateId(), role: 'user', content: 'Hard food day.' };
@@ -266,20 +263,25 @@ export default function LogPage() {
             <polyline points="12 19 5 12 12 5" />
           </svg>
         </button>
-
-        <button className={styles.mealPill} onClick={cycleMealType}>
-          {MEAL_LABELS[mealType]}
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </button>
-
         {phase === 'chatting' && (
           <button className={styles.hardDayBtn} onClick={handleHardFoodDay}>
             Hard day
           </button>
         )}
-        {phase !== 'chatting' && <div className={styles.topBarRight} />}
+      </div>
+
+      {/* ── Meal type tabs ── */}
+      <div className={styles.tabsRow}>
+        {MEAL_TYPES.map((type) => (
+          <button
+            key={type}
+            className={`${styles.tab} ${mealType === type ? styles.tabActive : ''}`}
+            onClick={() => phase === 'chatting' && setMealType(type)}
+            disabled={phase !== 'chatting'}
+          >
+            {MEAL_LABELS[type]}
+          </button>
+        ))}
       </div>
 
       <p className={styles.aiDisclosure}>SHAI is an AI assistant.</p>

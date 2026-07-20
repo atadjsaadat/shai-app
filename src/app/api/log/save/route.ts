@@ -31,6 +31,19 @@ export async function POST(request: Request) {
       : NextResponse.json({ success: true })
   }
 
+  if (mealType === 'hydration') {
+    const hydrationRows = items.map((item) => ({
+      child_id: childId,
+      drink_type: item.food_name,
+      amount_ml: null,
+      confidence_score: item.confidence_score,
+    }))
+    const { error } = await admin.from('hydration_logs').insert(hydrationRows)
+    return error
+      ? NextResponse.json({ error: error.message }, { status: 500 })
+      : NextResponse.json({ success: true })
+  }
+
   const rows = items.map((item) => ({
     child_id: childId,
     logged_by_user_id: user.id,

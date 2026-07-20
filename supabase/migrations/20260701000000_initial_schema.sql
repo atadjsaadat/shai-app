@@ -639,3 +639,13 @@ alter table adverse_events enable row level security;
 
 create policy "Users can submit adverse events"
   on adverse_events for insert with check (auth.uid() = submitted_by);
+
+-- ─────────────────────────────────────────────────────
+-- ROLE GRANTS
+-- ─────────────────────────────────────────────────────
+grant usage on schema public to anon, authenticated, service_role;
+grant all on all tables in schema public to service_role;
+grant all on all sequences in schema public to service_role;
+grant all on all tables in schema public to authenticated;
+grant all on all sequences in schema public to authenticated;
+grant select on all tables in schema public to anon;

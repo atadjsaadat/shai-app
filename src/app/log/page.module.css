@@ -34,21 +34,6 @@
   border-radius: 8px;
 }
 
-.mealPill {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--oat);
-  border: 1.5px solid var(--oat-dark);
-  border-radius: 20px;
-  padding: 6px 14px;
-  font-family: var(--font-nunito), sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-primary);
-  cursor: pointer;
-}
-
 .hardDayBtn {
   background: none;
   border: none;
@@ -60,8 +45,47 @@
   padding: 6px 4px;
 }
 
-.topBarRight {
-  width: 60px; /* balances layout when hardDayBtn is hidden */
+/* ── Meal type tabs ──────────────────────────────────── */
+.tabsRow {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--oat-dark);
+  background: var(--cream);
+}
+
+.tabsRow::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  flex-shrink: 0;
+  padding: 7px 16px;
+  border-radius: 20px;
+  border: 1.5px solid var(--oat-dark);
+  background: var(--oat);
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.tabActive {
+  background: var(--terracotta);
+  border-color: var(--terracotta);
+  color: white;
+}
+
+.tab:disabled {
+  cursor: default;
+  opacity: 0.6;
 }
 
 /* ── AI disclosure ───────────────────────────────────── */

@@ -108,9 +108,10 @@
 .nutrientValue {
   font-size: 12px;
   color: var(--text-muted);
-  width: 28px;
+  width: 52px;
   text-align: right;
   flex-shrink: 0;
+  font-weight: 600;
 }
 
 .emptyHint {
@@ -119,4 +120,56 @@
   text-align: center;
   margin-top: 10px;
   font-weight: 500;
+}
+
+/* ── Today's meals ───────────────────────────────────── */
+.mealList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mealGroup {
+  background: var(--oat);
+  border-radius: 18px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mealGroupLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.mealItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--oat-dark);
+}
+
+.mealItem:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.mealItemName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-transform: capitalize;
+}
+
+.mealItemCal {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+  flex-shrink: 0;
 }
