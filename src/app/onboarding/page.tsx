@@ -27,6 +27,7 @@ export default function OnboardingPage() {
   const [consentResearch, setConsentResearch] = useState(false);
   const [proceedVisible, setProceedVisible] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -130,13 +131,25 @@ export default function OnboardingPage() {
           </span>
         </label>
 
+        {saveError && (
+          <p style={{ color: '#C4714A', fontSize: '0.875rem', textAlign: 'center', marginTop: '0.5rem' }}>
+            {saveError}
+          </p>
+        )}
+
         <button
           className={`${styles.proceedBtn} ${proceedVisible ? styles.visible : ''}`}
           disabled={!proceedVisible || saving}
           onClick={async () => {
             setSaving(true);
-            const { childId } = await createChildProfile(collected);
-            if (childId) localStorage.setItem('shai_active_child_id', childId);
+            setSaveError(null);
+            const { childId, error } = await createChildProfile(collected);
+            if (error || !childId) {
+              setSaveError("Something went wrong saving your profile — please try again.");
+              setSaving(false);
+              return;
+            }
+            localStorage.setItem('shai_active_child_id', childId);
             if (collected.childName) localStorage.setItem('shai_child_name', collected.childName);
             await updateResearchConsent(consentResearch);
             router.push('/onboarding/partner-invite');

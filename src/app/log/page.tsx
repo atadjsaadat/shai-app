@@ -180,7 +180,19 @@ export default function LogPage() {
     setPhase('saving');
     setSaveError(null);
 
-    const childId = localStorage.getItem('shai_active_child_id') ?? '';
+    let childId = localStorage.getItem('shai_active_child_id') ?? '';
+    if (!childId) {
+      const res = await fetch('/api/children');
+      if (res.ok) {
+        const json = await res.json();
+        if (json.childId) {
+          childId = json.childId;
+          localStorage.setItem('shai_active_child_id', json.childId);
+          if (json.childName) localStorage.setItem('shai_child_name', json.childName);
+        }
+      }
+    }
+
     const { error } = await saveFoodLog(
       childId,
       parsedData.foodItems,

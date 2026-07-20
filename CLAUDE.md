@@ -493,6 +493,14 @@ GDPR: month/year of birth only, first name only, country only, AES-256 photos, A
 
 ---
 
+## Session Startup — Mandatory Every Session
+
+1. Check if Docker is running. If not, start it before doing anything else.
+2. Check if the dev server is running. If not, run `npm run dev` automatically.
+3. Confirm both are running before making any code changes.
+
+---
+
 ## Session Protocol
 
 When Alexander says "ask the three questions":
