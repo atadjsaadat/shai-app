@@ -57,42 +57,89 @@
   flex: 1;
 }
 
-/* ── Nutrition section ───────────────────────────────── */
+/* ── Section header ──────────────────────────────────── */
+.sectionHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
 .sectionLabel {
   font-size: 16px;
   font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 10px;
 }
 
+.rdaHint {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ── Nutrition card — 2-column grid ─────────────────── */
 .nutrientCard {
   background: var(--oat);
   border-radius: 18px;
-  padding: 4px 16px 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.nutrientCol {
+  flex: 1;
+  padding: 4px 12px 0;
+}
+
+.nutrientCol + .nutrientCol {
+  border-left: 1px solid var(--oat-dark);
 }
 
 .nutrientRow {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 13px 0;
+  gap: 6px;
+  padding: 11px 0;
   border-bottom: 1px solid var(--oat-dark);
 }
 
 .nutrientRow:last-child {
   border-bottom: none;
+  padding-bottom: 8px;
 }
 
 .nutrientName {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-secondary);
   font-weight: 600;
-  width: 62px;
+  width: 40px;
   flex-shrink: 0;
 }
 
-.barTrack {
+/* barWrap holds the tick via ::after, overflow visible so tick can extend above/below bar */
+.barWrap {
   flex: 1;
+  min-width: 30px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* RDA tick — dark, extends 2px above and below the 6px bar so it's always visible */
+.barWrap::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 10px;
+  background: rgba(61, 43, 31, 0.35);
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+.barTrack {
+  width: 100%;
   height: 6px;
   background: var(--oat-dark);
   border-radius: 3px;
@@ -102,13 +149,13 @@
 .barFill {
   height: 100%;
   border-radius: 3px;
-  transition: width 0.5s ease;
+  transition: width 0.6s ease;
 }
 
 .nutrientValue {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-muted);
-  width: 52px;
+  width: 40px;
   text-align: right;
   flex-shrink: 0;
   font-weight: 600;

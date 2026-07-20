@@ -5,28 +5,18 @@ import SHAiPresence from '@/components/SHAiPresence';
 import BottomNav from '@/components/BottomNav';
 import styles from './page.module.css';
 
-const NUTRIENTS: { key: string; name: string; color: string; target: number; unit: string }[] = [
-  { key: 'calories_kcal', name: 'Calories', color: '#C4714A', target: 1200, unit: '' },
-  { key: 'protein_g',     name: 'Protein',  color: '#D4A72C', target: 15,   unit: 'g' },
-  { key: 'carbs_g',       name: 'Carbs',    color: '#B09585', target: 130,  unit: 'g' },
-  { key: 'fat_g',         name: 'Fat',      color: '#A67BC4', target: 35,   unit: 'g' },
-  { key: 'fibre_g',       name: 'Fibre',    color: '#7A9E7E', target: 14,   unit: 'g' },
-];
-
-const MEAL_LABELS: Record<string, string> = {
-  breakfast: 'Breakfast',
-  lunch: 'Lunch',
-  dinner: 'Dinner',
-  snack: 'Snack',
-};
-
 interface Totals {
   calories_kcal: number;
   protein_g: number;
   carbs_g: number;
   fat_g: number;
   fibre_g: number;
+  sugar_g: number;
+  sodium_mg: number;
+  iron_mg: number;
 }
+
+interface Targets extends Totals {}
 
 interface MealItem {
   food_name: string;
@@ -37,6 +27,33 @@ interface Meal {
   meal_type: string;
   items: MealItem[];
 }
+
+type NutrientDef = {
+  key: keyof Totals;
+  name: string;
+  color: string;
+}
+
+const LEFT_NUTRIENTS: NutrientDef[] = [
+  { key: 'calories_kcal', name: 'Cals',  color: '#C4714A' },
+  { key: 'protein_g',     name: 'Pro',   color: '#D4A72C' },
+  { key: 'carbs_g',       name: 'Carbs', color: '#B09585' },
+  { key: 'fat_g',         name: 'Fat',   color: '#A67BC4' },
+];
+
+const RIGHT_NUTRIENTS: NutrientDef[] = [
+  { key: 'fibre_g',   name: 'Fibre', color: '#7A9E7E' },
+  { key: 'sugar_g',   name: 'Sugar', color: '#E8874A' },
+  { key: 'sodium_mg', name: 'Salt',  color: '#7AA5C4' },
+  { key: 'iron_mg',   name: 'Iron',  color: '#B87333' },
+];
+
+const MEAL_LABELS: Record<string, string> = {
+  breakfast: 'Breakfast',
+  lunch: 'Lunch',
+  dinner: 'Dinner',
+  snack: 'Snack',
+};
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -59,9 +76,43 @@ function localDate(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function formatValue(value: number, unit: string): string {
-  if (!unit) return String(Math.round(value));
-  return `${value < 10 ? value.toFixed(1) : Math.round(value)}${unit}`;
+function formatValue(value: number, key: keyof Totals): string {
+  if (key === 'calories_kcal') return String(Math.round(value));
+  if (key === 'sodium_mg' || key === 'iron_mg') {
+    return `${value < 10 ? value.toFixed(1) : Math.round(value)}mg`;
+  }
+  return `${value < 10 ? value.toFixed(1) : Math.round(value)}g`;
+}
+
+function NutrientCol({ nutrients, totals, targets, loading }: {
+  nutrients: NutrientDef[];
+  totals: Totals | null;
+  targets: Targets | null;
+  loading: boolean;
+}) {
+  return (
+    <div className={styles.nutrientCol}>
+      {nutrients.map((n) => {
+        const value = totals?.[n.key] ?? 0;
+        const target = targets?.[n.key] ?? 1;
+        // Scale: 0 → 2×target. Tick at 50% marks RDA. Fill reaching tick = target met.
+        const pct = Math.min(100, (value / (target * 2)) * 100);
+        return (
+          <div key={n.key} className={styles.nutrientRow}>
+            <span className={styles.nutrientName}>{n.name}</span>
+            <div className={styles.barWrap}>
+              <div className={styles.barTrack}>
+                <div className={styles.barFill} style={{ width: `${pct}%`, background: n.color }} />
+              </div>
+            </div>
+            <span className={styles.nutrientValue}>
+              {loading ? '…' : value > 0 ? formatValue(value, n.key) : '—'}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 export default function HomePage() {
@@ -70,6 +121,7 @@ export default function HomePage() {
 
   const [childName, setChildName] = useState<string | null>(null);
   const [totals, setTotals] = useState<Totals | null>(null);
+  const [targets, setTargets] = useState<Targets | null>(null);
   const [meals, setMeals] = useState<Meal[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -83,8 +135,9 @@ export default function HomePage() {
     fetch(`/api/home/today?childId=${childId}&date=${localDate()}`)
       .then((r) => r.json())
       .then((data) => {
-        if (data.totals) setTotals(data.totals);
-        if (data.meals) setMeals(data.meals);
+        if (data.totals)  setTotals(data.totals);
+        if (data.targets) setTargets(data.targets);
+        if (data.meals)   setMeals(data.meals);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -113,23 +166,13 @@ export default function HomePage() {
       </div>
 
       <section>
-        <p className={styles.sectionLabel}>Today&apos;s nutrition</p>
+        <div className={styles.sectionHeader}>
+          <p className={styles.sectionLabel}>Today&apos;s nutrition</p>
+          <p className={styles.rdaHint}>bar fills to RDA</p>
+        </div>
         <div className={styles.nutrientCard}>
-          {NUTRIENTS.map((n) => {
-            const value = totals ? (totals as unknown as Record<string, number>)[n.key] ?? 0 : 0;
-            const pct = Math.min(100, Math.round((value / n.target) * 100));
-            return (
-              <div key={n.key} className={styles.nutrientRow}>
-                <span className={styles.nutrientName}>{n.name}</span>
-                <div className={styles.barTrack}>
-                  <div className={styles.barFill} style={{ width: `${pct}%`, background: n.color }} />
-                </div>
-                <span className={styles.nutrientValue}>
-                  {loading ? '…' : value > 0 ? formatValue(value, n.unit) : '—'}
-                </span>
-              </div>
-            );
-          })}
+          <NutrientCol nutrients={LEFT_NUTRIENTS}  totals={totals} targets={targets} loading={loading} />
+          <NutrientCol nutrients={RIGHT_NUTRIENTS} totals={totals} targets={targets} loading={loading} />
         </div>
         {!hasMeals && !loading && (
           <p className={styles.emptyHint}>Log a meal to start tracking</p>

@@ -17,11 +17,14 @@ const MEAL_LABELS: Record<MealType, string> = {
 };
 
 const MACROS: { key: keyof ParsedFoodItem; label: string; unit: string; color: string }[] = [
-  { key: 'calories_kcal', label: 'cal', unit: '', color: '#C4714A' },
-  { key: 'protein_g',     label: 'pro', unit: 'g', color: '#D4A72C' },
-  { key: 'carbs_g',       label: 'carbs', unit: 'g', color: '#B09585' },
-  { key: 'fat_g',         label: 'fat', unit: 'g', color: '#A67BC4' },
-  { key: 'fibre_g',       label: 'fibre', unit: 'g', color: '#7A9E7E' },
+  { key: 'calories_kcal', label: 'cal',   unit: '',   color: '#C4714A' },
+  { key: 'protein_g',     label: 'pro',   unit: 'g',  color: '#D4A72C' },
+  { key: 'carbs_g',       label: 'carbs', unit: 'g',  color: '#B09585' },
+  { key: 'fat_g',         label: 'fat',   unit: 'g',  color: '#A67BC4' },
+  { key: 'fibre_g',       label: 'fibre', unit: 'g',  color: '#7A9E7E' },
+  { key: 'sugar_g',       label: 'sugar', unit: 'g',  color: '#E8874A' },
+  { key: 'sodium_mg',     label: 'salt',  unit: 'mg', color: '#7AA5C4' },
+  { key: 'iron_mg',       label: 'iron',  unit: 'mg', color: '#B87333' },
 ];
 
 function detectMealType(): MealType {
