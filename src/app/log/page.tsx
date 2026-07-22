@@ -88,17 +88,17 @@ export default function LogPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Validate child ID in localStorage exists in DB; if not, clear and redirect to onboarding
+  // Always resolve child from DB; localStorage is just a cache for same-device speed
   useEffect(() => {
     const storedId = localStorage.getItem('shai_active_child_id');
-    if (!storedId) {
-      router.replace('/onboarding');
-      return;
-    }
     fetch('/api/children')
       .then((r) => r.json())
       .then((json) => {
         if (json.childId) {
+          localStorage.setItem('shai_active_child_id', json.childId);
+          if (json.childName) localStorage.setItem('shai_child_name', json.childName);
+          const name = json.childName ?? localStorage.getItem('shai_child_name');
+          if (name) setMessages([{ id: '0', role: 'assistant', content: `What did ${name} have? The more detail the better — ingredients, type, and roughly how much.` }]);
           setChildValidated(true);
         } else {
           localStorage.removeItem('shai_active_child_id');
@@ -106,16 +106,13 @@ export default function LogPage() {
           router.replace('/onboarding');
         }
       })
-      .catch(() => setChildValidated(true));
+      .catch(() => {
+        const name = localStorage.getItem('shai_child_name');
+        if (name) setMessages([{ id: '0', role: 'assistant', content: `What did ${name} have? The more detail the better — ingredients, type, and roughly how much.` }]);
+        if (storedId) setChildValidated(true);
+        else router.replace('/onboarding');
+      });
   }, [router]);
-
-  // Personalise opening message from localStorage (set during onboarding)
-  useEffect(() => {
-    const name = localStorage.getItem('shai_child_name');
-    if (name) {
-      setMessages([{ id: '0', role: 'assistant', content: `What did ${name} have? The more detail the better — ingredients, type, and roughly how much.` }]);
-    }
-  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

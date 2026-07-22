@@ -128,6 +128,7 @@ export async function GET(request: Request) {
     messages: [{ role: 'user', content: buildWeeklySummaryPrompt(childName, ageMonths, daysLogged, nutrients) }],
   })
 
-  const summary = response.content[0].type === 'text' ? response.content[0].text.trim() : ''
+  const raw = response.content[0].type === 'text' ? response.content[0].text.trim() : ''
+  const summary = raw.replace(/^#+\s*[^\n]*\n+/g, '').trim()
   return NextResponse.json({ summary })
 }

@@ -154,53 +154,65 @@ export default function HomePage() {
   const [showFeedbackSection, setShowFeedbackSection] = useState(false);
 
   useEffect(() => {
-    const name = localStorage.getItem('shai_child_name');
-    setChildName(name);
+    async function init() {
+      let childId = localStorage.getItem('shai_active_child_id');
+      let name = localStorage.getItem('shai_child_name');
 
-    const childId = localStorage.getItem('shai_active_child_id');
-    if (!childId) { setLoading(false); return; }
+      if (!childId) {
+        try {
+          const json = await fetch('/api/children').then((r) => r.json());
+          if (json.childId) {
+            childId = json.childId;
+            name = json.childName ?? null;
+            localStorage.setItem('shai_active_child_id', childId!);
+            if (name) localStorage.setItem('shai_child_name', name);
+          }
+        } catch { /* silently fall through — childId stays null */ }
+      }
 
-    const offset = -new Date().getTimezoneOffset();
-    const today = localDate();
+      setChildName(name);
+      if (!childId) { setLoading(false); return; }
 
-    fetch(`/api/home/today?childId=${childId}&date=${today}&utcOffset=${offset}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.totals)              setTotals(data.totals);
-        if (data.targets)             setTargets(data.targets);
-        if (data.meals)               setMeals(data.meals);
-        if (data.ageMonths !== undefined) setAgeMonths(data.ageMonths);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      const offset = -new Date().getTimezoneOffset();
+      const today = localDate();
 
-    // Weekly summary — cached by Monday of current week
-    const weeklyCacheKey = `shai_weekly_summary_${getMondayDate()}`;
-    const cachedWeekly = localStorage.getItem(weeklyCacheKey);
-    if (cachedWeekly) {
-      setWeeklySummary(cachedWeekly);
-    } else {
-      setWeeklyLoading(true);
-      fetch(`/api/home/weekly-summary?childId=${childId}&date=${today}&utcOffset=${offset}&childName=${encodeURIComponent(name ?? 'your little one')}`)
+      fetch(`/api/home/today?childId=${childId}&date=${today}&utcOffset=${offset}`)
         .then((r) => r.json())
         .then((data) => {
-          if (data.summary) {
-            setWeeklySummary(data.summary);
-            localStorage.setItem(weeklyCacheKey, data.summary);
-          }
+          if (data.totals)                  setTotals(data.totals);
+          if (data.targets)                 setTargets(data.targets);
+          if (data.meals)                   setMeals(data.meals);
+          if (data.ageMonths !== undefined) setAgeMonths(data.ageMonths);
         })
         .catch(() => {})
-        .finally(() => setWeeklyLoading(false));
-    }
+        .finally(() => setLoading(false));
 
-    // Daily feedback — only shown 18:00–22:00 local time
-    const hour = new Date().getHours();
-    if (hour >= 18 && hour < 22) {
-      setShowFeedbackSection(true);
-      const feedbackCacheKey = `shai_daily_feedback_${today}`;
-      const cachedFeedback = localStorage.getItem(feedbackCacheKey);
-      if (cachedFeedback) setDailyFeedback(cachedFeedback);
+      const weeklyCacheKey = `shai_weekly_summary_${getMondayDate()}`;
+      const cachedWeekly = localStorage.getItem(weeklyCacheKey);
+      if (cachedWeekly) {
+        setWeeklySummary(cachedWeekly);
+      } else {
+        setWeeklyLoading(true);
+        fetch(`/api/home/weekly-summary?childId=${childId}&date=${today}&utcOffset=${offset}&childName=${encodeURIComponent(name ?? 'your little one')}`)
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.summary) {
+              setWeeklySummary(data.summary);
+              localStorage.setItem(weeklyCacheKey, data.summary);
+            }
+          })
+          .catch(() => {})
+          .finally(() => setWeeklyLoading(false));
+      }
+
+      const hour = new Date().getHours();
+      if (hour >= 18 && hour < 22) {
+        setShowFeedbackSection(true);
+        const cachedFeedback = localStorage.getItem(`shai_daily_feedback_${today}`);
+        if (cachedFeedback) setDailyFeedback(cachedFeedback);
+      }
     }
+    init();
   }, []);
 
   async function handleGenerateFeedback() {
@@ -225,9 +237,27 @@ export default function HomePage() {
   }
 
   const hasMeals = meals.length > 0;
-  const shaiMessage = hasMeals
-    ? `${childName ? `${childName}'s` : 'Meals are'} meals are looking good today — keep it up!`
-    : `Ready when you are. Tap Log below to start tracking${childName ? ` ${childName}'s` : ''} meals.`;
+
+  function buildStatusMessage(): string {
+    const name = childName ?? 'your little one';
+    if (!hasMeals) return `Ready when you are — tap Log below to start tracking ${name}'s meals.`;
+    if (!totals || !targets) return `${name}'s day is coming together.`;
+    const sugarPct = targets.sugar_g       > 0 ? totals.sugar_g       / targets.sugar_g       : 0;
+    const saltPct  = targets.sodium_mg     > 0 ? totals.sodium_mg     / targets.sodium_mg     : 0;
+    const calPct   = targets.calories_kcal > 0 ? totals.calories_kcal / targets.calories_kcal : 0;
+    const fatPct   = targets.fat_g         > 0 ? totals.fat_g         / targets.fat_g         : 0;
+    // More than double the RDA on a dangerous nutrient — be clear, not dismissive
+    if (sugarPct > 2)  return `Today's sugar was well over the recommended amount for ${name}'s age — a lighter day tomorrow would help balance things out.`;
+    if (saltPct  > 2)  return `Today's salt was well over the recommended amount for ${name}'s age — worth aiming lighter tomorrow.`;
+    if (calPct   > 2)  return `Today's calories were well above what's recommended for ${name}'s age — worth aiming for something lighter tomorrow.`;
+    // Over target but not double — acknowledge as treat day
+    if (sugarPct > 1.5 || fatPct > 1.5) return `Treat day for ${name} — a balanced one tomorrow will even things out.`;
+    if (calPct   > 1.5) return `Big calorie day for ${name} — a lighter one tomorrow will balance it out.`;
+    if (calPct   < 0.4) return `Light start for ${name} so far — plenty of time to top up.`;
+    return `${name}'s day is looking balanced — nice work.`;
+  }
+
+  const shaiMessage = buildStatusMessage();
 
   return (
     <div className={styles.page}>

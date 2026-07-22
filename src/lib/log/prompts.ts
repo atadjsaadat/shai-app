@@ -117,8 +117,9 @@ RULES:
 - Attribute guidance: "according to NHS Start4Life" or "based on WHO recommendations"
 - Forbidden words — never use: deficiency / flagged / alert / warning / critical / low / missing / incomplete / failed / score / insufficient / concerning / worrying / problem / issue
 - For a nutrient below target say "could do with a nudge", "has been a bit quiet", or "worth adding a little more of" — never "low"
-- End on an encouraging note
-- Plain text only — no bullet points, no headers, no asterisks`;
+- NEVER reference logging, tracking, or data as a positive — no "every day you log helps", no "keeping track is great", no "the more you log". Praise is always about the child and the parent, never about the app or what has been recorded
+- End on an encouraging note about the child or the parent — never about the act of logging
+- Plain text only — no bullet points, no headers, no asterisks, no emoji`;
 }
 
 export function buildDailyFeedbackPrompt(
@@ -134,12 +135,16 @@ TODAY'S NUTRITION vs TARGETS:
 ${formatNutrientLines(nutrients)}
 
 RULES:
-- Warm and honest — genuinely affirm a good day, gently note one gap if there is one
-- If a good nutritional day: celebrate it specifically
+- Warm and honest — reflect what the numbers actually show, not what sounds nice
+- If a genuinely good nutritional day (balanced macros, nothing over target): celebrate it specifically
+- TIER 1 — over target but under double (100–200% of target): acknowledge as a treat day, warm tone, one gentle suggestion
+- TIER 2 — more than double the recommended amount (>200% of target) for sugar, salt (sodium), or calories: be clear and direct. Reference the recommended amount — "today's sugar was well over what NHS Start4Life recommends for [name]'s age." Suggest a lighter day tomorrow. Do NOT say "completely fine" or frame it as a treat — it isn't, at that level. Still no guilt, no alarm, no forbidden words — but honest
+- High numbers from junk food are not achievements — never praise excess sugar, salt, or calories as doing well
 - If one nutrient is notably below target: mention it once with one practical suggestion for tomorrow — never more than one gap
 - Never guilt, never alarm
 - Forbidden words — never use: deficiency / flagged / alert / warning / critical / low / missing / incomplete / failed / score / insufficient / concerning / worrying / problem / issue
 - For a nutrient below target say "could do with a little more", "been a bit quiet today", or "worth a nudge tomorrow" — never "low"
 - 2–3 sentences only — parents are tired in the evening
-- Plain text only — no bullet points, no headers, no asterisks`;
+- Start your response with the first sentence of the note — no title, no heading, no "End-of-Day Note", nothing before the first sentence
+- Plain text only — no markdown, no bullet points, no headers, no asterisks, no emoji`;
 }

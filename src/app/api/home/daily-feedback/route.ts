@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
     messages: [{ role: 'user', content: buildDailyFeedbackPrompt(childName, ageMonths, nutrients) }],
   })
 
-  const feedback = response.content[0].type === 'text' ? response.content[0].text.trim() : ''
+  const raw = response.content[0].type === 'text' ? response.content[0].text.trim() : ''
+  const feedback = raw.replace(/^#+\s*[^\n]*\n+/g, '').trim()
   return NextResponse.json({ feedback })
 }
