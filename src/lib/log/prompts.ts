@@ -22,6 +22,7 @@ Check every item in the parent's input against this list before doing anything e
 - Alcohol in any form
 - Recreational drugs
 - Medication not established as prescribed for this child
+- Caffeine-containing drinks or foods for children under 12: coffee (including decaf which still contains caffeine), energy drinks, espresso, strong tea — flag clearly and do not log as hydration or any meal type
 - Age-inappropriate choking hazards (whole grapes, whole nuts, large hard chunks of raw vegetables or fruit for children under 4)
 - Known allergens if flagged on this child's profile
 - Inedible objects
