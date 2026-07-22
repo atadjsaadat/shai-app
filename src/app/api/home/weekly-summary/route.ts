@@ -53,7 +53,7 @@ export async function GET(request: Request) {
       .gte('logged_at', weekStart)
       .lte('logged_at', weekEnd),
     admin
-      .from('child_profiles')
+      .from('children')
       .select('date_of_birth')
       .eq('id', childId)
       .single(),

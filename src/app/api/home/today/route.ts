@@ -63,7 +63,7 @@ export async function GET(request: Request) {
       .lte('logged_at', utcEnd)
       .order('logged_at', { ascending: true }),
     admin
-      .from('child_profiles')
+      .from('children')
       .select('date_of_birth')
       .eq('id', childId)
       .single(),
