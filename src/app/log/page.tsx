@@ -225,6 +225,14 @@ export default function LogPage() {
       return;
     }
 
+    // Invalidate home page caches so next visit regenerates with fresh data
+    const today = new Date().toISOString().slice(0, 10);
+    const monday = (() => {
+      const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d.toISOString().slice(0, 10);
+    })();
+    localStorage.removeItem(`shai_daily_feedback_${today}`);
+    localStorage.removeItem(`shai_weekly_summary_${monday}`);
+
     setPhase('saved');
   };
 
