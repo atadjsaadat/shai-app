@@ -44,8 +44,13 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const childId = searchParams.get('childId')
   const date = searchParams.get('date')
+  const offsetMinutes = parseInt(searchParams.get('utcOffset') ?? '0', 10) || 0
 
   if (!childId || !date) return NextResponse.json({ error: 'Missing params' }, { status: 400 })
+
+  const [ty, tm, td] = date.split('-').map(Number)
+  const utcStart = new Date(Date.UTC(ty, tm - 1, td, 0, 0, 0) - offsetMinutes * 60_000).toISOString()
+  const utcEnd   = new Date(Date.UTC(ty, tm - 1, td, 23, 59, 59) - offsetMinutes * 60_000).toISOString()
 
   const admin = createAdminClient()
 
@@ -54,8 +59,8 @@ export async function GET(request: Request) {
       .from('food_logs')
       .select('meal_type, food_name, calories_kcal, protein_g, carbs_g, fat_g, fibre_g, sugar_g, sodium_mg, iron_mg, is_hard_food_day')
       .eq('child_id', childId)
-      .gte('logged_at', `${date}T00:00:00`)
-      .lte('logged_at', `${date}T23:59:59`)
+      .gte('logged_at', utcStart)
+      .lte('logged_at', utcEnd)
       .order('logged_at', { ascending: true }),
     admin
       .from('child_profiles')
@@ -108,5 +113,5 @@ export async function GET(request: Request) {
     if (!ORDER.includes(type)) meals.push({ meal_type: type, items })
   }
 
-  return NextResponse.json({ totals, meals, targets })
+  return NextResponse.json({ totals, meals, targets, ageMonths })
 }

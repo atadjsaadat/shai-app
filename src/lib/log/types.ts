@@ -1,5 +1,12 @@
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'hydration';
 
+export interface NutrientLine {
+  name: string;
+  value: number;
+  target: number;
+  unit: string;
+}
+
 export interface ParsedFoodItem {
   food_name: string;
   serving_size_description: string | null;

@@ -220,3 +220,42 @@
   font-weight: 500;
   flex-shrink: 0;
 }
+
+/* ── Insight cards (weekly summary + daily feedback) ─ */
+.insightCard {
+  background: var(--oat);
+  border-radius: 18px;
+  padding: 16px 18px;
+  margin-top: 10px;
+}
+
+.insightText {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+.insightLoading {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.feedbackBtn {
+  background: var(--terracotta);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  width: 100%;
+  transition: opacity 0.15s;
+}
+
+.feedbackBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

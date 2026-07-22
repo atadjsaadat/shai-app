@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import SHAiPresence from '@/components/SHAiPresence';
 import BottomNav from '@/components/BottomNav';
 import styles from './page.module.css';
+import type { NutrientLine } from '@/lib/log/types';
 
 interface Totals {
   calories_kcal: number;
@@ -76,12 +77,32 @@ function localDate(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+function getMondayDate(): string {
+  const d = new Date();
+  const day = d.getDay();
+  d.setDate(d.getDate() - day + (day === 0 ? -6 : 1));
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function formatValue(value: number, key: keyof Totals): string {
   if (key === 'calories_kcal') return String(Math.round(value));
   if (key === 'sodium_mg' || key === 'iron_mg') {
     return `${value < 10 ? value.toFixed(1) : Math.round(value)}mg`;
   }
   return `${value < 10 ? value.toFixed(1) : Math.round(value)}g`;
+}
+
+function buildNutrientLines(totals: Totals, targets: Targets): NutrientLine[] {
+  return [
+    { name: 'Calories',      value: Math.round(totals.calories_kcal),              target: targets.calories_kcal, unit: ' kcal' },
+    { name: 'Protein',       value: Math.round(totals.protein_g),                  target: targets.protein_g,     unit: 'g' },
+    { name: 'Carbs',         value: Math.round(totals.carbs_g),                    target: targets.carbs_g,       unit: 'g' },
+    { name: 'Fat',           value: Math.round(totals.fat_g),                      target: targets.fat_g,         unit: 'g' },
+    { name: 'Fibre',         value: parseFloat(totals.fibre_g.toFixed(1)),         target: targets.fibre_g,       unit: 'g' },
+    { name: 'Sugar',         value: Math.round(totals.sugar_g),                    target: targets.sugar_g,       unit: 'g' },
+    { name: 'Salt (sodium)', value: Math.round(totals.sodium_mg),                  target: targets.sodium_mg,     unit: 'mg' },
+    { name: 'Iron',          value: parseFloat(totals.iron_mg.toFixed(1)),         target: targets.iron_mg,       unit: 'mg' },
+  ];
 }
 
 function NutrientCol({ nutrients, totals, targets, loading }: {
@@ -95,7 +116,6 @@ function NutrientCol({ nutrients, totals, targets, loading }: {
       {nutrients.map((n) => {
         const value = totals?.[n.key] ?? 0;
         const target = targets?.[n.key] ?? 1;
-        // Scale: 0 → 2×target. Tick at 50% marks RDA. Fill reaching tick = target met.
         const pct = Math.min(100, (value / (target * 2)) * 100);
         return (
           <div key={n.key} className={styles.nutrientRow}>
@@ -124,6 +144,14 @@ export default function HomePage() {
   const [targets, setTargets] = useState<Targets | null>(null);
   const [meals, setMeals] = useState<Meal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [ageMonths, setAgeMonths] = useState<number>(24);
+
+  const [weeklySummary, setWeeklySummary] = useState<string | null>(null);
+  const [weeklyLoading, setWeeklyLoading] = useState(false);
+
+  const [dailyFeedback, setDailyFeedback] = useState<string | null>(null);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [showFeedbackSection, setShowFeedbackSection] = useState(false);
 
   useEffect(() => {
     const name = localStorage.getItem('shai_child_name');
@@ -132,16 +160,69 @@ export default function HomePage() {
     const childId = localStorage.getItem('shai_active_child_id');
     if (!childId) { setLoading(false); return; }
 
-    fetch(`/api/home/today?childId=${childId}&date=${localDate()}`)
+    const offset = -new Date().getTimezoneOffset();
+    const today = localDate();
+
+    fetch(`/api/home/today?childId=${childId}&date=${today}&utcOffset=${offset}`)
       .then((r) => r.json())
       .then((data) => {
-        if (data.totals)  setTotals(data.totals);
-        if (data.targets) setTargets(data.targets);
-        if (data.meals)   setMeals(data.meals);
+        if (data.totals)              setTotals(data.totals);
+        if (data.targets)             setTargets(data.targets);
+        if (data.meals)               setMeals(data.meals);
+        if (data.ageMonths !== undefined) setAgeMonths(data.ageMonths);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+
+    // Weekly summary — cached by Monday of current week
+    const weeklyCacheKey = `shai_weekly_summary_${getMondayDate()}`;
+    const cachedWeekly = localStorage.getItem(weeklyCacheKey);
+    if (cachedWeekly) {
+      setWeeklySummary(cachedWeekly);
+    } else {
+      setWeeklyLoading(true);
+      fetch(`/api/home/weekly-summary?childId=${childId}&date=${today}&utcOffset=${offset}&childName=${encodeURIComponent(name ?? 'your little one')}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.summary) {
+            setWeeklySummary(data.summary);
+            localStorage.setItem(weeklyCacheKey, data.summary);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setWeeklyLoading(false));
+    }
+
+    // Daily feedback — only shown 18:00–22:00 local time
+    const hour = new Date().getHours();
+    if (hour >= 18 && hour < 22) {
+      setShowFeedbackSection(true);
+      const feedbackCacheKey = `shai_daily_feedback_${today}`;
+      const cachedFeedback = localStorage.getItem(feedbackCacheKey);
+      if (cachedFeedback) setDailyFeedback(cachedFeedback);
+    }
   }, []);
+
+  async function handleGenerateFeedback() {
+    if (!totals || !targets || feedbackLoading) return;
+    setFeedbackLoading(true);
+    try {
+      const nutrients = buildNutrientLines(totals, targets);
+      const res = await fetch('/api/home/daily-feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ childName: childName ?? 'your little one', ageMonths, nutrients }),
+      });
+      const data = await res.json();
+      if (data.feedback) {
+        setDailyFeedback(data.feedback);
+        localStorage.setItem(`shai_daily_feedback_${localDate()}`, data.feedback);
+      }
+    } catch {
+      // silently fail
+    }
+    setFeedbackLoading(false);
+  }
 
   const hasMeals = meals.length > 0;
   const shaiMessage = hasMeals
@@ -198,6 +279,38 @@ export default function HomePage() {
                 ))}
               </div>
             ))}
+          </div>
+        </section>
+      )}
+
+      {(weeklyLoading || weeklySummary) && (
+        <section>
+          <p className={styles.sectionLabel}>This week at a glance</p>
+          <div className={styles.insightCard}>
+            {weeklyLoading ? (
+              <p className={styles.insightLoading}>Getting your week summary…</p>
+            ) : (
+              <p className={styles.insightText}>{weeklySummary}</p>
+            )}
+          </div>
+        </section>
+      )}
+
+      {showFeedbackSection && hasMeals && (
+        <section>
+          <p className={styles.sectionLabel}>How did today go?</p>
+          <div className={styles.insightCard}>
+            {dailyFeedback ? (
+              <p className={styles.insightText}>{dailyFeedback}</p>
+            ) : (
+              <button
+                className={styles.feedbackBtn}
+                onClick={handleGenerateFeedback}
+                disabled={feedbackLoading}
+              >
+                {feedbackLoading ? 'SHAi is thinking…' : 'Ask SHAi'}
+              </button>
+            )}
           </div>
         </section>
       )}

@@ -1,4 +1,4 @@
-import type { MealType } from './types';
+import type { MealType, NutrientLine } from './types';
 
 export function buildParserSystemPrompt(mealType: MealType): string {
   return `You are SHAI's food log parser for a child nutrition companion app. Convert a parent's natural description into structured food data.
@@ -13,6 +13,15 @@ RULES:
 - Hard food day: if the parent says refused / wouldn't eat / nothing today / hard day for food — set isHardFoodDay: true, foodItems: [], complete: true. No questions. One warm line.
 - Keep message to one brief warm sentence. Parents are busy.
 - Your ENTIRE response must be valid JSON starting with { and ending with }. No prose outside the JSON.
+
+TONE — NUTRITIONAL HONESTY:
+The "message" field must honestly reflect the nutritional quality of what was logged.
+- Nutritious wholefood meal (good protein, vegetables, fruit, wholegrains): affirm it warmly and specifically.
+- Average or mixed meal: neutral and factual. "All logged." is perfectly fine.
+- Poor nutritional quality (ultra-processed, high sugar/salt — e.g. crisps, sweets, fizzy drinks, fast food): acknowledge without alarm or guilt. "Logged — a treat day is completely fine." Never say "great", "brilliant", or "lovely" about junk food.
+- Never judgmental, clinical, or alarming.
+- Forbidden words (never use in message): deficiency / flagged / alert / warning / critical / low / missing / incomplete / failed / score / insufficient / concerning / worrying / problem / issue
+- One brief warm sentence only.
 
 NUTRIENT EXTRACTION — CRITICAL:
 Use your full nutritional knowledge to populate EVERY field you can reasonably estimate. You know the typical nutrient profiles of common foods. Fill them in — do not leave fields null just because the parent did not mention them.
@@ -71,4 +80,66 @@ RESPONSE FORMAT (strict JSON, no extra text):
   "isHardFoodDay": false,
   "complete": true
 }`;
+}
+
+function formatNutrientLines(lines: NutrientLine[]): string {
+  return lines
+    .map(({ name, value, target, unit }) => {
+      const pct = Math.round((value / target) * 100);
+      const met = pct >= 100 ? ' — met ✓' : '';
+      const display = value % 1 === 0 ? String(value) : value.toFixed(1);
+      return `${name}: ${display}${unit} / target ${target}${unit} (${pct}%${met})`;
+    })
+    .join('\n');
+}
+
+export function buildWeeklySummaryPrompt(
+  childName: string,
+  ageMonths: number,
+  daysLogged: number,
+  nutrients: NutrientLine[],
+): string {
+  return `You are SHAi, a warm child nutrition companion inside a parenting app.
+Generate a brief weekly nutrition note for a parent. 2–4 sentences maximum.
+
+CHILD: ${childName}, ${ageMonths} months old
+DAYS LOGGED THIS WEEK: ${daysLogged} of 7
+
+AVERAGE DAILY NUTRITION vs TARGETS:
+${formatNutrientLines(nutrients)}
+
+RULES:
+- Conversational, warm, honest — like a knowledgeable friend
+- Celebrate what went well this week, specifically
+- If a nutrient average is below ~70% of target, mention it once with ONE practical suggestion — never repeat a concern
+- If fewer than 3 days logged: acknowledge limited data, keep tone light and encouraging, avoid drawing conclusions
+- Never guilt the parent about un-logged days
+- Attribute guidance: "according to NHS Start4Life" or "based on WHO recommendations"
+- Forbidden words — never use: deficiency / flagged / alert / warning / critical / low / missing / incomplete / failed / score / insufficient / concerning / worrying / problem / issue
+- For a nutrient below target say "could do with a nudge", "has been a bit quiet", or "worth adding a little more of" — never "low"
+- End on an encouraging note
+- Plain text only — no bullet points, no headers, no asterisks`;
+}
+
+export function buildDailyFeedbackPrompt(
+  childName: string,
+  ageMonths: number,
+  nutrients: NutrientLine[],
+): string {
+  return `You are SHAi, a warm child nutrition companion inside a parenting app.
+Generate a brief end-of-day note for a parent. 2–3 sentences maximum.
+
+CHILD: ${childName}, ${ageMonths} months old
+TODAY'S NUTRITION vs TARGETS:
+${formatNutrientLines(nutrients)}
+
+RULES:
+- Warm and honest — genuinely affirm a good day, gently note one gap if there is one
+- If a good nutritional day: celebrate it specifically
+- If one nutrient is notably below target: mention it once with one practical suggestion for tomorrow — never more than one gap
+- Never guilt, never alarm
+- Forbidden words — never use: deficiency / flagged / alert / warning / critical / low / missing / incomplete / failed / score / insufficient / concerning / worrying / problem / issue
+- For a nutrient below target say "could do with a little more", "been a bit quiet today", or "worth a nudge tomorrow" — never "low"
+- 2–3 sentences only — parents are tired in the evening
+- Plain text only — no bullet points, no headers, no asterisks`;
 }
