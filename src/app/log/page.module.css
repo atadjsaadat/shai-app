@@ -88,6 +88,47 @@
   opacity: 0.6;
 }
 
+/* ── Quick picks ─────────────────────────────────────── */
+.quickPicksRow {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 16px 4px;
+  background: var(--cream);
+}
+
+.quickPickChip {
+  display: flex;
+  align-items: center;
+  background: var(--oat);
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.quickPickName {
+  padding: 6px 10px 6px 12px;
+  background: none;
+  border: none;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.quickPickRemove {
+  padding: 6px 10px 6px 2px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
 /* ── AI disclosure ───────────────────────────────────── */
 .aiDisclosure {
   flex-shrink: 0;

@@ -6,6 +6,7 @@ import SHAiPresence from '@/components/SHAiPresence';
 import styles from './page.module.css';
 import { saveFoodLog } from '@/lib/log/save';
 import type { LogMessage, ParseApiResponse, MealType, ParsedFoodItem } from '@/lib/log/types';
+import type { QuickPick } from '@/app/api/log/quick-picks/route';
 
 const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack', 'hydration'];
 const MEAL_LABELS: Record<MealType, string> = {
@@ -84,9 +85,50 @@ export default function LogPage() {
   const [parsedData, setParsedData] = useState<ParseApiResponse | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [childValidated, setChildValidated] = useState(false);
+  const [quickPicks, setQuickPicks] = useState<QuickPick[]>([]);
+  const [hiddenPicks, setHiddenPicks] = useState<Set<string>>(new Set());
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const loadQuickPicks = useCallback((meal: MealType) => {
+    const key = `shai_hidden_picks_${meal}`;
+    const hidden = JSON.parse(localStorage.getItem(key) ?? '[]') as string[];
+    setHiddenPicks(new Set(hidden));
+    fetch(`/api/log/quick-picks?mealType=${meal}`)
+      .then((r) => r.json())
+      .then((json) => setQuickPicks(json.picks ?? []))
+      .catch(() => {});
+  }, []);
+
+  const handleQuickPick = (pick: QuickPick) => {
+    const foodItem: ParsedFoodItem = {
+      food_name: pick.food_name,
+      serving_size_description: pick.serving_size_description ?? '',
+      calories_kcal: pick.calories_kcal, protein_g: pick.protein_g,
+      carbs_g: pick.carbs_g, fat_g: pick.fat_g, fibre_g: pick.fibre_g,
+      sugar_g: pick.sugar_g, saturated_fat_g: pick.saturated_fat_g, sodium_mg: pick.sodium_mg, iron_mg: pick.iron_mg,
+      calcium_mg: pick.calcium_mg, vitamin_c_mg: pick.vitamin_c_mg,
+      vitamin_a_mcg: pick.vitamin_a_mcg, vitamin_d_mcg: pick.vitamin_d_mcg,
+      zinc_mg: pick.zinc_mg, omega3_mg: pick.omega3_mg, b12_mcg: pick.b12_mcg,
+      b6_mg: pick.b6_mg, folate_mcg: pick.folate_mcg, magnesium_mg: pick.magnesium_mg,
+      potassium_mg: pick.potassium_mg, omega6_mg: pick.omega6_mg,
+      iodine_mcg: pick.iodine_mcg, selenium_mcg: pick.selenium_mcg,
+      phosphorus_mg: pick.phosphorus_mg, choline_mg: pick.choline_mg,
+      dha_mg: pick.dha_mg, vitamin_k_mcg: pick.vitamin_k_mcg,
+      confidence_score: 0.9,
+    };
+    setParsedData({ message: '', foodItems: [foodItem], clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: true });
+    setPhase('confirming');
+  };
+
+  const handleHidePick = (foodName: string) => {
+    const key = `shai_hidden_picks_${mealType}`;
+    const existing = JSON.parse(localStorage.getItem(key) ?? '[]') as string[];
+    const updated = Array.from(new Set([...existing, foodName.toLowerCase().trim()]));
+    localStorage.setItem(key, JSON.stringify(updated));
+    setHiddenPicks(new Set(updated));
+  };
 
   // Always resolve child from DB; localStorage is just a cache for same-device speed
   useEffect(() => {
@@ -113,6 +155,10 @@ export default function LogPage() {
         else router.replace('/onboarding');
       });
   }, [router]);
+
+  useEffect(() => {
+    if (childValidated) loadQuickPicks(mealType);
+  }, [mealType, childValidated, loadQuickPicks]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -234,6 +280,7 @@ export default function LogPage() {
     localStorage.removeItem(`shai_weekly_summary_${monday}`);
 
     setPhase('saved');
+    loadQuickPicks(mealType);
   };
 
   const handleEdit = () => {
@@ -291,6 +338,24 @@ export default function LogPage() {
           </button>
         ))}
       </div>
+
+      {/* ── Quick picks ── */}
+      {phase === 'chatting' && quickPicks.some((p) => !hiddenPicks.has(p.food_name.toLowerCase().trim())) && (
+        <div className={styles.quickPicksRow}>
+          {quickPicks
+            .filter((p) => !hiddenPicks.has(p.food_name.toLowerCase().trim()))
+            .map((pick) => (
+              <div key={pick.food_name} className={styles.quickPickChip}>
+                <button className={styles.quickPickName} onClick={() => handleQuickPick(pick)}>
+                  {pick.food_name}
+                </button>
+                <button className={styles.quickPickRemove} onClick={() => handleHidePick(pick.food_name)} aria-label="Remove">
+                  ×
+                </button>
+              </div>
+            ))}
+        </div>
+      )}
 
       <p className={styles.aiDisclosure}>SHAI is an AI assistant.</p>
 
