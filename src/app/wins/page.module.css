@@ -1,0 +1,241 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--cream);
+}
+
+/* ── Header ──────────────────────────────────────────── */
+.header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 12px;
+  border-bottom: 1px solid var(--oat-dark);
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.addBtn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #7A9E7E;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.addBtn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ── Content ─────────────────────────────────────────── */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 16px 100px;
+}
+
+/* ── Empty state ─────────────────────────────────────── */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 60px 24px;
+  text-align: center;
+}
+
+.emptyText {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  font-weight: 500;
+  max-width: 280px;
+}
+
+/* ── Win list ────────────────────────────────────────── */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  background: #D4E8D6;
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.winType {
+  font-size: 14px;
+  font-weight: 800;
+  color: #4A7050;
+}
+
+.cardMeta {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  color: #4A7050;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.foodInvolved {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.note {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  font-weight: 500;
+}
+
+/* ── Add form overlay ────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: flex-end;
+  z-index: 100;
+}
+
+.form {
+  width: 100%;
+  background: var(--cream);
+  border-radius: 24px 24px 0 0;
+  padding: 24px 20px;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.formTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.typeGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.typeBtn {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1.5px solid var(--oat-dark);
+  background: var(--oat);
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.typeBtnActive {
+  background: #D4E8D6;
+  border-color: #7A9E7E;
+  color: #4A7050;
+}
+
+.input {
+  background: var(--oat);
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 15px;
+  color: var(--text-primary);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.input::placeholder { color: var(--text-muted); }
+.input:focus { border-color: #7A9E7E; }
+
+.textarea {
+  background: var(--oat);
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 15px;
+  color: var(--text-primary);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
+  line-height: 1.5;
+}
+
+.textarea::placeholder { color: var(--text-muted); }
+.textarea:focus { border-color: #7A9E7E; }
+
+.formBtns {
+  display: flex;
+  gap: 10px;
+}
+
+.cancelBtn {
+  flex: 1;
+  background: none;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 14px;
+  padding: 13px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.saveBtn {
+  flex: 2;
+  background: #7A9E7E;
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 13px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.saveBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
