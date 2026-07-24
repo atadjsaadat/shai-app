@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import BottomNav from '@/components/BottomNav';
 import SHAiPresence from '@/components/SHAiPresence';
+import { compressPhoto } from '@/lib/storage/upload';
 import styles from './page.module.css';
 
 interface Win {
@@ -13,6 +14,7 @@ interface Win {
   food_involved: string | null;
   parent_note: string | null;
   child_age_days: number | null;
+  photo_url: string | null;
 }
 
 const WIN_TYPES = [
@@ -50,6 +52,9 @@ export default function WinsPage() {
   const [foodInvolved, setFoodInvolved] = useState('');
   const [parentNote, setParentNote] = useState('');
   const [saving, setSaving] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch('/api/wins')
@@ -61,13 +66,31 @@ export default function WinsPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  };
+
   const handleSave = async () => {
     if (saving) return;
     setSaving(true);
+
+    let photo_url: string | null = null;
+    if (photoFile) {
+      const compressed = await compressPhoto(photoFile);
+      const form = new FormData();
+      form.append('photo', compressed, 'photo.jpg');
+      const uploadRes = await fetch('/api/wins/upload', { method: 'POST', body: form });
+      const uploadJson = await uploadRes.json();
+      photo_url = uploadJson.url ?? null;
+    }
+
     const res = await fetch('/api/wins', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ win_type: winType, food_involved: foodInvolved, parent_note: parentNote }),
+      body: JSON.stringify({ win_type: winType, food_involved: foodInvolved, parent_note: parentNote, photo_url }),
     });
     const json = await res.json();
     if (json.win) {
@@ -76,6 +99,8 @@ export default function WinsPage() {
       setWinType('new_food');
       setFoodInvolved('');
       setParentNote('');
+      setPhotoFile(null);
+      if (photoPreview) { URL.revokeObjectURL(photoPreview); setPhotoPreview(null); }
     }
     setSaving(false);
   };
@@ -109,6 +134,10 @@ export default function WinsPage() {
                     <span>{formatDate(win.logged_at)}</span>
                   </span>
                 </div>
+                {win.photo_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={win.photo_url} alt="Food photo" className={styles.cardPhoto} />
+                )}
                 {win.food_involved && (
                   <p className={styles.foodInvolved}>{win.food_involved}</p>
                 )}
@@ -137,6 +166,26 @@ export default function WinsPage() {
                 </button>
               ))}
             </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className={styles.fileInput}
+              onChange={handlePhotoSelect}
+            />
+            {photoPreview ? (
+              <div className={styles.previewWrap}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={photoPreview} alt="Food photo preview" className={styles.preview} />
+                <button className={styles.removePhoto} onClick={() => { setPhotoFile(null); if (photoPreview) URL.revokeObjectURL(photoPreview); setPhotoPreview(null); }}>×</button>
+              </div>
+            ) : (
+              <button className={styles.photoBtn} onClick={() => fileInputRef.current?.click()}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                Add a photo of the food (optional)
+              </button>
+            )}
 
             <input
               className={styles.input}

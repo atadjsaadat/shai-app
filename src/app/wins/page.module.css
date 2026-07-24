@@ -169,6 +169,67 @@
   color: #4A7050;
 }
 
+.fileInput {
+  display: none;
+}
+
+.photoBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 14px;
+  background: var(--oat);
+  border: 1.5px dashed var(--oat-dark);
+  border-radius: 12px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: left;
+}
+
+.previewWrap {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  height: 160px;
+}
+
+.preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.removePhoto {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.5);
+  border: none;
+  color: white;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardPhoto {
+  width: 100%;
+  border-radius: 10px;
+  object-fit: cover;
+  max-height: 200px;
+  display: block;
+}
+
 .input {
   background: var(--oat);
   border: 1.5px solid var(--oat-dark);

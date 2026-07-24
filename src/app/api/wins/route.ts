@@ -17,7 +17,7 @@ export async function GET() {
 
   const { data: wins, error } = await admin
     .from('wins')
-    .select('id, logged_at, win_type, food_involved, parent_note, child_age_days')
+    .select('id, logged_at, win_type, food_involved, parent_note, child_age_days, photo_url')
     .eq('child_id', child.id)
     .order('logged_at', { ascending: false })
 
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-  const { win_type, food_involved, parent_note } = await req.json()
+  const { win_type, food_involved, parent_note, photo_url } = await req.json()
   if (!win_type) return NextResponse.json({ error: 'win_type required' }, { status: 400 })
 
   const admin = createAdminClient()
@@ -61,10 +61,11 @@ export async function POST(req: NextRequest) {
       win_type,
       food_involved: food_involved || null,
       parent_note: parent_note || null,
+      photo_url: photo_url || null,
       child_age_days,
       season,
     })
-    .select('id, logged_at, win_type, food_involved, parent_note, child_age_days')
+    .select('id, logged_at, win_type, food_involved, parent_note, child_age_days, photo_url')
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
