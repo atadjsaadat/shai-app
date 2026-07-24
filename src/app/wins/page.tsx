@@ -27,12 +27,12 @@ const WIN_TYPES = [
 ];
 
 const WIN_COLOURS: Record<string, { bg: string; text: string; badge: string }> = {
-  new_food:    { bg: '#D4E8D6', text: '#4A7050', badge: '#7A9E7E' },  // sage green
-  ate_well:    { bg: '#F0D5C8', text: '#9E5035', badge: '#C4714A' },  // terracotta
-  new_texture: { bg: '#D0E4F0', text: '#2E5C7A', badge: '#7AA5C4' },  // soft blue
-  self_fed:    { bg: '#F5E8C0', text: '#7A5810', badge: '#D4A72C' },  // warm gold
-  family_meal: { bg: '#E4D8F0', text: '#5A3F80', badge: '#A67BC4' },  // soft lavender
-  other:       { bg: '#F0D8E4', text: '#803050', badge: '#C47A8A' },  // dusty rose
+  new_food:    { bg: '#D4E8D6', text: '#4A7050', badge: '#7A9E7E' },
+  ate_well:    { bg: '#F0D5C8', text: '#9E5035', badge: '#C4714A' },
+  new_texture: { bg: '#D0E4F0', text: '#2E5C7A', badge: '#7AA5C4' },
+  self_fed:    { bg: '#F5E8C0', text: '#7A5810', badge: '#D4A72C' },
+  family_meal: { bg: '#E4D8F0', text: '#5A3F80', badge: '#A67BC4' },
+  other:       { bg: '#F0D8E4', text: '#803050', badge: '#C47A8A' },
 };
 
 function winTypeLabel(value: string): string {
@@ -43,7 +43,20 @@ function winColour(value: string) {
   return WIN_COLOURS[value] ?? WIN_COLOURS['new_food'];
 }
 
+function formatAge(days: number | null): string {
+  if (days == null) return '';
+  if (days < 30) return `${days} days old`;
+  if (days < 365) return `${Math.floor(days / 30)} months old`;
+  const y = Math.floor(days / 365);
+  const m = Math.floor((days % 365) / 30);
+  return m > 0 ? `${y}y ${m}mo old` : `${y} years old`;
+}
+
 function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function formatDateShort(iso: string): string {
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
@@ -52,6 +65,7 @@ export default function WinsPage() {
   const [wins, setWins] = useState<Win[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [selectedWin, setSelectedWin] = useState<Win | null>(null);
   const [winType, setWinType] = useState('new_food');
   const [foodInvolved, setFoodInvolved] = useState('');
   const [parentNote, setParentNote] = useState('');
@@ -149,9 +163,7 @@ export default function WinsPage() {
         <div className={styles.filterRow}>
           <button
             className={styles.filterChip}
-            style={!activeFilter
-              ? { background: '#3D2B1F', color: '#fff', borderColor: '#3D2B1F' }
-              : {}}
+            style={!activeFilter ? { background: '#3D2B1F', color: '#fff', borderColor: '#3D2B1F' } : {}}
             onClick={() => setActiveFilter('')}
           >
             All
@@ -190,7 +202,12 @@ export default function WinsPage() {
             {filteredWins.map((win) => {
               const c = winColour(win.win_type);
               return (
-                <div key={win.id} className={styles.card}>
+                <div
+                  key={win.id}
+                  className={styles.card}
+                  style={!win.photo_url ? { background: c.bg } : {}}
+                  onClick={() => setSelectedWin(win)}
+                >
                   {win.photo_url ? (
                     <>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -205,10 +222,10 @@ export default function WinsPage() {
                       )}
                     </>
                   ) : (
-                    <div className={styles.cardText} style={{ background: c.bg }}>
+                    <div className={styles.cardText}>
                       <span className={styles.tileType} style={{ color: c.badge }}>{winTypeLabel(win.win_type)}</span>
                       {win.food_involved && <span className={styles.tileFood} style={{ color: c.text }}>{win.food_involved}</span>}
-                      <span className={styles.tileDate} style={{ color: c.text, opacity: 0.65 }}>{formatDate(win.logged_at)}</span>
+                      <span className={styles.tileDate} style={{ color: c.text, opacity: 0.65 }}>{formatDateShort(win.logged_at)}</span>
                     </div>
                   )}
                 </div>
@@ -218,6 +235,76 @@ export default function WinsPage() {
         )}
       </div>
 
+      {/* ── Win detail sheet ── */}
+      {selectedWin && (() => {
+        const w = selectedWin;
+        const c = winColour(w.win_type);
+        return (
+          <div className={styles.detailOverlay} onClick={() => setSelectedWin(null)}>
+            <div className={styles.detailSheet} onClick={(e) => e.stopPropagation()}>
+              {/* Photo or colour band */}
+              {w.photo_url ? (
+                <div className={styles.detailPhotoWrap}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={w.photo_url} alt="Food photo" className={styles.detailPhoto} />
+                </div>
+              ) : (
+                <div className={styles.detailBand} style={{ background: c.bg }} />
+              )}
+
+              {/* Close button */}
+              <button className={styles.detailClose} onClick={() => setSelectedWin(null)} aria-label="Close">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+
+              <div className={styles.detailBody}>
+                {/* Badge + food name */}
+                <span className={styles.detailBadge} style={{ background: c.bg, color: c.text, borderColor: c.badge }}>
+                  {winTypeLabel(w.win_type)}
+                </span>
+
+                {w.food_involved && (
+                  <h2 className={styles.detailFood}>{w.food_involved}</h2>
+                )}
+
+                {/* Date + age */}
+                <div className={styles.detailMeta}>
+                  <div className={styles.detailMetaRow}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span>{formatDate(w.logged_at)}</span>
+                  </div>
+                  {w.child_age_days != null && (
+                    <div className={styles.detailMetaRow}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/></svg>
+                      <span>{formatAge(w.child_age_days)}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Parent note */}
+                {w.parent_note && (
+                  <div className={styles.detailNote}>
+                    <p className={styles.detailNoteLabel}>What happened</p>
+                    <p className={styles.detailNoteText}>{w.parent_note}</p>
+                  </div>
+                )}
+
+                {/* Recipe placeholder — SHAI AI suggestions coming in v2 */}
+                {w.food_involved && (
+                  <div className={styles.detailRecipe}>
+                    <p className={styles.detailRecipeLabel}>Serving ideas</p>
+                    <p className={styles.detailRecipeText}>AI-powered serving and recipe suggestions for {w.food_involved} coming soon.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── Add form overlay ── */}
       {showForm && (
         <div className={styles.overlay} onClick={() => setShowForm(false)}>
           <div className={styles.form} onClick={(e) => e.stopPropagation()}>
