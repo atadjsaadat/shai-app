@@ -75,6 +75,9 @@ export default function WinsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('');
+  const [editingNote, setEditingNote] = useState(false);
+  const [noteText, setNoteText] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
 
   useEffect(() => {
     fetch('/api/wins')
@@ -85,6 +88,29 @@ export default function WinsPage() {
       })
       .finally(() => setLoading(false));
   }, [router]);
+
+  useEffect(() => {
+    setEditingNote(false);
+    setNoteText(selectedWin?.parent_note ?? '');
+  }, [selectedWin]);
+
+  const handleSaveNote = async () => {
+    if (!selectedWin || savingNote) return;
+    setSavingNote(true);
+    const res = await fetch(`/api/wins/${selectedWin.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parent_note: noteText }),
+    });
+    const json = await res.json();
+    if (json.win) {
+      const updated = { ...selectedWin, parent_note: json.win.parent_note };
+      setSelectedWin(updated);
+      setWins((prev) => prev.map((w) => w.id === updated.id ? updated : w));
+      setEditingNote(false);
+    }
+    setSavingNote(false);
+  };
 
   const filteredWins = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -283,19 +309,51 @@ export default function WinsPage() {
                   )}
                 </div>
 
-                {/* Parent note */}
-                {w.parent_note && (
-                  <div className={styles.detailNote}>
-                    <p className={styles.detailNoteLabel}>What happened</p>
-                    <p className={styles.detailNoteText}>{w.parent_note}</p>
+                {/* Notes — editable */}
+                <div className={styles.detailNote}>
+                  <div className={styles.detailNoteLabelRow}>
+                    <p className={styles.detailNoteLabel}>Notes</p>
+                    {!editingNote && (
+                      <button className={styles.editNoteBtn} onClick={() => setEditingNote(true)} aria-label="Edit note">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                      </button>
+                    )}
                   </div>
-                )}
+                  {editingNote ? (
+                    <>
+                      <textarea
+                        className={styles.noteTextarea}
+                        value={noteText}
+                        onChange={(e) => setNoteText(e.target.value)}
+                        placeholder="Add a note…"
+                        rows={3}
+                        autoFocus
+                      />
+                      <div className={styles.noteBtns}>
+                        <button className={styles.noteCancelBtn} onClick={() => { setEditingNote(false); setNoteText(w.parent_note ?? ''); }}>Cancel</button>
+                        <button className={styles.noteSaveBtn} onClick={handleSaveNote} disabled={savingNote}>
+                          {savingNote ? 'Saving…' : 'Save'}
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <p className={styles.detailNoteText} onClick={() => setEditingNote(true)}>
+                      {w.parent_note || <span className={styles.notePlaceholder}>Tap to add a note…</span>}
+                    </p>
+                  )}
+                </div>
 
-                {/* Recipe placeholder — SHAI AI suggestions coming in v2 */}
+                {/* Recipes — v2 AI feature */}
                 {w.food_involved && (
                   <div className={styles.detailRecipe}>
-                    <p className={styles.detailRecipeLabel}>Serving ideas</p>
-                    <p className={styles.detailRecipeText}>AI-powered serving and recipe suggestions for {w.food_involved} coming soon.</p>
+                    <p className={styles.detailRecipeLabel}>Recipes</p>
+                    <p className={styles.detailRecipeText}>
+                      Coming in v2 — personalised recipe ideas for {w.food_involved},{' '}
+                      based on your child&apos;s logs, allergies, texture preferences, and nutritional gaps.
+                    </p>
                   </div>
                 )}
               </div>
