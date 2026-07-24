@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import BottomNav from '@/components/BottomNav';
 import SHAiPresence from '@/components/SHAiPresence';
@@ -26,17 +26,21 @@ const WIN_TYPES = [
   { value: 'other',       label: 'Something else' },
 ];
 
+const WIN_COLOURS: Record<string, { bg: string; text: string; badge: string }> = {
+  new_food:    { bg: '#D4E8D6', text: '#4A7050', badge: '#7A9E7E' },  // sage green
+  ate_well:    { bg: '#F0D5C8', text: '#9E5035', badge: '#C4714A' },  // terracotta
+  new_texture: { bg: '#D0E4F0', text: '#2E5C7A', badge: '#7AA5C4' },  // soft blue
+  self_fed:    { bg: '#F5E8C0', text: '#7A5810', badge: '#D4A72C' },  // warm gold
+  family_meal: { bg: '#E4D8F0', text: '#5A3F80', badge: '#A67BC4' },  // soft lavender
+  other:       { bg: '#F0D8E4', text: '#803050', badge: '#C47A8A' },  // dusty rose
+};
+
 function winTypeLabel(value: string): string {
   return WIN_TYPES.find((t) => t.value === value)?.label ?? value;
 }
 
-function formatAge(days: number | null): string {
-  if (days == null) return '';
-  if (days < 30) return `${days}d old`;
-  if (days < 365) return `${Math.floor(days / 30)}mo old`;
-  const y = Math.floor(days / 365);
-  const m = Math.floor((days % 365) / 30);
-  return m > 0 ? `${y}y ${m}mo old` : `${y}y old`;
+function winColour(value: string) {
+  return WIN_COLOURS[value] ?? WIN_COLOURS['new_food'];
 }
 
 function formatDate(iso: string): string {
@@ -55,6 +59,8 @@ export default function WinsPage() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [search, setSearch] = useState('');
+  const [activeFilter, setActiveFilter] = useState('');
 
   useEffect(() => {
     fetch('/api/wins')
@@ -65,6 +71,13 @@ export default function WinsPage() {
       })
       .finally(() => setLoading(false));
   }, [router]);
+
+  const filteredWins = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return wins
+      .filter((w) => !activeFilter || w.win_type === activeFilter)
+      .filter((w) => !q || [w.food_involved, w.parent_note].some((s) => s?.toLowerCase().includes(q)));
+  }, [wins, search, activeFilter]);
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -117,34 +130,90 @@ export default function WinsPage() {
         </button>
       </div>
 
+      <div className={styles.controls}>
+        <div className={styles.searchWrap}>
+          <svg className={styles.searchIcon} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            className={styles.searchInput}
+            placeholder="Search wins…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          {search && (
+            <button className={styles.searchClear} onClick={() => setSearch('')}>×</button>
+          )}
+        </div>
+
+        <div className={styles.filterRow}>
+          <button
+            className={styles.filterChip}
+            style={!activeFilter
+              ? { background: '#3D2B1F', color: '#fff', borderColor: '#3D2B1F' }
+              : {}}
+            onClick={() => setActiveFilter('')}
+          >
+            All
+          </button>
+          {WIN_TYPES.map((t) => {
+            const c = WIN_COLOURS[t.value];
+            const isActive = activeFilter === t.value;
+            return (
+              <button
+                key={t.value}
+                className={styles.filterChip}
+                style={isActive
+                  ? { background: c.badge, color: '#fff', borderColor: c.badge }
+                  : { borderColor: c.badge, color: c.text }}
+                onClick={() => setActiveFilter(isActive ? '' : t.value)}
+              >
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className={styles.content}>
-        {loading ? null : wins.length === 0 ? (
+        {loading ? null : filteredWins.length === 0 ? (
           <div className={styles.empty}>
             <SHAiPresence expression="default" size={48} />
-            <p className={styles.emptyText}>Every little win belongs here — first tastes, brave bites, happy meals. Tap + to add your first one.</p>
+            <p className={styles.emptyText}>
+              {wins.length === 0
+                ? 'Every little win belongs here — first tastes, brave bites, happy meals. Tap + to add your first one.'
+                : 'No wins match that search.'}
+            </p>
           </div>
         ) : (
           <div className={styles.list}>
-            {wins.map((win) => (
-              <div key={win.id} className={styles.card}>
-                {win.photo_url ? (
-                  <>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={win.photo_url} alt="Food photo" className={styles.cardPhoto} />
-                    <div className={styles.cardOverlay}>
-                      <span className={styles.overlayType}>{winTypeLabel(win.win_type)}</span>
-                      {win.food_involved && <span className={styles.overlayFood}>{win.food_involved}</span>}
+            {filteredWins.map((win) => {
+              const c = winColour(win.win_type);
+              return (
+                <div key={win.id} className={styles.card}>
+                  {win.photo_url ? (
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={win.photo_url} alt="Food photo" className={styles.cardPhoto} />
+                      <span className={styles.badge} style={{ background: c.badge }}>
+                        {winTypeLabel(win.win_type)}
+                      </span>
+                      {win.food_involved && (
+                        <div className={styles.cardOverlay}>
+                          <span className={styles.overlayFood}>{win.food_involved}</span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className={styles.cardText} style={{ background: c.bg }}>
+                      <span className={styles.tileType} style={{ color: c.badge }}>{winTypeLabel(win.win_type)}</span>
+                      {win.food_involved && <span className={styles.tileFood} style={{ color: c.text }}>{win.food_involved}</span>}
+                      <span className={styles.tileDate} style={{ color: c.text, opacity: 0.65 }}>{formatDate(win.logged_at)}</span>
                     </div>
-                  </>
-                ) : (
-                  <div className={styles.cardText}>
-                    <span className={styles.tileType}>{winTypeLabel(win.win_type)}</span>
-                    {win.food_involved && <span className={styles.tileFood}>{win.food_involved}</span>}
-                    <span className={styles.tileDate}>{formatDate(win.logged_at)}</span>
-                  </div>
-                )}
-              </div>
-            ))}
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -155,15 +224,20 @@ export default function WinsPage() {
             <h2 className={styles.formTitle}>Add a win</h2>
 
             <div className={styles.typeGrid}>
-              {WIN_TYPES.map((t) => (
-                <button
-                  key={t.value}
-                  className={`${styles.typeBtn} ${winType === t.value ? styles.typeBtnActive : ''}`}
-                  onClick={() => setWinType(t.value)}
-                >
-                  {t.label}
-                </button>
-              ))}
+              {WIN_TYPES.map((t) => {
+                const c = WIN_COLOURS[t.value];
+                const isActive = winType === t.value;
+                return (
+                  <button
+                    key={t.value}
+                    className={`${styles.typeBtn} ${isActive ? styles.typeBtnActive : ''}`}
+                    style={isActive ? { background: c.bg, borderColor: c.badge, color: c.text } : {}}
+                    onClick={() => setWinType(t.value)}
+                  >
+                    {t.label}
+                  </button>
+                );
+              })}
             </div>
 
             <input
@@ -177,11 +251,19 @@ export default function WinsPage() {
               <div className={styles.previewWrap}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={photoPreview} alt="Food photo preview" className={styles.preview} />
-                <button className={styles.removePhoto} onClick={() => { setPhotoFile(null); if (photoPreview) URL.revokeObjectURL(photoPreview); setPhotoPreview(null); }}>×</button>
+                <button className={styles.removePhoto} onClick={() => {
+                  setPhotoFile(null);
+                  if (photoPreview) URL.revokeObjectURL(photoPreview);
+                  setPhotoPreview(null);
+                }}>×</button>
               </div>
             ) : (
               <button className={styles.photoBtn} onClick={() => fileInputRef.current?.click()}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
                 Add a photo of the food (optional)
               </button>
             )}
