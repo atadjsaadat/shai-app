@@ -127,22 +127,21 @@ export default function WinsPage() {
           <div className={styles.list}>
             {wins.map((win) => (
               <div key={win.id} className={styles.card}>
-                <div className={styles.cardTop}>
-                  <span className={styles.winType}>{winTypeLabel(win.win_type)}</span>
-                  <span className={styles.cardMeta}>
-                    {formatAge(win.child_age_days) && <span>{formatAge(win.child_age_days)}</span>}
-                    <span>{formatDate(win.logged_at)}</span>
-                  </span>
-                </div>
-                {win.photo_url && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={win.photo_url} alt="Food photo" className={styles.cardPhoto} />
-                )}
-                {win.food_involved && (
-                  <p className={styles.foodInvolved}>{win.food_involved}</p>
-                )}
-                {win.parent_note && (
-                  <p className={styles.note}>{win.parent_note}</p>
+                {win.photo_url ? (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={win.photo_url} alt="Food photo" className={styles.cardPhoto} />
+                    <div className={styles.cardOverlay}>
+                      <span className={styles.overlayType}>{winTypeLabel(win.win_type)}</span>
+                      {win.food_involved && <span className={styles.overlayFood}>{win.food_involved}</span>}
+                    </div>
+                  </>
+                ) : (
+                  <div className={styles.cardText}>
+                    <span className={styles.tileType}>{winTypeLabel(win.win_type)}</span>
+                    {win.food_involved && <span className={styles.tileFood}>{win.food_involved}</span>}
+                    <span className={styles.tileDate}>{formatDate(win.logged_at)}</span>
+                  </div>
                 )}
               </div>
             ))}
