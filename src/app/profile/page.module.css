@@ -1,0 +1,263 @@
+.page {
+  min-height: 100dvh;
+  background: var(--cream);
+  padding: 60px 20px 0;
+  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* ── Header ──────────────────────────────────────────── */
+.topBar {
+  margin-bottom: 4px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.loadingHint {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 40px;
+}
+
+/* ── Child hero ──────────────────────────────────────── */
+.heroCard {
+  background: var(--oat);
+  border-radius: 24px;
+  padding: 24px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--terracotta);
+  color: #fff;
+  font-size: 30px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.childName {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.childAge {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.relationChip {
+  background: var(--oat-dark);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-top: 4px;
+}
+
+/* ── Generic card ────────────────────────────────────── */
+.card {
+  background: var(--oat);
+  border-radius: 20px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cardTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Detail rows ─────────────────────────────────────── */
+.detailRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.detailLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.detailValue {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-align: right;
+  word-break: break-all;
+}
+
+/* ── Chips ───────────────────────────────────────────── */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.chip {
+  background: var(--oat-dark);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.chipAmber {
+  background: #FFF3CD;
+  color: #856404;
+}
+
+/* ── Tier badge ──────────────────────────────────────── */
+.tierBadge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.tierFree {
+  background: var(--oat-dark);
+  color: var(--text-secondary);
+}
+
+.tierPremium {
+  background: var(--terracotta);
+  color: #fff;
+}
+
+.tierClinical {
+  background: #7AA5C4;
+  color: #fff;
+}
+
+/* ── Sign out ─────────────────────────────────────────── */
+.signOutBtn {
+  background: transparent;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 12px;
+  padding: 11px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: opacity 0.15s;
+  width: 100%;
+}
+
+.signOutBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Research consent toggle ─────────────────────────── */
+.toggleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.toggleText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.toggleLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.toggleDesc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.toggleTrack {
+  position: relative;
+  width: 46px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--oat-dark);
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s;
+  margin-top: 2px;
+  padding: 0;
+}
+
+.toggleTrack[data-on="true"] {
+  background: var(--terracotta);
+}
+
+.toggleTrack:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toggleThumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  transition: left 0.2s;
+}
+
+.toggleTrack[data-on="true"] .toggleThumb {
+  left: 23px;
+}
+
+/* ── Community / coming soon ─────────────────────────── */
+.comingSoonText {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* ── AI disclosure ───────────────────────────────────── */
+.disclosure {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  padding-bottom: 4px;
+}
