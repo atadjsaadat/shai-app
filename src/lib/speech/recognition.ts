@@ -20,8 +20,9 @@ function applyPunctuation(text: string): string {
   for (const [pattern, replacement] of PUNCT_MAP) {
     out = out.replace(pattern, replacement)
   }
-  // Trim spaces before punctuation that was just inserted
+  // Trim spaces before inserted punctuation; capitalise sentence starts
   out = out.replace(/\s+([.,?!:;])/g, '$1')
+  out = out.replace(/^([a-z])|([.?!] )([a-z])/g, (_, g1, g2, g3) => g1 ? g1.toUpperCase() : g2 + g3.toUpperCase())
   return out
 }
 

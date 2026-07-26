@@ -93,6 +93,7 @@ export default function LogPage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const speechRef = useRef<ReturnType<typeof createSpeechRecognition> | null>(null);
   const [logListening, setLogListening] = useState(false);
+  const [logCleaning, setLogCleaning] = useState(false);
 
   const loadQuickPicks = useCallback((meal: MealType) => {
     const key = `shai_hidden_picks_${meal}`;
@@ -138,12 +139,25 @@ export default function LogPage() {
     return () => { speechRef.current?.stop(); };
   }, []);
 
-  function toggleLogDictation() {
+  async function toggleLogDictation() {
     const speech = speechRef.current;
     if (!speech?.supported) return;
     if (logListening) {
       speech.stop();
       setLogListening(false);
+      if (input.trim()) {
+        setLogCleaning(true);
+        try {
+          const res = await fetch('/api/speech/cleanup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: input }),
+          });
+          const data = await res.json();
+          if (data.text) setInput(data.text);
+        } catch { /* keep original */ }
+        setLogCleaning(false);
+      }
       return;
     }
     setLogListening(true);
@@ -420,15 +434,17 @@ export default function LogPage() {
           <textarea
             ref={textareaRef}
             className={styles.textarea}
-            placeholder="Describe the meal…"
+            placeholder={logCleaning ? 'Tidying up…' : 'Describe the meal…'}
             value={input}
             rows={1}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
+            disabled={logCleaning}
           />
           <button
-            className={`${styles.micBtn}${logListening ? ` ${styles.micBtnActive}` : ''}`}
+            className={`${styles.micBtn}${(logListening || logCleaning) ? ` ${styles.micBtnActive}` : ''}`}
             onClick={toggleLogDictation}
+            disabled={logCleaning}
             aria-label={logListening ? 'Stop dictation' : 'Dictate meal'}
             type="button"
           >
@@ -442,7 +458,7 @@ export default function LogPage() {
           <button
             className={styles.sendBtn}
             onClick={sendMessage}
-            disabled={!input.trim() || isThinking}
+            disabled={!input.trim() || isThinking || logCleaning}
             aria-label="Send"
           >
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
