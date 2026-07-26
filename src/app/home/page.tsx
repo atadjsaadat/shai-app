@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import SHAiPresence from '@/components/SHAiPresence';
 import BottomNav from '@/components/BottomNav';
 import styles from './page.module.css';
@@ -262,7 +263,13 @@ export default function HomePage() {
   return (
     <div className={styles.page}>
       <header className={styles.topBar}>
-        <div>
+        <Link href="/profile" className={styles.profileLink} aria-label="Profile">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+        </Link>
+        <div className={styles.greetingGroup}>
           <p className={styles.greeting}>
             {greeting}{childName ? ` — ${childName}'s day` : ''}
           </p>

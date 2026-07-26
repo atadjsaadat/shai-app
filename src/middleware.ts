@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const PROTECTED = ['/home', '/log', '/trends', '/wins', '/profile', '/onboarding']
+const PROTECTED = ['/home', '/log', '/trends', '/wins', '/profile', '/journey', '/onboarding']
 
 export async function middleware(request: NextRequest) {
   if (process.env.NODE_ENV === 'development') return NextResponse.next()
