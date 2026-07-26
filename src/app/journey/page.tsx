@@ -50,6 +50,7 @@ export default function JourneyPage() {
   const [listening, setListening] = useState(false);
   const [listenTarget, setListenTarget] = useState<'composer' | 'edit'>('composer');
   const [saving, setSaving] = useState(false);
+  const [cleaning, setCleaning] = useState(false);
   const [childId, setChildId] = useState<string | null>(null);
 
   const speechRef = useRef<ReturnType<typeof createSpeechRecognition> | null>(null);
@@ -85,8 +86,40 @@ export default function JourneyPage() {
     setEditInterim('');
   }, []);
 
-  function toggleDictation(target: 'composer' | 'edit') {
-    if (listening) { stopListening(); return; }
+  async function cleanupText(target: 'composer' | 'edit') {
+    const text = target === 'composer' ? composerText : editText;
+    if (!text.trim()) return;
+    setCleaning(true);
+    if (target === 'composer') setComposerInterim('Tidying up…');
+    else setEditInterim('Tidying up…');
+    try {
+      const res = await fetch('/api/speech/cleanup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+      const data = await res.json();
+      if (data.text) {
+        if (target === 'composer') {
+          setComposerText(data.text);
+          setTimeout(() => autoResize(composerRef.current), 0);
+        } else {
+          setEditText(data.text);
+          setTimeout(() => autoResize(editRef.current), 0);
+        }
+      }
+    } catch { /* keep original text */ }
+    if (target === 'composer') setComposerInterim('');
+    else setEditInterim('');
+    setCleaning(false);
+  }
+
+  async function toggleDictation(target: 'composer' | 'edit') {
+    if (listening) {
+      stopListening();
+      await cleanupText(listenTarget);
+      return;
+    }
 
     const speech = speechRef.current;
     if (!speech?.supported) return;
@@ -225,7 +258,7 @@ export default function JourneyPage() {
               <button
                 className={styles.saveBtn}
                 onClick={saveNewEntry}
-                disabled={!composerText.trim() || saving}
+                disabled={!composerText.trim() || saving || cleaning}
               >
                 {saving ? 'Saving…' : 'Save'}
               </button>
@@ -270,7 +303,7 @@ export default function JourneyPage() {
                       <button
                         className={styles.saveBtn}
                         onClick={saveEdit}
-                        disabled={!editText.trim() || saving}
+                        disabled={!editText.trim() || saving || cleaning}
                       >
                         {saving ? 'Saving…' : 'Save'}
                       </button>
