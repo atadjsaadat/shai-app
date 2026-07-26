@@ -1,3 +1,30 @@
+const PUNCT_MAP: [RegExp, string][] = [
+  [/\bfull stop\b/gi, '.'],
+  [/\bperiod\b/gi, '.'],
+  [/\bcomma\b/gi, ','],
+  [/\bquestion mark\b/gi, '?'],
+  [/\bexclamation mark\b/gi, '!'],
+  [/\bexclamation point\b/gi, '!'],
+  [/\bcolon\b/gi, ':'],
+  [/\bsemicolon\b/gi, ';'],
+  [/\bnew line\b/gi, '\n'],
+  [/\bnew paragraph\b/gi, '\n\n'],
+  [/\bdash\b/gi, ' — '],
+  [/\bhyphen\b/gi, '-'],
+  [/\bopen bracket\b/gi, '('],
+  [/\bclose bracket\b/gi, ')'],
+]
+
+function applyPunctuation(text: string): string {
+  let out = text
+  for (const [pattern, replacement] of PUNCT_MAP) {
+    out = out.replace(pattern, replacement)
+  }
+  // Trim spaces before punctuation that was just inserted
+  out = out.replace(/\s+([.,?!:;])/g, '$1')
+  return out
+}
+
 export type SpeechHandler = {
   supported: boolean
   start: (
@@ -37,7 +64,7 @@ export function createSpeechRecognition(): SpeechHandler {
         let interim = ''
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript
-          if (event.results[i].isFinal) onFinal(transcript)
+          if (event.results[i].isFinal) onFinal(applyPunctuation(transcript))
           else interim += transcript
         }
         if (interim) onInterim(interim)
