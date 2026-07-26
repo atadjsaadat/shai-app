@@ -18,25 +18,8 @@
   align-items: center;
 }
 
-.profileLink {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--oat);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary);
-  flex-shrink: 0;
-  text-decoration: none;
-}
-
-.greetingGroup {
-  text-align: center;
-}
-
 .greeting {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 800;
   color: var(--text-primary);
   line-height: 1.2;

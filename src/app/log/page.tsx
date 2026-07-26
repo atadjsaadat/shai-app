@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { createSpeechRecognition } from '@/lib/speech/recognition';
 import { useRouter } from 'next/navigation';
 import SHAiPresence from '@/components/SHAiPresence';
 import styles from './page.module.css';
@@ -90,6 +91,8 @@ export default function LogPage() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const speechRef = useRef<ReturnType<typeof createSpeechRecognition> | null>(null);
+  const [logListening, setLogListening] = useState(false);
 
   const loadQuickPicks = useCallback((meal: MealType) => {
     const key = `shai_hidden_picks_${meal}`;
@@ -129,6 +132,28 @@ export default function LogPage() {
     localStorage.setItem(key, JSON.stringify(updated));
     setHiddenPicks(new Set(updated));
   };
+
+  useEffect(() => {
+    speechRef.current = createSpeechRecognition();
+    return () => { speechRef.current?.stop(); };
+  }, []);
+
+  function toggleLogDictation() {
+    const speech = speechRef.current;
+    if (!speech?.supported) return;
+    if (logListening) {
+      speech.stop();
+      setLogListening(false);
+      return;
+    }
+    setLogListening(true);
+    speech.start(
+      () => {},
+      (final) => setInput(prev => prev + (prev.trimEnd() ? ' ' : '') + final),
+      () => setLogListening(false),
+      () => setLogListening(false),
+    );
+  }
 
   // Always resolve child from DB; localStorage is just a cache for same-device speed
   useEffect(() => {
@@ -401,6 +426,19 @@ export default function LogPage() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
           />
+          <button
+            className={`${styles.micBtn}${logListening ? ` ${styles.micBtnActive}` : ''}`}
+            onClick={toggleLogDictation}
+            aria-label={logListening ? 'Stop dictation' : 'Dictate meal'}
+            type="button"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="9" y="2" width="6" height="11" rx="3" />
+              <path d="M5 10a7 7 0 0 0 14 0" />
+              <line x1="12" y1="19" x2="12" y2="23" />
+              <line x1="9" y1="23" x2="15" y2="23" />
+            </svg>
+          </button>
           <button
             className={styles.sendBtn}
             onClick={sendMessage}

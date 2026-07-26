@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { createClient as createAnthropicClient } from '@/lib/anthropic/client'
 import { buildWeeklySummaryPrompt } from '@/lib/log/prompts'
+import { getJournalContext } from '@/lib/journal/context'
 
 function subtractDays(dateStr: string, days: number): string {
   const [y, m, d] = dateStr.split('-').map(Number)
@@ -122,9 +123,12 @@ export async function GET(request: Request) {
   ]
 
   const anthropic = createAnthropicClient()
+  const journalContext = await getJournalContext(user.id, childId)
+
   const response = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 300,
+    ...(journalContext ? { system: journalContext } : {}),
     messages: [{ role: 'user', content: buildWeeklySummaryPrompt(childName, ageMonths, daysLogged, nutrients) }],
   })
 

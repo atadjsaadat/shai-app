@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAnthropicClient } from '@/lib/anthropic/client'
 import { buildDailyFeedbackPrompt } from '@/lib/log/prompts'
+import { getJournalContext } from '@/lib/journal/context'
 import type { NutrientLine } from '@/lib/log/types'
 
 interface FeedbackRequest {
@@ -18,9 +19,12 @@ export async function POST(req: NextRequest) {
   const { childName, ageMonths, nutrients }: FeedbackRequest = await req.json()
 
   const anthropic = createAnthropicClient()
+  const journalContext = await getJournalContext(user.id)
+
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 200,
+    ...(journalContext ? { system: journalContext } : {}),
     messages: [{ role: 'user', content: buildDailyFeedbackPrompt(childName, ageMonths, nutrients) }],
   })
 
