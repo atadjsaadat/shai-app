@@ -31,6 +31,12 @@ export default function Page() {
         >
           Set this up for your little one
         </a>
+        <p style={{ fontSize: '0.9rem', color: '#B09585', margin: 0 }}>
+          Already have an account?{' '}
+          <a href="/login" style={{ color: '#C4714A', fontWeight: 600, textDecoration: 'none' }}>
+            Sign in
+          </a>
+        </p>
       </div>
     </main>
   )
