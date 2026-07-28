@@ -89,18 +89,20 @@ export default function DemoCarousel() {
       }}
     >
       <div className={styles.track}>
-        <div
-          className={styles.rail}
-          style={{ transform: `translateX(-${current * 100}%)` }}
-        >
-          {slides.map((slide, i) => (
-            <div key={i} className={styles.slide} style={{ background: slide.bg }}>
-              <span className={styles.graphic}>{slide.graphic}</span>
-              <p className={styles.headline}>{slide.headline}</p>
-              <p className={styles.subtext}>{slide.subtext}</p>
-            </div>
-          ))}
-        </div>
+        {slides.map((slide, i) => (
+          <div
+            key={i}
+            className={styles.slide}
+            style={{
+              background: slide.bg,
+              transform: `translateX(${(i - current) * 100}%)`,
+            }}
+          >
+            <span className={styles.graphic}>{slide.graphic}</span>
+            <p className={styles.headline}>{slide.headline}</p>
+            <p className={styles.subtext}>{slide.subtext}</p>
+          </div>
+        ))}
       </div>
 
       <div className={styles.dots}>
