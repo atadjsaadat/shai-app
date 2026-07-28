@@ -11,6 +11,8 @@ interface Props {
 type ScanState = 'starting' | 'scanning' | 'error'
 
 function classifyError(err: Error): string {
+  if (err.message === 'HTTPS_REQUIRED')
+    return 'Camera requires a secure connection. Please open the app at shay-app.vercel.app to use the barcode scanner.'
   const msg = err.message?.toLowerCase() ?? ''
   if (msg.includes('permission') || msg.includes('denied') || msg.includes('notallowed'))
     return 'Camera permission was denied. Please allow camera access and try again.'

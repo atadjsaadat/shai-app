@@ -12,20 +12,20 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const canSubmit = email.length > 0 && password.length > 0 && !loading
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!canSubmit) return
+  const signIn = async () => {
+    if (loading) return
+    // Read DOM directly — captures iOS autofill that doesn't fire onChange
+    const emailVal = (document.getElementById('login-email') as HTMLInputElement | null)?.value ?? email
+    const passwordVal = (document.getElementById('login-password') as HTMLInputElement | null)?.value ?? password
+    if (!emailVal || !passwordVal) return
 
     setLoading(true)
     setError(null)
-
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: emailVal, password: passwordVal }),
       })
       const json = await res.json()
       if (!res.ok) {
@@ -40,32 +40,36 @@ export default function LoginForm() {
     }
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') signIn()
+  }
+
   return (
-    <form onSubmit={handleSubmit} className={styles.form}>
+    <div className={styles.form}>
       <div className={styles.field}>
-        <label className={styles.label} htmlFor="email">Email</label>
+        <label className={styles.label} htmlFor="login-email">Email</label>
         <input
-          id="email"
+          id="login-email"
           type="email"
           value={email}
           onChange={e => setEmail(e.target.value)}
+          onKeyDown={handleKeyDown}
           placeholder="your@email.com"
-          required
           className={styles.input}
           autoComplete="email"
         />
       </div>
 
       <div className={styles.field}>
-        <label className={styles.label} htmlFor="password">Password</label>
+        <label className={styles.label} htmlFor="login-password">Password</label>
         <div className={styles.passwordWrapper}>
           <input
-            id="password"
+            id="login-password"
             type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={e => setPassword(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder="Your password"
-            required
             className={`${styles.input} ${styles.passwordInput}`}
             autoComplete="current-password"
           />
@@ -82,11 +86,16 @@ export default function LoginForm() {
 
       {error && <p className={styles.error}>{error}</p>}
 
-      <button type="submit" disabled={!canSubmit} className={styles.button}>
+      <button
+        type="button"
+        disabled={loading}
+        className={styles.button}
+        onClick={signIn}
+      >
         {loading ? 'Signing in…' : 'Sign in'}
       </button>
 
       <p className={styles.disclosure}>SHAi is an AI assistant.</p>
-    </form>
+    </div>
   )
 }

@@ -7,6 +7,10 @@ export async function startBarcodeScanner(
   onResult: (barcode: string) => void,
   onError: (err: Error) => void,
 ): Promise<() => void> {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    throw new Error('HTTPS_REQUIRED')
+  }
+
   const { BrowserMultiFormatReader, NotFoundException } = await import('@zxing/library')
   const reader = new BrowserMultiFormatReader()
 
