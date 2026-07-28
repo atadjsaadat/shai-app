@@ -31,17 +31,32 @@ const slides = [
 ]
 
 const INTERVAL_MS = 8000
+const N = slides.length
+const GAP = 12 // px gap between cards — visible during transition
 
 export default function DemoCarousel() {
   const [current, setCurrent] = useState(0)
+  const [cardWidth, setCardWidth] = useState(0)
+  const trackRef = useRef<HTMLDivElement>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const startX = useRef(0)
   const startY = useRef(0)
   const swiping = useRef(false)
 
+  // Measure the track so translateX is in exact pixels with a visible gap between cards
+  useEffect(() => {
+    const measure = () => {
+      if (trackRef.current) setCardWidth(trackRef.current.offsetWidth)
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    if (trackRef.current) ro.observe(trackRef.current)
+    return () => ro.disconnect()
+  }, [])
+
   const resetTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current)
-    timerRef.current = setInterval(() => setCurrent(i => (i + 1) % slides.length), INTERVAL_MS)
+    timerRef.current = setInterval(() => setCurrent(i => (i + 1) % N), INTERVAL_MS)
   }
 
   useEffect(() => {
@@ -83,19 +98,24 @@ export default function DemoCarousel() {
       onTouchEnd={e => {
         if (!swiping.current) return
         const d = e.changedTouches[0].clientX - startX.current
-        if (d < -40) goTo((current + 1) % slides.length)
-        if (d > 40) goTo((current - 1 + slides.length) % slides.length)
+        if (d < -40) goTo((current + 1) % N)
+        if (d > 40) goTo((current - 1 + N) % N)
         swiping.current = false
       }}
     >
-      <div className={styles.track}>
+      {/* Invisible clipping window */}
+      <div ref={trackRef} className={styles.track}>
         {slides.map((slide, i) => (
           <div
             key={i}
             className={styles.slide}
             style={{
               background: slide.bg,
-              transform: `translateX(${(i - current) * 100}%)`,
+              // Each card steps (cardWidth + GAP)px from the previous.
+              // The GAP is visible between the exiting and entering card.
+              transform: cardWidth
+                ? `translateX(${(i - current) * (cardWidth + GAP)}px)`
+                : `translateX(${(i - current) * 100}%)`,
             }}
           >
             <span className={styles.graphic}>{slide.graphic}</span>
