@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     meal_type: mealType,
     food_name: item.food_name,
     serving_size_description: item.serving_size_description,
-    data_source: 'ai',
+    data_source: item.data_source ?? 'ai',
     confidence_score: item.confidence_score,
     // Core macros
     calories_kcal:    item.calories_kcal,

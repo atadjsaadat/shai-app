@@ -41,6 +41,7 @@ export interface ParsedFoodItem {
   dha_mg: number | null;
   vitamin_k_mcg: number | null;
   confidence_score: number;
+  data_source?: 'ai' | 'barcode' | 'manual';
 }
 
 export interface LogMessage {

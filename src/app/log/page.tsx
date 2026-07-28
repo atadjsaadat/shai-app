@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { createSpeechRecognition } from '@/lib/speech/recognition';
 import { useRouter } from 'next/navigation';
 import SHAiPresence from '@/components/SHAiPresence';
+import BarcodeScanner from '@/components/BarcodeScanner';
 import styles from './page.module.css';
 import { saveFoodLog } from '@/lib/log/save';
 import type { LogMessage, ParseApiResponse, MealType, ParsedFoodItem } from '@/lib/log/types';
@@ -88,6 +89,7 @@ export default function LogPage() {
   const [childValidated, setChildValidated] = useState(false);
   const [quickPicks, setQuickPicks] = useState<QuickPick[]>([]);
   const [hiddenPicks, setHiddenPicks] = useState<Set<string>>(new Set());
+  const [showScanner, setShowScanner] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -225,6 +227,34 @@ export default function LogPage() {
     setPhase('confirming');
   };
 
+  const handleBarcodeDetect = useCallback(async (barcode: string) => {
+    setShowScanner(false);
+    setIsThinking(true);
+    try {
+      const res = await fetch(`/api/barcode/lookup?barcode=${encodeURIComponent(barcode)}`);
+      if (res.status === 404) {
+        setMessages((prev) => [...prev, {
+          id: generateId(),
+          role: 'assistant',
+          content: "I couldn't find that product. Could you tell me what it is?",
+        }]);
+        return;
+      }
+      if (!res.ok) throw new Error('lookup failed');
+      const { item } = await res.json();
+      setParsedData({ message: '', foodItems: [item], clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: true });
+      setPhase('confirming');
+    } catch {
+      setMessages((prev) => [...prev, {
+        id: generateId(),
+        role: 'assistant',
+        content: "The scan didn't go through — could you describe the meal instead?",
+      }]);
+    } finally {
+      setIsThinking(false);
+    }
+  }, [mealType]);
+
   const sendMessage = useCallback(async () => {
     const text = input.trim();
     if (!text || isThinking || phase !== 'chatting') return;
@@ -349,6 +379,10 @@ export default function LogPage() {
 
   return (
     <div className={styles.screen}>
+      {showScanner && (
+        <BarcodeScanner onDetect={handleBarcodeDetect} onClose={() => setShowScanner(false)} />
+      )}
+
       {/* ── Top bar ── */}
       <div className={styles.topBar}>
         <button className={styles.backBtn} onClick={() => router.push('/home')} aria-label="Back to home">
@@ -441,6 +475,20 @@ export default function LogPage() {
             onKeyDown={handleKeyDown}
             disabled={logCleaning}
           />
+          <button
+            className={styles.barcodeBtn}
+            onClick={() => setShowScanner(true)}
+            aria-label="Scan barcode"
+            type="button"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="4" width="3" height="16" rx="0.5" fill="currentColor" stroke="none" />
+              <rect x="7" y="4" width="1.5" height="16" rx="0.5" fill="currentColor" stroke="none" />
+              <rect x="10.5" y="4" width="3" height="16" rx="0.5" fill="currentColor" stroke="none" />
+              <rect x="15.5" y="4" width="1.5" height="16" rx="0.5" fill="currentColor" stroke="none" />
+              <rect x="19" y="4" width="3" height="16" rx="0.5" fill="currentColor" stroke="none" />
+            </svg>
+          </button>
           <button
             className={`${styles.micBtn}${(logListening || logCleaning) ? ` ${styles.micBtnActive}` : ''}`}
             onClick={toggleLogDictation}

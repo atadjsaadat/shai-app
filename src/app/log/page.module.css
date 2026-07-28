@@ -255,6 +255,26 @@
   border-color: var(--terracotta);
 }
 
+.barcodeBtn {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: none;
+  background: var(--oat-dark);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.barcodeBtn:active {
+  background: var(--terracotta);
+  color: #fff;
+}
+
 .micBtn {
   width: 40px;
   height: 40px;

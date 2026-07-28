@@ -1,0 +1,92 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.closeBtn {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Scanning window — box-shadow darkens everything outside */
+.frame {
+  position: relative;
+  z-index: 1;
+  width: min(280px, 85vw);
+  aspect-ratio: 2.2 / 1;
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.62);
+  border-radius: 4px;
+}
+
+/* Corner brackets */
+.corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-color: white;
+  border-style: solid;
+}
+
+.corner[data-pos='tl'] { top: 0; left: 0; border-width: 3px 0 0 3px; border-radius: 3px 0 0 0; }
+.corner[data-pos='tr'] { top: 0; right: 0; border-width: 3px 3px 0 0; border-radius: 0 3px 0 0; }
+.corner[data-pos='bl'] { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-radius: 0 0 0 3px; }
+.corner[data-pos='br'] { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 3px 0; }
+
+/* Animated scan line */
+.scanLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #C4714A, transparent);
+  box-shadow: 0 0 10px #C4714A;
+  animation: scan 2s ease-in-out infinite;
+}
+
+@keyframes scan {
+  0%   { top: 4px; }
+  50%  { top: calc(100% - 6px); }
+  100% { top: 4px; }
+}
+
+/* Status label */
+.label {
+  position: absolute;
+  bottom: max(48px, calc(env(safe-area-inset-bottom) + 32px));
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-nunito), sans-serif;
+  padding: 0 32px;
+  z-index: 1;
+  line-height: 1.5;
+}

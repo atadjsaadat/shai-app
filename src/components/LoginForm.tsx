@@ -12,7 +12,7 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const canSubmit = email.length > 0 && password.length >= 8 && !loading
+  const canSubmit = email.length > 0 && password.length > 0 && !loading
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
