@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import BottomNav from '@/components/BottomNav';
 import styles from './page.module.css';
@@ -218,6 +219,16 @@ export default function TrendsPage() {
           <div className={styles.premiumBadge}>Coming soon</div>
         </div>
       )}
+
+      <Link href="/growth" className={styles.growthCard}>
+        <div>
+          <p className={styles.growthTitle}>Growth</p>
+          <p className={styles.growthText}>Weight, height and WHO percentile chart</p>
+        </div>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M8 5l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </Link>
 
       <BottomNav />
     </div>
