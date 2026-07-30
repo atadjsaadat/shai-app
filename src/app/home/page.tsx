@@ -277,6 +277,24 @@ export default function HomePage() {
         <p className={styles.shaiMessage}>{shaiMessage}</p>
       </div>
 
+      {!loading && ageMonths < 8 && (
+        <Link href="/newborn" className={styles.newbornCard}>
+          <div className={styles.newbornCardIcon}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <circle cx="12" cy="12" r="2" fill="currentColor"/>
+            </svg>
+          </div>
+          <div className={styles.newbornCardText}>
+            <p className={styles.newbornCardTitle}>Log a feed</p>
+            <p className={styles.newbornCardSub}>Breast, formula or expressed</p>
+          </div>
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M8 5l5 5-5 5"/>
+          </svg>
+        </Link>
+      )}
+
       <section>
         <div className={styles.sectionHeader}>
           <p className={styles.sectionLabel}>Today&apos;s nutrition</p>

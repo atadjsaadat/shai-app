@@ -1,0 +1,439 @@
+.page {
+  min-height: 100dvh;
+  background: var(--cream);
+  padding: 60px 20px 0;
+  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* ── Header ── */
+.topBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.back {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--oat);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ── Timer card ── */
+.timerCard {
+  background: var(--oat);
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.timerCardOverdue {
+  background: #FFF3F0;
+  border: 1.5px solid #F5C4BA;
+}
+
+.timerMain {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.timerLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.timerValue {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.15;
+}
+
+.timerSub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.alarmBox {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--terra-light);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--terra-dark);
+}
+
+.alarmDismiss {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--terra-dark);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+  opacity: 0.6;
+}
+
+/* ── Log button ── */
+.logBtn {
+  width: 100%;
+  padding: 16px;
+  background: var(--terracotta);
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(196, 113, 74, 0.35);
+  transition: opacity 0.15s, transform 0.1s;
+  font-family: inherit;
+}
+
+.logBtn:active {
+  opacity: 0.88;
+  transform: scale(0.98);
+}
+
+/* ── Form ── */
+.formCard {
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+}
+
+.formTitle {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+/* Feed type row */
+.typeRow {
+  display: flex;
+  gap: 8px;
+}
+
+.typeBtn {
+  flex: 1;
+  padding: 10px 6px;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 12px;
+  background: var(--cream);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.typeBtnActive {
+  background: var(--terracotta);
+  border-color: var(--terracotta);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(196, 113, 74, 0.3);
+}
+
+/* Side selector */
+.sideRow {
+  display: flex;
+  gap: 8px;
+}
+
+.sideBtn {
+  flex: 1;
+  padding: 9px 6px;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 10px;
+  background: var(--cream);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.sideBtnActive {
+  background: var(--oat-dark);
+  border-color: var(--text-muted);
+  color: var(--text-primary);
+}
+
+/* Field group */
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fieldLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 12px;
+  background: var(--cream);
+  font-size: 16px;
+  color: var(--text-primary);
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: inherit;
+}
+
+.input:focus { border-color: var(--terracotta); }
+
+/* Reaction chips */
+.chipGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  padding: 8px 14px;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 20px;
+  background: var(--cream);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.chipActive {
+  background: var(--terra-light);
+  border-color: var(--terracotta);
+  color: var(--terra-dark);
+}
+
+.chipGreen {
+  background: var(--sage-light);
+  border-color: var(--sage);
+  color: var(--sage-dark);
+}
+
+/* Alarm toggle */
+.alarmToggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toggle {
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--oat-dark);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.toggleOn { background: var(--terracotta); }
+
+.toggleThumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  transition: transform 0.2s;
+  pointer-events: none;
+}
+
+.toggleOn .toggleThumb { transform: translateX(18px); }
+
+.alarmIntervalRow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.intervalBtn {
+  padding: 8px 12px;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 10px;
+  background: var(--cream);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.intervalBtnActive {
+  background: var(--terracotta);
+  border-color: var(--terracotta);
+  color: #fff;
+}
+
+.errorText {
+  font-size: 13px;
+  color: #C0392B;
+  font-weight: 500;
+}
+
+.formButtons {
+  display: flex;
+  gap: 10px;
+}
+
+.cancelBtn {
+  flex: 1;
+  padding: 13px;
+  background: var(--oat);
+  border: none;
+  border-radius: 13px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.saveBtn {
+  flex: 2;
+  padding: 13px;
+  background: var(--terracotta);
+  border: none;
+  border-radius: 13px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  font-family: inherit;
+}
+
+.saveBtn:disabled { opacity: 0.6; }
+
+/* ── Today's feeds ── */
+.sectionLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.feedList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.feedRow {
+  background: var(--oat);
+  border-radius: 14px;
+  padding: 13px 16px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.feedTime {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-primary);
+  min-width: 44px;
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+
+.feedDetail {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+
+.feedLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.reactionList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.reactionTag {
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--terra-light);
+  color: var(--terra-dark);
+  border-radius: 8px;
+  padding: 3px 8px;
+}
+
+.emptyHint {
+  font-size: 14px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 8px 0;
+  font-weight: 500;
+}

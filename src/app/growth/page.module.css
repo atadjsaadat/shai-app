@@ -53,11 +53,12 @@
 .statCard {
   flex: 1;
   background: var(--oat);
-  border-radius: 14px;
-  padding: 14px 12px;
+  border-radius: 18px;
+  padding: 16px 14px;
   display: flex;
   flex-direction: column;
   gap: 2px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
 .statValue {
@@ -85,8 +86,8 @@
 
 .statPercentile {
   font-size: 12px;
-  color: var(--terracotta);
-  font-weight: 600;
+  color: var(--child-accent, var(--terracotta));
+  font-weight: 700;
   margin-top: 2px;
 }
 
@@ -94,16 +95,16 @@
 .tabs {
   display: flex;
   background: var(--oat);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 3px;
   gap: 3px;
 }
 
 .tab {
   flex: 1;
-  padding: 8px;
+  padding: 9px;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   background: transparent;
   font-size: 13px;
   font-weight: 600;
@@ -112,18 +113,17 @@
   transition: background 0.2s, color 0.2s;
 }
 
+/* Active state background/color applied inline with accent; this provides the pill shape */
 .tabActive {
-  background: #fff;
-  color: var(--terracotta);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* ── Chart ── */
 .chartCard {
-  background: #fff;
-  border-radius: 16px;
-  padding: 16px 12px 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border-radius: 20px;
+  padding: 16px 12px 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+  /* background applied inline with accent gradient */
 }
 
 .chartPlaceholder {
@@ -138,28 +138,32 @@
 /* ── Add button ── */
 .addBtn {
   width: 100%;
-  padding: 14px;
-  background: var(--terracotta);
+  padding: 15px;
+  background: var(--child-accent, var(--terracotta));
   color: #fff;
   border: none;
-  border-radius: 14px;
+  border-radius: 16px;
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: opacity 0.15s, transform 0.1s;
+  /* shadow applied inline with accent color */
 }
 
-.addBtn:active { opacity: 0.85; }
+.addBtn:active {
+  opacity: 0.88;
+  transform: scale(0.98);
+}
 
 /* ── Form ── */
 .formCard {
   background: #fff;
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
 }
 
 .formTitle {
@@ -202,7 +206,7 @@
   font-family: inherit;
 }
 
-.input:focus { border-color: var(--terracotta); }
+.input:focus { border-color: var(--child-accent, var(--terracotta)); }
 
 .errorText {
   font-size: 13px;
@@ -230,7 +234,7 @@
 .saveBtn {
   flex: 2;
   padding: 12px;
-  background: var(--terracotta);
+  background: var(--child-accent, var(--terracotta));
   border: none;
   border-radius: 12px;
   font-size: 14px;
@@ -238,6 +242,7 @@
   color: #fff;
   cursor: pointer;
   transition: opacity 0.15s;
+  /* shadow applied inline with accent color */
 }
 
 .saveBtn:disabled { opacity: 0.6; }
@@ -260,12 +265,13 @@
 
 .historyRow {
   background: var(--oat);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 12px 14px;
   display: flex;
   flex-direction: column;
   gap: 4px;
   margin-bottom: 6px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
 }
 
 .historyDate {
@@ -288,7 +294,7 @@
 
 .historyPct {
   font-size: 12px;
-  color: var(--terracotta);
+  color: var(--child-accent, var(--terracotta));
   font-weight: 600;
 }
 

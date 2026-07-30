@@ -19,6 +19,23 @@ interface GrowthRecord {
 
 type Tab = 'weight' | 'height'
 
+const ACCENT_BOY     = '#3D86C8'
+const ACCENT_GIRL    = '#E07A8F'
+const ACCENT_DEFAULT = '#C4714A'
+
+function accentForSex(sex: string | null): string {
+  if (sex === 'male')   return ACCENT_BOY
+  if (sex === 'female') return ACCENT_GIRL
+  return ACCENT_DEFAULT
+}
+
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r},${g},${b},${alpha})`
+}
+
 function ordinal(n: number): string {
   const r = Math.round(n)
   if (r >= 11 && r <= 13) return `${r}th`
@@ -43,6 +60,7 @@ export default function GrowthPage() {
   const [tab, setTab] = useState<Tab>('weight')
   const [records, setRecords] = useState<GrowthRecord[]>([])
   const [sex, setSex] = useState<string>('male')
+  const [accent, setAccent] = useState<string>(ACCENT_DEFAULT)
   const [dob, setDob] = useState<string | null>(null)
   const [childName, setChildName] = useState<string | null>(null)
   const [childId, setChildId] = useState<string | null>(null)
@@ -80,6 +98,7 @@ export default function GrowthPage() {
         if (!json.error) {
           setRecords(json.records ?? [])
           setSex(json.sex ?? 'male')
+          setAccent(accentForSex(json.sex ?? null))
           setDob(json.dob ?? null)
         }
       } catch { /* silently fail */ }
@@ -128,8 +147,14 @@ export default function GrowthPage() {
       value: (tab === 'weight' ? r.weight_kg : r.height_cm) as number,
     }))
 
+  const tabActiveStyle = (t: Tab): React.CSSProperties | undefined =>
+    tab === t ? { background: hexToRgba(accent, 0.12), color: accent } : undefined
+
   return (
-    <div className={styles.page}>
+    <div
+      className={styles.page}
+      style={{ '--child-accent': accent } as React.CSSProperties}
+    >
       <header className={styles.topBar}>
         <button className={styles.back} onClick={() => router.back()} aria-label="Back">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -179,12 +204,14 @@ export default function GrowthPage() {
       <div className={styles.tabs}>
         <button
           className={`${styles.tab}${tab === 'weight' ? ` ${styles.tabActive}` : ''}`}
+          style={tabActiveStyle('weight')}
           onClick={() => setTab('weight')}
         >
           Weight
         </button>
         <button
           className={`${styles.tab}${tab === 'height' ? ` ${styles.tabActive}` : ''}`}
+          style={tabActiveStyle('height')}
           onClick={() => setTab('height')}
         >
           Height
@@ -192,7 +219,10 @@ export default function GrowthPage() {
       </div>
 
       {/* Chart */}
-      <div className={styles.chartCard}>
+      <div
+        className={styles.chartCard}
+        style={{ background: `linear-gradient(150deg, #fff 40%, ${hexToRgba(accent, 0.06)} 100%)` }}
+      >
         {loading ? (
           <div className={styles.chartPlaceholder}>Loading…</div>
         ) : (
@@ -257,13 +287,22 @@ export default function GrowthPage() {
             <button className={styles.cancelBtn} onClick={() => { setShowForm(false); setError(null) }}>
               Cancel
             </button>
-            <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
+            <button
+              className={styles.saveBtn}
+              style={{ boxShadow: `0 4px 16px ${hexToRgba(accent, 0.3)}` }}
+              onClick={handleSave}
+              disabled={saving}
+            >
               {saving ? 'Saving…' : 'Save'}
             </button>
           </div>
         </div>
       ) : (
-        <button className={styles.addBtn} onClick={() => setShowForm(true)}>
+        <button
+          className={styles.addBtn}
+          style={{ boxShadow: `0 6px 20px ${hexToRgba(accent, 0.35)}` }}
+          onClick={() => setShowForm(true)}
+        >
           + Add measurement
         </button>
       )}

@@ -259,3 +259,45 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* ── Newborn feed shortcut card ── */
+.newbornCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--oat);
+  border-radius: 18px;
+  padding: 16px 18px;
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: background 0.15s;
+}
+
+.newbornCard:active { background: var(--oat-dark); }
+
+.newbornCardIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--terra-light);
+  color: var(--terracotta);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.newbornCardText { flex: 1; }
+
+.newbornCardTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.newbornCardSub {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-top: 2px;
+}
