@@ -31,7 +31,7 @@ const REACTION_OPTIONS = [
   'Unusually unsettled',
 ]
 
-const ALARM_OPTIONS = [
+const REMINDER_OPTIONS = [
   { label: '1h',   mins: 60  },
   { label: '1.5h', mins: 90  },
   { label: '2h',   mins: 120 },
@@ -103,6 +103,8 @@ export default function NewbornPage() {
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [alarm, setAlarm] = useState<Alarm | null>(null)
+  // null = reminders off; number = chosen interval in minutes (persisted)
+  const [reminderMins, setReminderMins] = useState<number | null>(null)
   const [tick, setTick] = useState(0)
 
   // Form state
@@ -113,14 +115,11 @@ export default function NewbornPage() {
   const [logTime, setLogTime] = useState(nowTimeStr())
   const [reactions, setReactions] = useState<string[]>([])
   const [noReaction, setNoReaction] = useState(false)
-  const [wantAlarm, setWantAlarm] = useState(false)
-  const [alarmMins, setAlarmMins] = useState(180)
   const [saveError, setSaveError] = useState<string | null>(null)
 
   const durationRef = useRef<HTMLInputElement>(null)
   const amountRef = useRef<HTMLInputElement>(null)
 
-  // Tick timer — updates every minute so time displays stay fresh
   useEffect(() => {
     const id = setInterval(() => setTick(t => t + 1), 60_000)
     return () => clearInterval(id)
@@ -146,10 +145,14 @@ export default function NewbornPage() {
       if (!cId) { setLoading(false); return }
       setChildId(cId)
 
-      // Load alarm from localStorage
       try {
         const stored = localStorage.getItem(`shai_feed_alarm_${cId}`)
         if (stored) setAlarm(JSON.parse(stored))
+      } catch { /* ignore */ }
+
+      try {
+        const storedMins = localStorage.getItem(`shai_feed_reminder_mins_${cId}`)
+        if (storedMins) setReminderMins(Number(storedMins))
       } catch { /* ignore */ }
 
       try {
@@ -165,6 +168,16 @@ export default function NewbornPage() {
     }
     init()
   }, [])
+
+  function setReminder(mins: number | null) {
+    if (!childId) return
+    setReminderMins(mins)
+    if (mins == null) {
+      localStorage.removeItem(`shai_feed_reminder_mins_${childId}`)
+    } else {
+      localStorage.setItem(`shai_feed_reminder_mins_${childId}`, String(mins))
+    }
+  }
 
   function toggleReaction(r: string) {
     setReactions(prev =>
@@ -188,8 +201,6 @@ export default function NewbornPage() {
     setAmount('')
     setReactions([])
     setNoReaction(false)
-    setWantAlarm(false)
-    setAlarmMins(180)
     setSaveError(null)
     setShowForm(true)
   }
@@ -199,7 +210,6 @@ export default function NewbornPage() {
     setSaving(true)
     setSaveError(null)
 
-    // Build logged_at from today's date + selected time
     const now = new Date()
     const [hh, mm] = logTime.split(':').map(Number)
     const loggedAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0).toISOString()
@@ -221,17 +231,16 @@ export default function NewbornPage() {
     const json = await res.json()
     if (json.error) { setSaveError(json.error); setSaving(false); return }
 
-    // Prepend new feed to list
     setFeeds(prev => [json.feed, ...prev])
 
-    // Handle alarm
-    const key = `shai_feed_alarm_${childId}`
-    if (wantAlarm) {
-      const newAlarm: Alarm = { dueAt: new Date(loggedAt).getTime() + alarmMins * 60_000, intervalMins: alarmMins }
-      localStorage.setItem(key, JSON.stringify(newAlarm))
+    // Auto-arm the next alarm from the saved feed time if reminders are on
+    const alarmKey = `shai_feed_alarm_${childId}`
+    if (reminderMins != null) {
+      const newAlarm: Alarm = { dueAt: new Date(loggedAt).getTime() + reminderMins * 60_000, intervalMins: reminderMins }
+      localStorage.setItem(alarmKey, JSON.stringify(newAlarm))
       setAlarm(newAlarm)
     } else {
-      localStorage.removeItem(key)
+      localStorage.removeItem(alarmKey)
       setAlarm(null)
     }
 
@@ -239,7 +248,6 @@ export default function NewbornPage() {
     setSaving(false)
   }
 
-  // Ignore tick in dep array — we want the display to update but not re-derive everything
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const lastFeed = feeds[0] ?? null
   const todayFeeds = feeds.filter(f => isToday(f.logged_at))
@@ -267,22 +275,20 @@ export default function NewbornPage() {
           <div className={styles.timerMain}>
             <p className={styles.timerLabel}>Last feed</p>
             <p className={styles.timerValue} suppressHydrationWarning>
-              {lastFeed ? timeSince(lastFeed.logged_at) : 'None logged yet today'}
-              {/* tick used to force re-render */}
+              {lastFeed ? timeSince(lastFeed.logged_at) : 'None logged yet'}
               {tick !== tick ? null : null}
             </p>
             {lastFeed && (
               <p className={styles.timerSub}>{feedLabel(lastFeed)} · {formatTime(lastFeed.logged_at)}</p>
             )}
           </div>
+
           {alarm && (
             <div className={styles.alarmBox}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
               </svg>
-              <span suppressHydrationWarning>
-                Next feed {timeUntil(alarm.dueAt)}
-              </span>
+              <span suppressHydrationWarning>Next feed {timeUntil(alarm.dueAt)}</span>
               <button
                 className={styles.alarmDismiss}
                 onClick={() => {
@@ -296,10 +302,39 @@ export default function NewbornPage() {
               </button>
             </div>
           )}
+
+          {/* Persistent reminder setting */}
+          <div className={styles.reminderRow}>
+            <span className={styles.reminderLabel}>
+              {reminderMins != null
+                ? `Remind every ${REMINDER_OPTIONS.find(o => o.mins === reminderMins)?.label ?? `${reminderMins / 60}h`}`
+                : 'Feed reminders'}
+            </span>
+            <button
+              className={`${styles.toggle}${reminderMins != null ? ` ${styles.toggleOn}` : ''}`}
+              onClick={() => setReminder(reminderMins != null ? null : 180)}
+              aria-label="Toggle feed reminders"
+            >
+              <span className={styles.toggleThumb} />
+            </button>
+          </div>
+          {reminderMins != null && (
+            <div className={styles.alarmIntervalRow}>
+              {REMINDER_OPTIONS.map(o => (
+                <button
+                  key={o.mins}
+                  className={`${styles.intervalBtn}${reminderMins === o.mins ? ` ${styles.intervalBtnActive}` : ''}`}
+                  onClick={() => setReminder(o.mins)}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Log a feed button / form */}
+      {/* Log button / form */}
       {!showForm ? (
         <button className={styles.logBtn} onClick={openForm}>
           + Log a feed
@@ -308,7 +343,6 @@ export default function NewbornPage() {
         <div className={styles.formCard}>
           <p className={styles.formTitle}>Log a feed</p>
 
-          {/* Feed type */}
           <div className={styles.typeRow}>
             {(['breast', 'formula', 'expressed'] as FeedType[]).map(t => (
               <button
@@ -321,7 +355,6 @@ export default function NewbornPage() {
             ))}
           </div>
 
-          {/* Breast fields */}
           {feedType === 'breast' && (
             <>
               <div className={styles.fieldGroup}>
@@ -355,7 +388,6 @@ export default function NewbornPage() {
             </>
           )}
 
-          {/* Formula / expressed fields */}
           {feedType !== 'breast' && (
             <div className={styles.fieldGroup}>
               <p className={styles.fieldLabel}>Amount (ml, optional)</p>
@@ -373,7 +405,6 @@ export default function NewbornPage() {
             </div>
           )}
 
-          {/* Time */}
           <div className={styles.fieldGroup}>
             <p className={styles.fieldLabel}>Time</p>
             <input
@@ -384,7 +415,6 @@ export default function NewbornPage() {
             />
           </div>
 
-          {/* Reactions */}
           <div className={styles.fieldGroup}>
             <p className={styles.fieldLabel}>Any reaction? (optional)</p>
             <div className={styles.chipGrid}>
@@ -406,33 +436,6 @@ export default function NewbornPage() {
             </div>
           </div>
 
-          {/* Alarm */}
-          <div className={styles.fieldGroup}>
-            <div className={styles.alarmToggleRow}>
-              <p className={styles.fieldLabel}>Set a feed reminder?</p>
-              <button
-                className={`${styles.toggle}${wantAlarm ? ` ${styles.toggleOn}` : ''}`}
-                onClick={() => setWantAlarm(v => !v)}
-                aria-label="Toggle feed reminder"
-              >
-                <span className={styles.toggleThumb} />
-              </button>
-            </div>
-            {wantAlarm && (
-              <div className={styles.alarmIntervalRow}>
-                {ALARM_OPTIONS.map(o => (
-                  <button
-                    key={o.mins}
-                    className={`${styles.intervalBtn}${alarmMins === o.mins ? ` ${styles.intervalBtnActive}` : ''}`}
-                    onClick={() => setAlarmMins(o.mins)}
-                  >
-                    {o.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
           {saveError && <p className={styles.errorText}>{saveError}</p>}
 
           <div className={styles.formButtons}>
@@ -446,7 +449,6 @@ export default function NewbornPage() {
         </div>
       )}
 
-      {/* Today's feeds */}
       {todayFeeds.length > 0 && (
         <section>
           <p className={styles.sectionLabel}>Today · {todayFeeds.length} feed{todayFeeds.length > 1 ? 's' : ''}</p>

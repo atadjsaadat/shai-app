@@ -265,6 +265,22 @@
   color: var(--sage-dark);
 }
 
+/* Persistent reminder row inside timer card */
+.reminderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  margin-top: 4px;
+  border-top: 1px solid var(--oat-dark);
+}
+
+.reminderLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
 /* Alarm toggle */
 .alarmToggleRow {
   display: flex;
