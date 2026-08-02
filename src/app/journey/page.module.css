@@ -23,6 +23,24 @@
   color: var(--text-primary);
 }
 
+.topBarActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bookBtn {
+  background: none;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 20px;
+  padding: 7px 14px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
 .newBtn {
   background: var(--terracotta);
   color: #fff;

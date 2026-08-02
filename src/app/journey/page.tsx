@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import Link from 'next/link';
 import BottomNav from '@/components/BottomNav';
 import { createSpeechRecognition } from '@/lib/speech/recognition';
 import styles from './page.module.css';
@@ -228,9 +229,12 @@ export default function JourneyPage() {
     <div className={styles.page}>
       <header className={styles.topBar}>
         <p className={styles.title}>Journey</p>
-        {!composing && (
-          <button className={styles.newBtn} onClick={openComposer}>+ New</button>
-        )}
+        <div className={styles.topBarActions}>
+          <Link href="/baby-book" className={styles.bookBtn}>Baby book</Link>
+          {!composing && (
+            <button className={styles.newBtn} onClick={openComposer}>+ New</button>
+          )}
+        </div>
       </header>
 
       {composing && (
