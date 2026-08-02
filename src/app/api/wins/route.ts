@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+
+  const since = new URL(request.url).searchParams.get('since')
 
   const admin = createAdminClient()
   const { data: child } = await admin
@@ -15,11 +17,15 @@ export async function GET() {
 
   if (!child) return NextResponse.json({ wins: [] })
 
-  const { data: wins, error } = await admin
+  let query = admin
     .from('wins')
     .select('id, logged_at, win_type, food_involved, parent_note, child_age_days, photo_url')
     .eq('child_id', child.id)
     .order('logged_at', { ascending: false })
+
+  if (since) query = query.gte('logged_at', since)
+
+  const { data: wins, error } = await query
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ wins: wins ?? [] })

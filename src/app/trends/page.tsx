@@ -32,6 +32,14 @@ interface WeekData {
   tier: string;
 }
 
+interface WinEntry {
+  id: string;
+  logged_at: string;
+  win_type: string;
+  food_involved: string | null;
+  parent_note: string | null;
+}
+
 type NutrientDef = { key: keyof Totals; name: string; color: string }
 
 const LEFT_NUTRIENTS: NutrientDef[] = [
@@ -48,6 +56,24 @@ const RIGHT_NUTRIENTS: NutrientDef[] = [
   { key: 'iron_mg',   name: 'Iron',  color: '#B87333' },
 ];
 
+const WIN_TYPE_LABELS: Record<string, string> = {
+  new_food:    'New food tried',
+  ate_well:    'Ate really well',
+  new_texture: 'New texture',
+  self_fed:    'Ate independently',
+  family_meal: 'Family meal',
+  other:       'Something else',
+};
+
+const WIN_CHIP_COLOURS: Record<string, { bg: string; text: string }> = {
+  new_food:    { bg: '#D4E8D6', text: '#4A7050' },
+  ate_well:    { bg: '#F0D5C8', text: '#9E5035' },
+  new_texture: { bg: '#D0E4F0', text: '#2E5C7A' },
+  self_fed:    { bg: '#F5E8C0', text: '#7A5810' },
+  family_meal: { bg: '#E4D8F0', text: '#5A3F80' },
+  other:       { bg: '#F0D8E4', text: '#803050' },
+};
+
 function formatValue(value: number, key: keyof Totals): string {
   if (key === 'calories_kcal') return String(Math.round(value));
   if (key === 'sodium_mg' || key === 'iron_mg') {
@@ -58,6 +84,13 @@ function formatValue(value: number, key: keyof Totals): string {
 
 function localDate(): string {
   const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function getMondayDate(): string {
+  const d = new Date();
+  const day = d.getDay();
+  d.setDate(d.getDate() - day + (day === 0 ? -6 : 1));
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
@@ -95,6 +128,9 @@ export default function TrendsPage() {
   const [data, setData] = useState<WeekData | null>(null);
   const [loading, setLoading] = useState(true);
   const [noChild, setNoChild] = useState(false);
+  const [weekWins, setWeekWins] = useState<WinEntry[]>([]);
+  const [insight, setInsight] = useState<string | null>(null);
+  const [insightLoading, setInsightLoading] = useState(false);
 
   useEffect(() => {
     async function init() {
@@ -119,14 +155,44 @@ export default function TrendsPage() {
 
       const offset = -new Date().getTimezoneOffset();
       const date = localDate();
+      const monday = getMondayDate();
+
+      const [weekRes, winsRes] = await Promise.all([
+        fetch(`/api/trends/week?childId=${childId}&date=${date}&utcOffset=${offset}`),
+        fetch(`/api/wins?since=${monday}`),
+      ]);
 
       try {
-        const res = await fetch(`/api/trends/week?childId=${childId}&date=${date}&utcOffset=${offset}`);
-        const json = await res.json();
+        const json = await weekRes.json();
         if (!json.error) setData(json);
       } catch { /* silently fail */ }
 
+      try {
+        const winsJson = await winsRes.json();
+        if (winsJson.wins) setWeekWins(winsJson.wins);
+      } catch { /* silently fail */ }
+
       setLoading(false);
+
+      // Insight: read from shared weekly cache or call API (Sonnet)
+      const cacheKey = `shai_weekly_summary_${monday}`;
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        setInsight(cached);
+      } else {
+        setInsightLoading(true);
+        try {
+          const res = await fetch(
+            `/api/home/weekly-summary?childId=${childId}&date=${date}&utcOffset=${offset}&childName=${encodeURIComponent(name ?? 'your little one')}`
+          );
+          const json = await res.json();
+          if (json.summary) {
+            setInsight(json.summary);
+            localStorage.setItem(cacheKey, json.summary);
+          }
+        } catch { /* silently fail */ }
+        setInsightLoading(false);
+      }
     }
     init();
   }, []);
@@ -218,6 +284,41 @@ export default function TrendsPage() {
           </p>
           <div className={styles.premiumBadge}>Coming soon</div>
         </div>
+      )}
+
+      {(insightLoading || insight) && (
+        <section>
+          <p className={styles.sectionLabel}>SHAi&apos;s take</p>
+          <div className={styles.insightCard}>
+            {insightLoading ? (
+              <p className={styles.insightLoading}>Getting SHAi&apos;s view…</p>
+            ) : (
+              <p className={styles.insightText}>{insight}</p>
+            )}
+          </div>
+          <p className={styles.aiDisclosure}>SHAi is an AI assistant.</p>
+        </section>
+      )}
+
+      {weekWins.length > 0 && (
+        <section>
+          <p className={styles.sectionLabel}>This week&apos;s wins</p>
+          <div className={styles.winsRow}>
+            {weekWins.map((w) => {
+              const c = WIN_CHIP_COLOURS[w.win_type] ?? WIN_CHIP_COLOURS['other'];
+              return (
+                <div key={w.id} className={styles.winChip} style={{ background: c.bg, color: c.text }}>
+                  <span className={styles.winChipLabel}>
+                    {WIN_TYPE_LABELS[w.win_type] ?? w.win_type}
+                  </span>
+                  {w.food_involved && (
+                    <span className={styles.winChipFood}>{w.food_involved}</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
       )}
 
       <Link href="/growth" className={styles.growthCard}>

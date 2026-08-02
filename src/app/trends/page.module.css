@@ -242,3 +242,59 @@
   border-radius: 20px;
   margin-top: 2px;
 }
+
+/* ── SHAi insight ────────────────────────────────────── */
+.insightCard {
+  background: var(--oat);
+  border-radius: 18px;
+  padding: 16px 18px;
+  margin-top: 10px;
+}
+
+.insightText {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+.insightLoading {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.aiDisclosure {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+/* ── Wins chips ──────────────────────────────────────── */
+.winsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.winChip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  border-radius: 14px;
+}
+
+.winChipLabel {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.winChipFood {
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.8;
+  text-transform: capitalize;
+}
