@@ -1,0 +1,369 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import BottomNav from '@/components/BottomNav'
+import styles from './page.module.css'
+import type { Appointment, AppointmentType } from '@/lib/appointments/types'
+import { TYPE_LABELS, TYPE_COLORS } from '@/lib/appointments/types'
+
+const APPOINTMENT_TYPES: AppointmentType[] = [
+  'gp', 'paediatrician', 'health_visitor', 'dentist', 'hospital', 'specialist', 'other',
+]
+
+interface FormState {
+  title: string
+  appointment_type: AppointmentType | ''
+  date: string
+  time: string
+  location: string
+  notes: string
+}
+
+const EMPTY_FORM: FormState = {
+  title: '',
+  appointment_type: '',
+  date: '',
+  time: '',
+  location: '',
+  notes: '',
+}
+
+function todayString(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function localToISO(date: string, time: string): string {
+  return new Date(`${date}T${time || '00:00'}`).toISOString()
+}
+
+function isoToLocal(iso: string): { date: string; time: string } {
+  const d = new Date(iso)
+  return {
+    date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
+    time: `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`,
+  }
+}
+
+function formatDateTime(iso: string): string {
+  const d = new Date(iso)
+  const datePart = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+  const timePart = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true })
+  return `${datePart} · ${timePart}`
+}
+
+function TypeBadge({ type }: { type: AppointmentType | null }) {
+  if (!type) return null
+  return (
+    <span
+      className={styles.typeBadge}
+      style={{ background: `${TYPE_COLORS[type]}22`, color: TYPE_COLORS[type], borderColor: `${TYPE_COLORS[type]}44` }}
+    >
+      {TYPE_LABELS[type]}
+    </span>
+  )
+}
+
+export default function AppointmentsPage() {
+  const router = useRouter()
+  const [appointments, setAppointments] = useState<Appointment[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [form, setForm] = useState<FormState>(EMPTY_FORM)
+  const [saving, setSaving] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
+
+  const load = useCallback(() => {
+    fetch('/api/appointments')
+      .then(r => {
+        if (r.status === 401) { router.replace('/login'); return null }
+        return r.json()
+      })
+      .then(data => { if (data) setAppointments(data.appointments ?? []) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [router])
+
+  useEffect(() => { load() }, [load])
+
+  const now = new Date()
+  const upcoming = appointments.filter(a => new Date(a.scheduled_at) >= now)
+  const past = appointments.filter(a => new Date(a.scheduled_at) < now).reverse()
+
+  function openAdd() {
+    setForm({ ...EMPTY_FORM, date: todayString() })
+    setEditingId(null)
+    setFormError(null)
+    setShowForm(true)
+  }
+
+  function openEdit(appt: Appointment) {
+    const { date, time } = isoToLocal(appt.scheduled_at)
+    setForm({
+      title: appt.title,
+      appointment_type: appt.appointment_type ?? '',
+      date,
+      time,
+      location: appt.location ?? '',
+      notes: appt.notes ?? '',
+    })
+    setEditingId(appt.id)
+    setFormError(null)
+    setShowForm(true)
+    setExpandedId(null)
+  }
+
+  function cancelForm() {
+    setShowForm(false)
+    setEditingId(null)
+    setFormError(null)
+  }
+
+  async function handleSave() {
+    if (!form.title.trim()) { setFormError('Title is required.'); return }
+    if (!form.date) { setFormError('Date is required.'); return }
+    setSaving(true)
+    setFormError(null)
+    const body = {
+      title: form.title.trim(),
+      appointment_type: form.appointment_type || null,
+      scheduled_at: localToISO(form.date, form.time),
+      location: form.location.trim() || undefined,
+      notes: form.notes.trim() || undefined,
+    }
+    try {
+      if (editingId) {
+        const res = await fetch(`/api/appointments/${editingId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+        if (!res.ok) throw new Error()
+        const { appointment } = await res.json()
+        setAppointments(prev => prev.map(a => a.id === editingId ? appointment : a))
+      } else {
+        const res = await fetch('/api/appointments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+        if (!res.ok) throw new Error()
+        const { appointment } = await res.json()
+        setAppointments(prev => [...prev, appointment].sort(
+          (a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
+        ))
+      }
+      cancelForm()
+    } catch {
+      setFormError('Something went wrong — please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleAttended(appt: Appointment) {
+    const next = !appt.attended
+    setAppointments(prev => prev.map(a => a.id === appt.id ? { ...a, attended: next } : a))
+    try {
+      await fetch(`/api/appointments/${appt.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ attended: next }),
+      })
+    } catch {
+      setAppointments(prev => prev.map(a => a.id === appt.id ? { ...a, attended: appt.attended } : a))
+    }
+  }
+
+  async function handleDelete(id: string) {
+    setAppointments(prev => prev.filter(a => a.id !== id))
+    setExpandedId(null)
+    try {
+      await fetch(`/api/appointments/${id}`, { method: 'DELETE' })
+    } catch {
+      load()
+    }
+  }
+
+  function AppointmentCard({ appt }: { appt: Appointment }) {
+    const expanded = expandedId === appt.id
+    return (
+      <div className={styles.card}>
+        <button
+          className={styles.cardMain}
+          onClick={() => setExpandedId(expanded ? null : appt.id)}
+        >
+          <div className={styles.cardTop}>
+            <TypeBadge type={appt.appointment_type} />
+            {appt.attended && <span className={styles.attendedChip}>Attended</span>}
+          </div>
+          <div className={styles.cardRow}>
+            <span className={styles.cardTitle}>{appt.title}</span>
+            <svg
+              className={`${styles.chevron}${expanded ? ` ${styles.chevronUp}` : ''}`}
+              width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+          <p className={styles.cardMeta}>
+            {formatDateTime(appt.scheduled_at)}
+            {appt.location && ` · ${appt.location}`}
+          </p>
+        </button>
+
+        {expanded && (
+          <div className={styles.cardExpanded}>
+            {appt.notes && <p className={styles.cardNotes}>{appt.notes}</p>}
+            <div className={styles.cardActions}>
+              <button
+                className={`${styles.attendBtn}${appt.attended ? ` ${styles.attendBtnActive}` : ''}`}
+                onClick={() => handleAttended(appt)}
+              >
+                {appt.attended ? '✓ Attended' : 'Mark attended'}
+              </button>
+              <button className={styles.editBtn} onClick={() => openEdit(appt)}>Edit</button>
+              <button className={styles.deleteBtn} onClick={() => handleDelete(appt.id)}>Delete</button>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className={styles.page}>
+      <header className={styles.topBar}>
+        <button className={styles.backBtn} onClick={() => router.back()} aria-label="Back">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+        </button>
+        <p className={styles.title}>Appointments</p>
+        {!showForm && (
+          <button className={styles.addBtn} onClick={openAdd} aria-label="Add appointment">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </button>
+        )}
+      </header>
+
+      <div className={styles.scroll}>
+        {/* Add / edit form */}
+        {showForm && (
+          <div className={styles.form}>
+            <p className={styles.formTitle}>{editingId ? 'Edit appointment' : 'New appointment'}</p>
+
+            <div className={styles.field}>
+              <label className={styles.label}>Title</label>
+              <input
+                className={styles.input}
+                placeholder="e.g. 6-month check"
+                value={form.title}
+                onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+              />
+            </div>
+
+            <div className={styles.field}>
+              <label className={styles.label}>Type</label>
+              <select
+                className={styles.select}
+                value={form.appointment_type}
+                onChange={e => setForm(f => ({ ...f, appointment_type: e.target.value as AppointmentType | '' }))}
+              >
+                <option value="">Select type</option>
+                {APPOINTMENT_TYPES.map(t => (
+                  <option key={t} value={t}>{TYPE_LABELS[t]}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className={styles.fieldRow}>
+              <div className={styles.field}>
+                <label className={styles.label}>Date</label>
+                <input
+                  className={styles.input}
+                  type="date"
+                  value={form.date}
+                  onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
+                />
+              </div>
+              <div className={styles.field}>
+                <label className={styles.label}>Time</label>
+                <input
+                  className={styles.input}
+                  type="time"
+                  value={form.time}
+                  onChange={e => setForm(f => ({ ...f, time: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div className={styles.field}>
+              <label className={styles.label}>Location <span className={styles.optional}>(optional)</span></label>
+              <input
+                className={styles.input}
+                placeholder="e.g. Mater Dei Hospital"
+                value={form.location}
+                onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
+              />
+            </div>
+
+            <div className={styles.field}>
+              <label className={styles.label}>Notes <span className={styles.optional}>(optional)</span></label>
+              <textarea
+                className={styles.textarea}
+                placeholder="Any questions to ask, things to bring…"
+                rows={3}
+                value={form.notes}
+                onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+              />
+            </div>
+
+            {formError && <p className={styles.formError}>{formError}</p>}
+
+            <div className={styles.formBtns}>
+              <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+              <button className={styles.cancelBtn} onClick={cancelForm} disabled={saving}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {loading ? (
+          <p className={styles.empty}>Loading…</p>
+        ) : (
+          <>
+            <section>
+              <p className={styles.sectionLabel}>Upcoming</p>
+              {upcoming.length === 0 ? (
+                <p className={styles.empty}>No upcoming appointments</p>
+              ) : (
+                upcoming.map(a => <AppointmentCard key={a.id} appt={a} />)
+              )}
+            </section>
+
+            {past.length > 0 && (
+              <section>
+                <p className={styles.sectionLabel}>Past</p>
+                {past.map(a => <AppointmentCard key={a.id} appt={a} />)}
+              </section>
+            )}
+          </>
+        )}
+      </div>
+
+      <BottomNav />
+    </div>
+  )
+}

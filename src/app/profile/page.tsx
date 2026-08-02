@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import BottomNav from '@/components/BottomNav';
 import styles from './page.module.css';
@@ -211,6 +212,23 @@ export default function ProfilePage() {
               </div>
             </div>
           )}
+
+          {/* Quick links */}
+          <div className={styles.card}>
+            <p className={styles.cardTitle}>Health</p>
+            <Link href="/appointments" className={styles.linkRow}>
+              <span className={styles.linkLabel}>Appointments</span>
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8 5l5 5-5 5"/>
+              </svg>
+            </Link>
+            <Link href="/growth" className={styles.linkRow}>
+              <span className={styles.linkLabel}>Growth tracking</span>
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8 5l5 5-5 5"/>
+              </svg>
+            </Link>
+          </div>
 
           {/* Community placeholder */}
           <div className={styles.card}>

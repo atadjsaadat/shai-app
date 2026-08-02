@@ -254,6 +254,27 @@
   line-height: 1.6;
 }
 
+/* ── Link rows ───────────────────────────────────────── */
+.linkRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  text-decoration: none;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--oat-dark);
+}
+
+.linkRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.linkLabel {
+  font-size: 15px;
+  font-weight: 600;
+}
+
 /* ── AI disclosure ───────────────────────────────────── */
 .disclosure {
   font-size: 11px;

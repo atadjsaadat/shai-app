@@ -1,0 +1,334 @@
+.page {
+  min-height: 100dvh;
+  background: var(--cream);
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 80px;
+}
+
+/* ── Top bar ── */
+.topBar {
+  display: flex;
+  align-items: center;
+  padding: 16px 16px 12px;
+  gap: 12px;
+  background: var(--cream);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.backBtn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.title {
+  flex: 1;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.addBtn {
+  background: var(--terracotta);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  flex-shrink: 0;
+}
+
+/* ── Scrollable content ── */
+.scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Section labels ── */
+.sectionLabel {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.empty {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 500;
+  padding: 4px 0 8px;
+}
+
+/* ── Form ── */
+.form {
+  background: var(--oat);
+  border-radius: 20px;
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border: 1.5px solid var(--oat-dark);
+}
+
+.formTitle {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+
+.fieldRow {
+  display: flex;
+  gap: 12px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.optional {
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.input,
+.select,
+.textarea {
+  background: var(--cream);
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: var(--terracotta);
+}
+
+.textarea {
+  resize: none;
+  line-height: 1.5;
+}
+
+.formError {
+  font-size: 13px;
+  color: #c0392b;
+  font-weight: 600;
+}
+
+.formBtns {
+  display: flex;
+  gap: 10px;
+}
+
+.saveBtn {
+  flex: 1;
+  background: var(--terracotta);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 12px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.saveBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.cancelBtn {
+  background: none;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 14px;
+  padding: 12px 18px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+/* ── Appointment card ── */
+.card {
+  background: var(--oat);
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1.5px solid var(--oat-dark);
+  margin-bottom: 10px;
+}
+
+.cardMain {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 14px 16px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.typeBadge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  border: 1px solid;
+  letter-spacing: 0.02em;
+}
+
+.attendedChip {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--sage-dark);
+  background: var(--sage-light);
+  border-radius: 20px;
+  padding: 3px 9px;
+}
+
+.cardRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cardTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.chevron {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.chevronUp {
+  transform: rotate(180deg);
+}
+
+.cardMeta {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* ── Expanded card ── */
+.cardExpanded {
+  border-top: 1.5px solid var(--oat-dark);
+  padding: 12px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--cream);
+}
+
+.cardNotes {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  font-weight: 500;
+}
+
+.cardActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.attendBtn {
+  background: var(--cream);
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.attendBtnActive {
+  background: var(--sage-light);
+  border-color: var(--sage);
+  color: var(--sage-dark);
+}
+
+.editBtn {
+  background: none;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.deleteBtn {
+  background: none;
+  border: 1.5px solid transparent;
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #c0392b;
+  cursor: pointer;
+  margin-left: auto;
+}
