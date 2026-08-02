@@ -417,6 +417,60 @@
   font-weight: 600;
 }
 
+/* Reaction chips */
+.reactionSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reactionLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.reactionOptional {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.reactionChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.reactionChip {
+  padding: 7px 13px;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 20px;
+  background: var(--cream);
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.reactionChip:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.reactionChipActive {
+  background: var(--terra-light);
+  border-color: var(--terracotta);
+  color: var(--terra-dark);
+}
+
+.reactionChipNone {
+  background: var(--sage-light);
+  border-color: var(--sage);
+  color: var(--sage-dark);
+}
+
 /* Portion multiplier */
 .portionRow {
   display: flex;

@@ -7,11 +7,12 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-  const { childId, items, mealType, isHardFoodDay }: {
+  const { childId, items, mealType, isHardFoodDay, reactionType }: {
     childId: string
     items: ParsedFoodItem[]
     mealType: MealType
     isHardFoodDay: boolean
+    reactionType?: string[] | null
   } = await request.json()
 
   if (!childId) return NextResponse.json({ error: 'No child profile found — please complete setup first.' }, { status: 400 })
@@ -82,6 +83,7 @@ export async function POST(request: Request) {
     choline_mg:       item.choline_mg,
     dha_mg:           item.dha_mg,
     vitamin_k_mcg:    item.vitamin_k_mcg,
+    reaction_type:    reactionType ?? null,
   }))
 
   const { error } = await admin.from('food_logs').insert(rows)

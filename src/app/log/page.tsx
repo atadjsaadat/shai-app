@@ -12,6 +12,17 @@ import type { QuickPick } from '@/app/api/log/quick-picks/route';
 
 const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack', 'hydration'];
 
+const REACTION_OPTIONS = [
+  'Rash / redness',
+  'Allergic response',
+  'Constipation',
+  'Soft stool',
+  'Vomiting',
+  'Excessive wind',
+  'Hives / swelling',
+  'Unusually unsettled',
+]
+
 const PORTION_OPTIONS = [
   { label: '½ ×', value: 0.5 },
   { label: '1 ×', value: 1 },
@@ -122,6 +133,8 @@ export default function LogPage() {
   const [hiddenPicks, setHiddenPicks] = useState<Set<string>>(new Set());
   const [showScanner, setShowScanner] = useState(false);
   const [portionMultiplier, setPortionMultiplier] = useState(1);
+  const [reactions, setReactions] = useState<string[]>([]);
+  const [noReaction, setNoReaction] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -259,6 +272,17 @@ export default function LogPage() {
     setPhase('confirming');
   };
 
+  const toggleReaction = (r: string) => {
+    setNoReaction(false);
+    setReactions(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r]);
+  };
+
+  const toggleNoReaction = () => {
+    setNoReaction(v => { if (!v) setReactions([]); return !v; });
+  };
+
+  const resetReactions = () => { setReactions([]); setNoReaction(false); };
+
   const handleBarcodeDetect = useCallback(async (barcode: string) => {
     setShowScanner(false);
     setIsThinking(true);
@@ -275,6 +299,7 @@ export default function LogPage() {
       if (!res.ok) throw new Error('lookup failed');
       const { item } = await res.json();
       setPortionMultiplier(1);
+      resetReactions();
       setParsedData({ message: '', foodItems: [item], clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: true });
       setPhase('confirming');
     } catch {
@@ -360,11 +385,14 @@ export default function LogPage() {
       }
     }
 
+    const reactionType = noReaction ? ['no_reaction'] : reactions.length ? reactions : null;
+
     const { error } = await saveFoodLog(
       childId,
       parsedData.foodItems.map((item) => scaleItem(item, portionMultiplier)),
       parsedData.mealType,
-      parsedData.isHardFoodDay
+      parsedData.isHardFoodDay,
+      reactionType,
     );
 
     if (error) {
@@ -388,6 +416,7 @@ export default function LogPage() {
   const handleEdit = () => {
     setParsedData(null);
     setPortionMultiplier(1);
+    resetReactions();
     setPhase('chatting');
     setMessages((prev) => [
       ...prev,
@@ -398,6 +427,7 @@ export default function LogPage() {
 
   const handleLogAnother = () => {
     setPortionMultiplier(1);
+    resetReactions();
     const name = localStorage.getItem('shai_child_name');
     setMessages([
       { id: generateId(), role: 'assistant', content: name ? `What else did ${name} have?` : "What else did they have?" },
@@ -581,6 +611,32 @@ export default function LogPage() {
                       {label}
                     </button>
                   ))}
+                </div>
+              )}
+              {parsedData.mealType !== 'hydration' && (
+                <div className={styles.reactionSection}>
+                  <p className={styles.reactionLabel}>
+                    Any reaction? <span className={styles.reactionOptional}>(optional)</span>
+                  </p>
+                  <div className={styles.reactionChips}>
+                    {REACTION_OPTIONS.map(r => (
+                      <button
+                        key={r}
+                        className={`${styles.reactionChip}${reactions.includes(r) ? ` ${styles.reactionChipActive}` : ''}`}
+                        onClick={() => toggleReaction(r)}
+                        disabled={phase === 'saving'}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                    <button
+                      className={`${styles.reactionChip}${noReaction ? ` ${styles.reactionChipNone}` : ''}`}
+                      onClick={toggleNoReaction}
+                      disabled={phase === 'saving'}
+                    >
+                      No reaction
+                    </button>
+                  </div>
                 </div>
               )}
             </>
