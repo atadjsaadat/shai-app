@@ -11,6 +11,32 @@ import type { LogMessage, ParseApiResponse, MealType, ParsedFoodItem } from '@/l
 import type { QuickPick } from '@/app/api/log/quick-picks/route';
 
 const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack', 'hydration'];
+
+const PORTION_OPTIONS = [
+  { label: '½ ×', value: 0.5 },
+  { label: '1 ×', value: 1 },
+  { label: '1½ ×', value: 1.5 },
+  { label: '2 ×', value: 2 },
+]
+
+const NUTRIENT_KEYS: (keyof ParsedFoodItem)[] = [
+  'calories_kcal', 'protein_g', 'carbs_g', 'fat_g', 'fibre_g',
+  'sugar_g', 'saturated_fat_g', 'sodium_mg',
+  'iron_mg', 'calcium_mg', 'vitamin_c_mg', 'vitamin_a_mcg', 'vitamin_d_mcg',
+  'zinc_mg', 'omega3_mg', 'b12_mcg', 'b6_mg', 'folate_mcg', 'magnesium_mg',
+  'potassium_mg', 'omega6_mg', 'iodine_mcg', 'selenium_mcg', 'phosphorus_mg',
+  'choline_mg', 'dha_mg', 'vitamin_k_mcg',
+]
+
+function scaleItem(item: ParsedFoodItem, multiplier: number): ParsedFoodItem {
+  if (multiplier === 1) return item
+  const scaled = { ...item }
+  for (const key of NUTRIENT_KEYS) {
+    const v = scaled[key] as number | null
+    if (v != null) (scaled as Record<string, unknown>)[key] = Math.round(v * multiplier * 100) / 100
+  }
+  return scaled
+}
 const MEAL_LABELS: Record<MealType, string> = {
   breakfast: 'Breakfast',
   lunch: 'Lunch',
@@ -47,13 +73,18 @@ type Phase = 'chatting' | 'confirming' | 'saving' | 'saved';
 const HARD_DAY_ACK =
   "That's okay — some days are just like that. You showed up, and that's what matters.";
 
-function FoodItemCard({ item }: { item: ParsedFoodItem }) {
+function FoodItemCard({ item, multiplier = 1 }: { item: ParsedFoodItem; multiplier?: number }) {
+  const servingLabel =
+    multiplier === 0.5 ? '½' : multiplier === 1.5 ? '1½' : String(multiplier)
+  const servingDesc = multiplier !== 1 && item.serving_size_description
+    ? `${servingLabel} × ${item.serving_size_description}`
+    : item.serving_size_description
   return (
     <div className={styles.foodItem}>
       <div className={styles.foodItemTop}>
         <span className={styles.foodName}>{item.food_name}</span>
-        {item.serving_size_description && (
-          <span className={styles.serving}>{item.serving_size_description}</span>
+        {servingDesc && (
+          <span className={styles.serving}>{servingDesc}</span>
         )}
       </div>
       <div className={styles.macroRow}>
@@ -66,7 +97,7 @@ function FoodItemCard({ item }: { item: ParsedFoodItem }) {
               className={styles.macroChip}
               style={{ '--c': color } as React.CSSProperties}
             >
-              {Math.round(raw)}{unit} {label}
+              {Math.round(raw * multiplier)}{unit} {label}
             </span>
           );
         })}
@@ -90,6 +121,7 @@ export default function LogPage() {
   const [quickPicks, setQuickPicks] = useState<QuickPick[]>([]);
   const [hiddenPicks, setHiddenPicks] = useState<Set<string>>(new Set());
   const [showScanner, setShowScanner] = useState(false);
+  const [portionMultiplier, setPortionMultiplier] = useState(1);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -242,6 +274,7 @@ export default function LogPage() {
       }
       if (!res.ok) throw new Error('lookup failed');
       const { item } = await res.json();
+      setPortionMultiplier(1);
       setParsedData({ message: '', foodItems: [item], clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: true });
       setPhase('confirming');
     } catch {
@@ -329,7 +362,7 @@ export default function LogPage() {
 
     const { error } = await saveFoodLog(
       childId,
-      parsedData.foodItems,
+      parsedData.foodItems.map((item) => scaleItem(item, portionMultiplier)),
       parsedData.mealType,
       parsedData.isHardFoodDay
     );
@@ -354,6 +387,7 @@ export default function LogPage() {
 
   const handleEdit = () => {
     setParsedData(null);
+    setPortionMultiplier(1);
     setPhase('chatting');
     setMessages((prev) => [
       ...prev,
@@ -363,6 +397,7 @@ export default function LogPage() {
   };
 
   const handleLogAnother = () => {
+    setPortionMultiplier(1);
     const name = localStorage.getItem('shai_child_name');
     setMessages([
       { id: generateId(), role: 'assistant', content: name ? `What else did ${name} have?` : "What else did they have?" },
@@ -527,11 +562,28 @@ export default function LogPage() {
               </p>
             </div>
           ) : (
-            <div className={styles.foodList}>
-              {parsedData.foodItems.map((item, i) => (
-                <FoodItemCard key={i} item={item} />
-              ))}
-            </div>
+            <>
+              <div className={styles.foodList}>
+                {parsedData.foodItems.map((item, i) => (
+                  <FoodItemCard key={i} item={item} multiplier={portionMultiplier} />
+                ))}
+              </div>
+              {parsedData.foodItems[0]?.data_source === 'barcode' && (
+                <div className={styles.portionRow}>
+                  <span className={styles.portionLabel}>How much?</span>
+                  {PORTION_OPTIONS.map(({ label, value }) => (
+                    <button
+                      key={value}
+                      className={`${styles.portionChip}${portionMultiplier === value ? ` ${styles.portionChipActive}` : ''}`}
+                      onClick={() => setPortionMultiplier(value)}
+                      disabled={phase === 'saving'}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           )}
 
           {saveError && <p className={styles.saveError}>{saveError}</p>}

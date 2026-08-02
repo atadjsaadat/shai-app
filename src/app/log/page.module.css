@@ -417,6 +417,45 @@
   font-weight: 600;
 }
 
+/* Portion multiplier */
+.portionRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.portionLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-right: 2px;
+}
+
+.portionChip {
+  padding: 6px 13px;
+  border-radius: 20px;
+  border: 1.5px solid var(--oat-dark);
+  background: var(--cream);
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.portionChipActive {
+  background: var(--terracotta);
+  border-color: var(--terracotta);
+  color: white;
+}
+
+.portionChip:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 /* Confirm / edit buttons */
 .confirmRow {
   display: flex;
