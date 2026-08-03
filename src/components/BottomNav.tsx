@@ -8,6 +8,7 @@ const TABS = [
   {
     label: 'Home',
     href: '/home',
+    activePaths: [] as string[],
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -18,6 +19,7 @@ const TABS = [
   {
     label: 'Trends',
     href: '/trends',
+    activePaths: [] as string[],
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
         <line x1="18" y1="20" x2="18" y2="10" />
@@ -29,6 +31,7 @@ const TABS = [
   {
     label: 'Journey',
     href: '/journey',
+    activePaths: [] as string[],
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
@@ -37,11 +40,15 @@ const TABS = [
     ),
   },
   {
-    label: 'Wins',
-    href: '/wins',
+    label: 'Record',
+    href: '/record',
+    activePaths: ['/baby-book', '/health-record', '/appointments', '/growth'],
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+        <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+        <line x1="9" y1="12" x2="15" y2="12" />
+        <line x1="9" y1="16" x2="15" y2="16" />
       </svg>
     ),
   },
@@ -56,16 +63,19 @@ export default function BottomNav() {
   return (
     <nav className={styles.nav}>
       <div className={styles.bar}>
-        {left.map((tab) => (
-          <Link
-            key={tab.href}
-            href={tab.href}
-            className={`${styles.tab} ${pathname === tab.href ? styles.active : ''}`}
-          >
-            {tab.icon}
-            {tab.label}
-          </Link>
-        ))}
+        {left.map((tab) => {
+          const isActive = pathname === tab.href || tab.activePaths.includes(pathname);
+          return (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              className={`${styles.tab} ${isActive ? styles.active : ''}`}
+            >
+              {tab.icon}
+              {tab.label}
+            </Link>
+          );
+        })}
 
         <div className={styles.logSlot}>
           <Link href="/log" className={styles.logBtn} aria-label="Log a meal">
@@ -77,16 +87,19 @@ export default function BottomNav() {
           <span className={styles.logLabel}>Log</span>
         </div>
 
-        {right.map((tab) => (
-          <Link
-            key={tab.href}
-            href={tab.href}
-            className={`${styles.tab} ${pathname === tab.href ? styles.active : ''}`}
-          >
-            {tab.icon}
-            {tab.label}
-          </Link>
-        ))}
+        {right.map((tab) => {
+          const isActive = pathname === tab.href || tab.activePaths.includes(pathname);
+          return (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              className={`${styles.tab} ${isActive ? styles.active : ''}`}
+            >
+              {tab.icon}
+              {tab.label}
+            </Link>
+          );
+        })}
       </div>
       <div className={styles.safeArea} />
     </nav>

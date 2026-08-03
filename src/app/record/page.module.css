@@ -1,0 +1,66 @@
+.page {
+  min-height: 100dvh;
+  background: var(--cream);
+  padding: 60px 20px 0;
+  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.card {
+  border-radius: 20px;
+  padding: 20px 16px;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 130px;
+  transition: transform 0.12s;
+}
+
+.card:active {
+  transform: scale(0.97);
+}
+
+.iconWrap {
+  margin-bottom: 4px;
+}
+
+.cardLabel {
+  font-size: 15px;
+  font-weight: 800;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.cardDesc {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.4;
+  opacity: 0.75;
+}
