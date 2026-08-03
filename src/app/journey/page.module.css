@@ -116,7 +116,7 @@
   background: transparent;
   border: none;
   outline: none;
-  font-family: var(--font-caveat), cursive;
+  font-family: var(--font-handwriting), cursive;
   font-size: 18px;
   color: var(--text-primary);
   line-height: 1.45;
@@ -267,7 +267,7 @@
 }
 
 .entryContent {
-  font-family: var(--font-caveat), cursive;
+  font-family: var(--font-handwriting), cursive;
   font-size: 18px;
   color: var(--text-primary);
   line-height: 1.45;

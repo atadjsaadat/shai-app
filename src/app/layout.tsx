@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Nunito, Caveat } from 'next/font/google'
+import { Nunito, Patrick_Hand } from 'next/font/google'
 import './globals.css'
 
 const nunito = Nunito({
@@ -7,10 +7,10 @@ const nunito = Nunito({
   subsets: ['latin'],
 })
 
-const caveat = Caveat({
-  variable: '--font-caveat',
+const patrickHand = Patrick_Hand({
+  variable: '--font-handwriting',
   subsets: ['latin'],
-  weight: ['400', '500'],
+  weight: '400',
 })
 
 export const viewport: Viewport = {
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${nunito.variable} ${caveat.variable}`}>
+    <html lang="en" className={`${nunito.variable} ${patrickHand.variable}`}>
       <body>{children}</body>
     </html>
   )
