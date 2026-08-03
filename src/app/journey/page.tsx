@@ -11,12 +11,12 @@ import styles from './page.module.css';
 // ── Journal note colours (cycling per entry) ──────────
 
 const NOTE_COLOURS = [
-  '#F0D5C8', // terra-light
-  '#D4E8D6', // sage-light
-  '#D0E4F0', // blue-light
-  '#F5E8C0', // yellow-light
-  '#E4D8F0', // purple-light
-  '#F0D8E4', // pink-light
+  '#FDF8F5', // whisper of terra
+  '#F5FAF6', // whisper of sage
+  '#F4F8FB', // whisper of blue
+  '#FDFBF2', // whisper of yellow
+  '#F8F5FC', // whisper of purple
+  '#FDF5F8', // whisper of pink
 ];
 
 // ── Types ──────────────────────────────────────────────

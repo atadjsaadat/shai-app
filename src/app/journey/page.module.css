@@ -207,15 +207,15 @@
   flex-direction: column;
   gap: 8px;
   background:
-    linear-gradient(to right, rgba(175, 65, 45, 0.2) 1px, transparent 1px) 36px 0 / 1px 100% no-repeat,
+    linear-gradient(to right, rgba(190, 80, 60, 0.18) 1px, transparent 1px) 36px 0 / 1px 100% no-repeat,
     repeating-linear-gradient(
       to bottom,
       transparent,
       transparent 25px,
-      rgba(0, 0, 0, 0.055) 25px,
-      rgba(0, 0, 0, 0.055) 26px
+      rgba(100, 130, 170, 0.13) 25px,
+      rgba(100, 130, 170, 0.13) 26px
     ),
-    var(--note-bg, #F0D5C8);
+    var(--note-bg, #FDF8F5);
 }
 
 .entryHeader {
