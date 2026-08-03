@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from './SignupForm.module.css'
 
-export default function LoginForm() {
+export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -32,7 +32,7 @@ export default function LoginForm() {
         setError(json.error ?? 'Something went wrong. Please try again.')
         return
       }
-      router.push('/home')
+      router.push(redirectTo ?? '/home')
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {

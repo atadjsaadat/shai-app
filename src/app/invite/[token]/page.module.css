@@ -1,0 +1,108 @@
+.page {
+  min-height: 100dvh;
+  background: var(--cream);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+}
+
+.content {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.card {
+  width: 100%;
+  background: var(--oat);
+  border-radius: 24px;
+  padding: 24px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cardTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.bodyText {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.authHint {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.errorText {
+  font-size: 13px;
+  color: var(--terracotta);
+  font-weight: 600;
+}
+
+.primaryBtn {
+  display: block;
+  width: 100%;
+  background: var(--terracotta);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 20px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.primaryBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.secondaryBtn {
+  display: block;
+  width: 100%;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 14px;
+  padding: 13px 20px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+}
+
+.hint {
+  font-size: 14px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.disclosure {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+}

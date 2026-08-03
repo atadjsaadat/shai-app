@@ -37,14 +37,14 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
   const admin = createAdminClient()
-  const { data: child, error } = await admin
+  const { data: child } = await admin
     .from('children')
     .select('id, name')
-    .eq('user_id', user.id)
+    .or(`user_id.eq.${user.id},linked_user_ids.cs.{${user.id}}`)
     .order('created_at', { ascending: true })
     .limit(1)
     .single()
 
-  if (error) return NextResponse.json({ childId: null, childName: null })
+  if (!child) return NextResponse.json({ childId: null, childName: null })
   return NextResponse.json({ childId: child.id, childName: child.name })
 }

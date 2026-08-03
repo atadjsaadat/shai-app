@@ -282,3 +282,178 @@
   text-align: center;
   padding-bottom: 4px;
 }
+
+/* ── Partners section ────────────────────────────────── */
+.partnerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--oat-dark);
+}
+
+.partnerRow:last-of-type {
+  border-bottom: none;
+}
+
+.partnerEmail {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.partnerStatus {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--oat-dark);
+  padding: 3px 8px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.removeBtn {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.inviteEmptyText {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.inviteBtn {
+  width: 100%;
+  background: var(--terracotta);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.inviteBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.inviteShareBox {
+  background: var(--cream);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.inviteShareLabel {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.inviteLink {
+  font-size: 12px;
+  color: var(--text-secondary);
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.shareRow {
+  display: flex;
+  gap: 8px;
+}
+
+.whatsappBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #25D366;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.copyBtn {
+  flex: 1;
+  background: var(--oat-dark);
+  color: var(--text-primary);
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.pendingSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pendingLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pendingItem {
+  background: var(--cream);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pendingMeta {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.pendingActions {
+  display: flex;
+  gap: 8px;
+}
+
+.revokeBtn {
+  background: none;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-muted);
+  cursor: pointer;
+}
