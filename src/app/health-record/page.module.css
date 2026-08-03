@@ -1,0 +1,286 @@
+.page {
+  min-height: 100dvh;
+  background: var(--cream);
+  padding: 0 20px;
+  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* ── Top bar ─────────────────────────────────────────── */
+.topBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 16px;
+}
+
+.backBtn {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+}
+
+.topBarTitle { flex: 1; }
+
+.title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 24px 0;
+}
+
+/* ── Section label ───────────────────────────────────── */
+.sectionLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 10px;
+}
+
+/* ── Birth details card ──────────────────────────────── */
+.detailsCard {
+  background: var(--oat);
+  border-radius: 18px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--oat-dark);
+}
+
+.detailRow:last-child { border-bottom: none; }
+
+.detailName {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.detailValue {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.detailEmpty {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 8px 0;
+  line-height: 1.6;
+}
+
+.detailLink {
+  color: var(--terracotta);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* ── Growth link ─────────────────────────────────────── */
+.growthLink {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--oat);
+  border-radius: 16px;
+  padding: 14px 18px;
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.growthLinkTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.growthLinkSub {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ── Vaccine groups ──────────────────────────────────── */
+.vaccineGroups {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vaccineGroup {
+  background: var(--oat);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.vaccineGroupHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 12px 16px 8px;
+  border-bottom: 1px solid var(--oat-dark);
+}
+
+.vaccineGroupLabel {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.vaccineGroupExpected {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ── Individual vaccine row ──────────────────────────── */
+.vaccineRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--oat-dark);
+  transition: background 0.15s;
+}
+
+.vaccineRow:last-child { border-bottom: none; }
+
+.vaccineRowGiven { background: color-mix(in srgb, var(--sage-light) 40%, transparent); }
+
+.vaccineCheck {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  border: 2px solid var(--oat-dark);
+  background: var(--cream);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.vaccineCheckGiven {
+  background: var(--sage);
+  border-color: var(--sage);
+}
+
+.vaccineCheck:disabled { opacity: 0.5; cursor: default; }
+
+.vaccineInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.vaccineName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.vaccineCovers {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.vaccineDate {
+  font-size: 12px;
+  color: var(--sage-dark);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* ── Date entry row ──────────────────────────────────── */
+.dateRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.dateInput {
+  background: var(--cream);
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 10px;
+  padding: 7px 10px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.dateInput:focus { border-color: var(--terracotta); }
+
+.confirmBtn {
+  background: var(--sage);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 7px 14px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.skipBtn {
+  background: none;
+  border: none;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* ── Attribution ─────────────────────────────────────── */
+.attribution {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  text-align: center;
+  margin-top: 8px;
+  font-weight: 500;
+}

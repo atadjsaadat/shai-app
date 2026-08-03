@@ -228,6 +228,12 @@ export default function ProfilePage() {
                 <path d="M8 5l5 5-5 5"/>
               </svg>
             </Link>
+            <Link href="/health-record" className={styles.linkRow}>
+              <span className={styles.linkLabel}>Health record</span>
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8 5l5 5-5 5"/>
+              </svg>
+            </Link>
           </div>
 
           {/* Community placeholder */}
