@@ -98,8 +98,7 @@
   gap: 10px;
 }
 
-.composerTextarea,
-.editTextarea {
+.composerTextarea {
   width: 100%;
   background: transparent;
   border: none;
@@ -108,6 +107,19 @@
   font-size: 15px;
   color: var(--text-primary);
   line-height: 1.6;
+  resize: none;
+  min-height: 80px;
+}
+
+.editTextarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-caveat), cursive;
+  font-size: 18px;
+  color: var(--text-primary);
+  line-height: 1.45;
   resize: none;
   min-height: 80px;
 }
@@ -255,9 +267,10 @@
 }
 
 .entryContent {
-  font-size: 15px;
+  font-family: var(--font-caveat), cursive;
+  font-size: 18px;
   color: var(--text-primary);
-  line-height: 1.733;
+  line-height: 1.45;
   white-space: pre-wrap;
 }
 
@@ -349,6 +362,13 @@
 }
 
 .filterRow::-webkit-scrollbar { display: none; }
+
+@media (hover: hover) {
+  .filterRow {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+}
 
 .filterChip {
   flex-shrink: 0;

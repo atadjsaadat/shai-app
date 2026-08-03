@@ -1,10 +1,16 @@
 import type { Metadata, Viewport } from 'next'
-import { Nunito } from 'next/font/google'
+import { Nunito, Caveat } from 'next/font/google'
 import './globals.css'
 
 const nunito = Nunito({
   variable: '--font-nunito',
   subsets: ['latin'],
+})
+
+const caveat = Caveat({
+  variable: '--font-caveat',
+  subsets: ['latin'],
+  weight: ['400', '500'],
 })
 
 export const viewport: Viewport = {
@@ -21,7 +27,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={nunito.variable}>
+    <html lang="en" className={`${nunito.variable} ${caveat.variable}`}>
       <body>{children}</body>
     </html>
   )
