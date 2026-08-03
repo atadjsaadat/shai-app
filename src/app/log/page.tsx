@@ -504,7 +504,7 @@ export default function LogPage() {
       <p className={styles.aiDisclosure}>SHAI is an AI assistant.</p>
 
       {/* ── Messages ── */}
-      <div className={`${styles.messages} ${phase === 'chatting' ? styles.messagesChat : ''}`}>
+      <div className={`${styles.messages} ${phase === 'chatting' ? styles.messagesChat : ''} ${distressLevel === 3 ? styles.messagesWithCard : ''}`}>
         {messages.map((msg, i) => (
           <div
             key={msg.id}

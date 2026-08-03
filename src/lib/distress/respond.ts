@@ -31,6 +31,8 @@ Your response (2–3 sentences):
 - Keep it brief — presence matters more than words
 - Do not ask about details, do not give advice, do not suggest they calm down or take a break
 
+CRITICAL: Do not reference any crisis line, helpline, or phone number — not 988, not 116, not any number. The app already displays a dedicated Supportline Malta 179 card. Your only job is to stay present.
+
 Do not mention food, logging, or the app.
 Plain text only. No formatting, no emoji.`
 
