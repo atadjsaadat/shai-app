@@ -8,6 +8,17 @@ import { createSpeechRecognition } from '@/lib/speech/recognition';
 import { compressPhoto } from '@/lib/storage/upload';
 import styles from './page.module.css';
 
+// ── Journal note colours (cycling per entry) ──────────
+
+const NOTE_COLOURS = [
+  '#F0D5C8', // terra-light
+  '#D4E8D6', // sage-light
+  '#D0E4F0', // blue-light
+  '#F5E8C0', // yellow-light
+  '#E4D8F0', // purple-light
+  '#F0D8E4', // pink-light
+];
+
 // ── Types ──────────────────────────────────────────────
 
 interface JournalEntry {
@@ -469,8 +480,12 @@ export default function JourneyPage() {
             </div>
           ) : (
             <div className={styles.entryList}>
-              {entries.map(entry => (
-                <div key={entry.id} className={styles.entryCard}>
+              {entries.map((entry, idx) => (
+                <div
+                  key={entry.id}
+                  className={styles.entryCard}
+                  style={{ '--note-bg': NOTE_COLOURS[idx % NOTE_COLOURS.length] } as React.CSSProperties}
+                >
                   {editingId === entry.id ? (
                     <>
                       <p className={styles.dateChip}>{formatEntryDate(entry.created_at)}</p>
