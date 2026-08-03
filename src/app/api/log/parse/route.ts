@@ -1,13 +1,81 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/anthropic/client';
+import { createClient } from '@/lib/supabase/server';
+import { createClient as createAnthropicClient } from '@/lib/anthropic/client';
 import { buildParserSystemPrompt } from '@/lib/log/prompts';
+import { detectDistress } from '@/lib/distress/detect';
+import { generateDistressResponse } from '@/lib/distress/respond';
+import { logDistressFlag } from '@/lib/distress/log';
 import type { ParseApiRequest, ParseApiResponse } from '@/lib/log/types';
 
 export async function POST(req: NextRequest) {
-  const { messages, mealType }: ParseApiRequest = await req.json();
+  const { messages, mealType, distressActive }: ParseApiRequest = await req.json();
 
-  const anthropic = createClient();
+  // Soft auth — needed for distress logging; food parse works without it
+  let userId: string | null = null;
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    userId = user?.id ?? null;
+  } catch { /* proceed without auth */ }
 
+  const latestUserMessage = [...messages].reverse().find(m => m.role === 'user')?.content ?? '';
+  const anthropic = createAnthropicClient();
+
+  // ── Distress intercept ──────────────────────────────────────────────────
+  // If parent is already in Level 3 distress mode, skip detection and stay in Sonnet
+  if (distressActive) {
+    const shaiResponse = await generateDistressResponse(3, messages);
+
+    if (userId) {
+      await logDistressFlag({
+        userId,
+        level: 3,
+        languageDetected: null,
+        shaiResponseGiven: shaiResponse,
+        resourceSurfaced: true,
+      }).catch(() => {});
+    }
+
+    return NextResponse.json({
+      message: shaiResponse,
+      foodItems: [],
+      clarifyingQuestion: null,
+      mealType,
+      isHardFoodDay: false,
+      complete: false,
+      distressLevel: 3,
+    } satisfies ParseApiResponse);
+  }
+
+  // Check the latest user message for distress signals
+  const { level, languageDetected } = await detectDistress(latestUserMessage);
+
+  if (level > 0) {
+    const shaiResponse = await generateDistressResponse(level as 1 | 2 | 3, messages);
+    const resourceSurfaced = level >= 2;
+
+    if (userId) {
+      await logDistressFlag({
+        userId,
+        level: level as 1 | 2 | 3,
+        languageDetected,
+        shaiResponseGiven: shaiResponse,
+        resourceSurfaced,
+      }).catch(() => {});
+    }
+
+    return NextResponse.json({
+      message: shaiResponse,
+      foodItems: [],
+      clarifyingQuestion: null,
+      mealType,
+      isHardFoodDay: false,
+      complete: false,
+      distressLevel: level as 1 | 2 | 3,
+    } satisfies ParseApiResponse);
+  }
+
+  // ── Normal food parse ───────────────────────────────────────────────────
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 2048,

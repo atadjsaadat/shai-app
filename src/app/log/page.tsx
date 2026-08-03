@@ -135,6 +135,7 @@ export default function LogPage() {
   const [portionMultiplier, setPortionMultiplier] = useState(1);
   const [reactions, setReactions] = useState<string[]>([]);
   const [noReaction, setNoReaction] = useState(false);
+  const [distressLevel, setDistressLevel] = useState<1 | 2 | 3 | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -332,6 +333,7 @@ export default function LogPage() {
         body: JSON.stringify({
           messages: nextMessages.map((m) => ({ role: m.role, content: m.content })),
           mealType,
+          ...(distressLevel === 3 && { distressActive: true }),
         }),
       });
 
@@ -342,7 +344,11 @@ export default function LogPage() {
         { id: generateId(), role: 'assistant', content: data.message },
       ]);
 
-      if (data.complete) {
+      if (data.distressLevel) {
+        setDistressLevel(data.distressLevel);
+      }
+
+      if (data.complete && !data.distressLevel) {
         setParsedData(data);
         setPhase('confirming');
       }
@@ -499,7 +505,7 @@ export default function LogPage() {
 
       {/* ── Messages ── */}
       <div className={`${styles.messages} ${phase === 'chatting' ? styles.messagesChat : ''}`}>
-        {messages.map((msg) => (
+        {messages.map((msg, i) => (
           <div
             key={msg.id}
             className={`${styles.row} ${msg.role === 'user' ? styles.rowUser : styles.rowAssistant}`}
@@ -509,6 +515,14 @@ export default function LogPage() {
             )}
             <div className={`${styles.bubble} ${msg.role === 'assistant' ? styles.bubbleAssistant : styles.bubbleUser}`}>
               {msg.content}
+              {msg.role === 'assistant' && distressLevel === 2 && i === messages.length - 1 && (
+                <a href="tel:179" className={styles.supportLineChip}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.22 1.18 2 2 0 012.18 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.72 6.72l1.06-1.06a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
+                  </svg>
+                  Supportline Malta · 179
+                </a>
+              )}
             </div>
           </div>
         ))}
@@ -526,6 +540,19 @@ export default function LogPage() {
 
         <div ref={messagesEndRef} />
       </div>
+
+      {/* ── Level 3 — sticky 179 card ── */}
+      {distressLevel === 3 && (
+        <div className={styles.distressCard}>
+          <div className={styles.distressCardText}>
+            <p className={styles.distressCardTitle}>You don&apos;t have to face this alone.</p>
+            <p className={styles.distressCardSub}>Free · Confidential · 24/7</p>
+          </div>
+          <a href="tel:179" className={styles.call179Btn}>
+            Call 179
+          </a>
+        </div>
+      )}
 
       {/* ── Chat input ── */}
       {phase === 'chatting' && (

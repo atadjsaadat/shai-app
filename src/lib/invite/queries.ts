@@ -46,7 +46,8 @@ export async function validateInvite(token: string): Promise<{
   if (new Date(invite.expires_at) < new Date()) return { valid: false, error: 'This invite has expired.' }
   if (invite.accepted_by_user_id) return { valid: false, alreadyAccepted: true, error: 'This invite has already been used.' }
 
-  const child = invite.children as { name: string; id: string } | null
+  const raw = invite.children
+  const child = (Array.isArray(raw) ? raw[0] : raw) as { name: string; id: string } | null
   const { data: inviterData } = await admin.auth.admin.getUserById(invite.invited_by_user_id)
 
   return {

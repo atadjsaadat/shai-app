@@ -53,6 +53,7 @@ export interface LogMessage {
 export interface ParseApiRequest {
   messages: { role: 'user' | 'assistant'; content: string }[];
   mealType: MealType;
+  distressActive?: boolean;
 }
 
 export interface ParseApiResponse {
@@ -62,4 +63,5 @@ export interface ParseApiResponse {
   mealType: MealType;
   isHardFoodDay: boolean;
   complete: boolean;
+  distressLevel?: 1 | 2 | 3;
 }
