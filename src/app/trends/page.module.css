@@ -63,6 +63,7 @@
   background: var(--oat);
   border-radius: 20px;
   padding: 18px 16px;
+  box-shadow: var(--card-shadow);
 }
 
 .dotsRow {
@@ -141,6 +142,7 @@
   padding: 16px 18px;
   display: flex;
   gap: 20px;
+  box-shadow: var(--card-shadow);
 }
 
 .nutrientCol {
@@ -207,6 +209,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  box-shadow: var(--card-shadow);
 }
 
 .foodGroupStrip {
@@ -301,6 +304,7 @@
   border: none;
   width: 100%;
   text-align: left;
+  box-shadow: var(--card-shadow);
 }
 
 .bestDayStar {
@@ -343,6 +347,7 @@
   flex-direction: column;
   gap: 10px;
   margin-top: -10px;
+  box-shadow: var(--card-shadow);
 }
 
 .snapshotHeader {
@@ -435,6 +440,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  box-shadow: var(--card-shadow);
 }
 
 .premiumTitle {
@@ -467,6 +473,7 @@
   border-radius: 18px;
   padding: 16px 18px;
   margin-top: 10px;
+  box-shadow: var(--card-shadow);
 }
 
 .insightText {

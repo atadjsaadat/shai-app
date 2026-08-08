@@ -58,7 +58,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--card-shadow);
 }
 
 .statValue {
@@ -91,38 +91,52 @@
   margin-top: 2px;
 }
 
+.statGain {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-top: 4px;
+  line-height: 1.3;
+}
+
+.lastMeasured {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-align: center;
+  margin-top: -4px;
+}
+
 /* ── Tabs ── */
 .tabs {
   display: flex;
-  background: var(--oat);
-  border-radius: 14px;
-  padding: 3px;
-  gap: 3px;
+  gap: 8px;
 }
 
 .tab {
   flex: 1;
   padding: 9px;
-  border: none;
-  border-radius: 12px;
-  background: transparent;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 20px;
+  background: var(--cream);
+  font-family: var(--font-nunito), sans-serif;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  outline: none;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
-/* Active state background/color applied inline with accent; this provides the pill shape */
 .tabActive {
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+  font-weight: 700;
 }
 
 /* ── Chart ── */
 .chartCard {
   border-radius: 20px;
   padding: 16px 12px 14px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+  box-shadow: var(--card-shadow);
   /* background applied inline with accent gradient */
 }
 
@@ -163,7 +177,7 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+  box-shadow: var(--card-shadow);
 }
 
 .formTitle {

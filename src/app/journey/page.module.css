@@ -30,15 +30,17 @@
 }
 
 .newBtn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
   background: var(--terracotta);
-  color: #fff;
   border: none;
-  border-radius: 20px;
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 700;
-  font-family: inherit;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
 }
 
 .addWinBtn {
@@ -88,27 +90,51 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
+.segActiveJournal {
+  background: var(--terracotta);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.segActiveWins {
+  background: var(--sage);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
 /* ── Composer ─────────────────────────────────────────── */
 .composer {
-  background: var(--oat);
   border-radius: 20px;
-  padding: 16px;
+  padding: 14px 16px 18px 48px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  background:
+    linear-gradient(to right, rgba(190, 80, 60, 0.18) 1px, transparent 1px) 36px 0 / 1px 100% no-repeat,
+    #FDF8F5;
+  box-shadow: var(--card-shadow);
 }
 
 .composerTextarea {
   width: 100%;
-  background: transparent;
+  padding: 0;
   border: none;
   outline: none;
-  font-family: inherit;
-  font-size: 15px;
+  font-family: var(--font-handwriting), cursive;
+  font-size: 18px;
   color: var(--text-primary);
-  line-height: 1.6;
+  line-height: 26px;
   resize: none;
-  min-height: 80px;
+  min-height: 104px;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 21px,
+    rgba(100, 130, 170, 0.13) 21px,
+    rgba(100, 130, 170, 0.13) 22px,
+    transparent 22px,
+    transparent 26px
+  );
 }
 
 .editTextarea {
@@ -209,7 +235,26 @@
 .entryList {
   display: flex;
   flex-direction: column;
+  gap: 20px;
+}
+
+.entryGroup {
+  display: flex;
+  flex-direction: column;
   gap: 12px;
+}
+
+.dateGroupHeader {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 2px 4px 6px;
+  position: sticky;
+  top: 0;
+  background: var(--cream);
+  z-index: 10;
 }
 
 .entryCard {
@@ -218,16 +263,11 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  overflow: hidden;
   background:
     linear-gradient(to right, rgba(190, 80, 60, 0.18) 1px, transparent 1px) 36px 0 / 1px 100% no-repeat,
-    repeating-linear-gradient(
-      to bottom,
-      transparent,
-      transparent 25px,
-      rgba(100, 130, 170, 0.13) 25px,
-      rgba(100, 130, 170, 0.13) 26px
-    ),
     var(--note-bg, #FDF8F5);
+  box-shadow: var(--card-shadow);
 }
 
 .entryHeader {
@@ -235,6 +275,28 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+.entryMeta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.entryTime {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.entryAgeChip {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--terra-dark);
+  background: var(--terra-light);
+  padding: 2px 8px;
+  border-radius: 20px;
 }
 
 .dateChip {
@@ -270,8 +332,21 @@
   font-family: var(--font-handwriting), cursive;
   font-size: 18px;
   color: var(--text-primary);
-  line-height: 1.45;
+  line-height: 26px;
   white-space: pre-wrap;
+  margin-left: -48px;
+  padding-left: 48px;
+  margin-right: -16px;
+  padding-right: 16px;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 21px,
+    rgba(100, 130, 170, 0.13) 21px,
+    rgba(100, 130, 170, 0.13) 22px,
+    transparent 22px,
+    transparent 26px
+  );
 }
 
 /* ── Empty states ─────────────────────────────────────── */
@@ -301,6 +376,80 @@
   font-size: 13px;
   color: var(--text-muted);
   text-align: center;
+}
+
+/* ── Journal search ──────────────────────────────────── */
+.journalSearch {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* ── On This Day card ────────────────────────────────── */
+.onThisDay {
+  background: #FFF9ED;
+  border-radius: 20px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-left: 3px solid var(--terracotta);
+  box-shadow: var(--card-shadow);
+}
+
+.onThisDayHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--terracotta);
+}
+
+.onThisDayLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--terracotta);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  flex: 1;
+}
+
+.onThisDayAgo {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.onThisDayContent {
+  font-family: var(--font-handwriting), cursive;
+  font-size: 16px;
+  color: var(--text-primary);
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.onThisDayFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+}
+
+.onThisDayAge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--terra-dark);
+  background: var(--terra-light);
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.onThisDayMore {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
 }
 
 /* ── Wins tab: controls ───────────────────────────────── */

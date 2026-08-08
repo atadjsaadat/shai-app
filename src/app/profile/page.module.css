@@ -31,7 +31,7 @@
 
 /* ── Child hero ──────────────────────────────────────── */
 .heroCard {
-  background: var(--oat);
+  background: var(--terra-light);
   border-radius: 24px;
   padding: 24px 20px 20px;
   display: flex;
@@ -74,6 +74,27 @@
   padding: 4px 12px;
   border-radius: 20px;
   margin-top: 4px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* ── Section labels ──────────────────────────────────── */
+.sectionLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 10px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
 }
 
 /* ── Generic card ────────────────────────────────────── */
@@ -84,6 +105,15 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  box-shadow: var(--card-shadow);
+}
+
+.cardTerra {
+  background: var(--terra-light);
+}
+
+.cardSage {
+  background: var(--sage-light);
 }
 
 .cardTitle {
@@ -137,6 +167,109 @@
 .chipAmber {
   background: #FFF3CD;
   color: #856404;
+}
+
+/* ── Allergy editor ──────────────────────────────────── */
+.cardTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.allergyEditBtn {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--terracotta);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.allergyEditor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.allergyEditorSectionLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: -4px;
+}
+
+.allergyGroupLabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+  opacity: 0.75;
+}
+
+.allergyPicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.allergyPickerChip {
+  background: var(--cream);
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.allergyPickerChipSelected {
+  background: var(--terra-light);
+  border-color: var(--terracotta);
+  color: var(--terra-dark);
+}
+
+.allergyPickerActions {
+  display: flex;
+  gap: 10px;
+}
+
+.allergyDoneBtn {
+  background: var(--terracotta);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 11px 20px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  flex: 1;
+}
+
+.allergyDoneBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.allergyCancelBtn {
+  background: none;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 12px;
+  padding: 11px 16px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
 }
 
 /* ── Tier badge ──────────────────────────────────────── */
@@ -457,3 +590,121 @@
   color: var(--text-muted);
   cursor: pointer;
 }
+
+/* ── Swipe hint ──────────────────────────────────────── */
+.swipeHint {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+  opacity: 0.6;
+  letter-spacing: 0.02em;
+}
+
+/* ── Journal PIN lock ─────────────────────────────────── */
+.pinActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.pinActionBtn {
+  background: none;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.pinSetup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0 4px;
+}
+
+.pinSetupLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.pinError {
+  font-size: 13px;
+  color: var(--terracotta);
+  margin: -8px 0 0;
+}
+
+.pinDots {
+  display: flex;
+  gap: 16px;
+}
+
+.pinDot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2px solid var(--oat-dark);
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.pinDotFilled {
+  background: var(--terracotta);
+  border-color: var(--terracotta);
+}
+
+.pinPad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+
+.pinPadBtn {
+  height: 56px;
+  border-radius: 14px;
+  border: none;
+  background: var(--oat);
+  font-family: inherit;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.pinPadBtn:active { background: var(--oat-dark); }
+.pinPadBtn:disabled { opacity: 0.45; cursor: default; }
+
+.pinPadCancel {
+  height: 56px;
+  border-radius: 14px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.pinPadBack {
+  height: 56px;
+  border-radius: 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.pinPadBack:disabled { opacity: 0.25; cursor: default; }

@@ -11,6 +11,7 @@
   --text-primary: #3D2B1F;
   --text-secondary: #7A6255;
   --text-muted: #B09585;
+  --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 *,

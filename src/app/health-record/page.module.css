@@ -25,9 +25,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: none;
+  background: var(--oat);
   border: none;
-  color: var(--text-secondary);
+  border-radius: 50%;
+  color: var(--text-primary);
   cursor: pointer;
   padding: 0;
 }
@@ -64,74 +65,90 @@
   margin-bottom: 10px;
 }
 
-/* ── Birth details card ──────────────────────────────── */
-.detailsCard {
-  background: var(--oat);
-  border-radius: 18px;
-  padding: 16px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.detailRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--oat-dark);
-}
-
-.detailRow:last-child { border-bottom: none; }
-
-.detailName {
-  font-size: 14px;
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.detailValue {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.detailEmpty {
-  font-size: 13px;
-  color: var(--text-muted);
-  padding: 8px 0;
-  line-height: 1.6;
-}
-
-.detailLink {
-  color: var(--terracotta);
-  font-weight: 600;
-  text-decoration: none;
-}
-
-/* ── Growth link ─────────────────────────────────────── */
-.growthLink {
+/* ── Vaccination appointment reminder banner ─────────── */
+.reminderBanner {
+  background: var(--terra-light);
+  border: 1.5px solid var(--terracotta);
+  border-radius: 14px;
+  padding: 12px 14px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  background: var(--oat);
-  border-radius: 16px;
-  padding: 14px 18px;
+  gap: 10px;
+  margin-bottom: 12px;
   text-decoration: none;
-  color: var(--text-primary);
 }
 
-.growthLinkTitle {
-  font-size: 15px;
+@keyframes bellRing {
+  0%, 55%, 100% { transform: rotate(0deg); }
+  5%  { transform: rotate(-20deg); }
+  15% { transform: rotate(20deg); }
+  25% { transform: rotate(-14deg); }
+  35% { transform: rotate(14deg); }
+  45% { transform: rotate(-6deg); }
+}
+
+.reminderIcon {
+  color: var(--terracotta);
+  flex-shrink: 0;
+  transform-origin: 50% 0%;
+  animation: bellRing 2.8s ease-in-out infinite;
+}
+
+.reminderBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.reminderLabel {
+  font-size: 11px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--terra-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   margin-bottom: 2px;
 }
 
-.growthLinkSub {
+.reminderText {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.reminderChevron {
+  color: var(--terracotta);
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+/* ── Next vaccine due callout ────────────────────────── */
+.nextDueCard {
+  background: var(--terra-light);
+  border-radius: 16px;
+  padding: 14px 18px;
+  margin-bottom: 12px;
+  box-shadow: var(--card-shadow);
+}
+
+.nextDueLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--terra-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.nextDueTitle {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.nextDueSub {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-weight: 500;
+  margin-top: 2px;
 }
 
 /* ── Vaccine groups ──────────────────────────────────── */
@@ -145,7 +162,12 @@
   background: var(--oat);
   border-radius: 18px;
   overflow: hidden;
+  box-shadow: var(--card-shadow);
 }
+
+.vaccineGroupTerra  { background: var(--terra-light); }
+.vaccineGroupSage   { background: var(--sage-light); }
+.vaccineGroupYellow { background: #FEF3C7; }
 
 .vaccineGroupHeader {
   display: flex;

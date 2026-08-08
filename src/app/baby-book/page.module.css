@@ -26,9 +26,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: none;
+  background: var(--oat);
   border: none;
-  color: var(--text-secondary);
+  border-radius: 50%;
+  color: var(--text-primary);
   cursor: pointer;
   padding: 0;
 }
@@ -51,16 +52,166 @@
 }
 
 .addBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   background: var(--terracotta);
   color: #fff;
   border: none;
-  border-radius: 20px;
-  padding: 8px 16px;
-  font-family: var(--font-nunito), sans-serif;
-  font-size: 14px;
-  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
+  font-size: 24px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+/* ── Search bar ──────────────────────────────────────── */
+.searchWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 14px;
+  color: var(--text-muted);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  width: 100%;
+  background: var(--oat);
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 14px;
+  padding: 11px 40px 11px 38px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.searchInput:focus {
+  border-color: var(--terracotta);
+}
+
+.searchInput::placeholder {
+  color: var(--text-muted);
+}
+
+.searchClear {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+/* ── Stats + view toggle row ─────────────────────────── */
+.statsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.statsText {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.viewToggle {
+  display: flex;
+  background: var(--oat);
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 20px;
+  padding: 3px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.viewToggleBtn {
+  padding: 5px 12px;
+  border: none;
+  border-radius: 16px;
+  background: none;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.viewToggleActive {
+  background: var(--text-primary);
+  color: #fff;
+}
+
+/* ── Filter bar ──────────────────────────────────────── */
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filterCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.12);
+  line-height: 1;
+}
+
+.filterChip {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--oat-dark);
+  background: var(--cream);
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.filterChipIcon {
+  display: flex;
+  align-items: center;
+}
+
+.filterChipAll {
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+  color: #fff;
+  font-weight: 700;
+}
+
+.filterChipActive {
+  font-weight: 700;
 }
 
 /* ── Form card ───────────────────────────────────────── */
@@ -71,6 +222,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  box-shadow: var(--card-shadow);
 }
 
 .formTitle {
@@ -103,6 +255,9 @@
 }
 
 .typeChip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   padding: 7px 13px;
   border-radius: 20px;
   border: 1.5px solid var(--oat-dark);
@@ -115,10 +270,13 @@
   transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
+.typeChipIcon {
+  display: flex;
+  align-items: center;
+}
+
 .typeChipActive {
-  background: var(--terracotta);
-  border-color: var(--terracotta);
-  color: #fff;
+  font-weight: 700;
 }
 
 .fieldInput {
@@ -221,51 +379,94 @@
   padding: 24px 0;
 }
 
+/* ── Domain sections ─────────────────────────────────── */
+.domainSections {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.domainSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.domainHeader {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 5px 14px;
+  border-radius: 20px;
+  margin-bottom: 14px;
+  letter-spacing: 0.02em;
+}
+
+.domainHeaderIcon {
+  display: flex;
+  align-items: center;
+}
+
+/* ── Domain picker (form) ────────────────────────────── */
+.domainGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.domainChip {
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1.5px solid var(--oat-dark);
+  background: var(--cream);
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.domainChipActive {
+  font-weight: 700;
+}
+
 /* ── Timeline ────────────────────────────────────────── */
 .timeline {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  position: relative;
-}
-
-.timeline::before {
-  content: '';
-  position: absolute;
-  left: 7px;
-  top: 8px;
-  bottom: 8px;
-  width: 2px;
-  background: var(--oat-dark);
-  border-radius: 1px;
+  gap: 10px;
 }
 
 .entry {
   display: flex;
-  gap: 16px;
-  padding-bottom: 24px;
-  position: relative;
+  gap: 14px;
+  align-items: flex-start;
 }
 
 .entryDot {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: var(--terracotta);
+  box-shadow: 0 0 0 3px rgba(196,113,74,0.15);
+  margin-top: 18px;
   flex-shrink: 0;
-  margin-top: 4px;
-  border: 3px solid var(--cream);
-  box-shadow: 0 0 0 2px var(--terracotta);
 }
 
 .entryBody {
+  position: relative;
   flex: 1;
-  background: var(--oat);
   border-radius: 16px;
   padding: 14px 16px;
+  border-left: 4px solid;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  box-shadow: var(--card-shadow);
 }
 
 .entryMeta {
@@ -276,6 +477,9 @@
 }
 
 .typeLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
   font-weight: 700;
   color: var(--terracotta);
@@ -284,10 +488,116 @@
   border-radius: 20px;
 }
 
+.typeLabelIcon {
+  display: flex;
+  align-items: center;
+}
+
 .ageLabel {
-  font-size: 12px;
+  font-size: 14px;
+  color: var(--terracotta);
+  font-weight: 600;
+}
+
+.menuBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: none;
+  border: none;
+  font-size: 20px;
   color: var(--text-muted);
-  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+}
+
+.menuBtn:hover {
+  background: var(--oat-dark);
+  color: var(--text-secondary);
+}
+
+.menuDropdown {
+  position: absolute;
+  top: 40px;
+  right: 8px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  padding: 6px;
+  z-index: 10;
+  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.menuItem {
+  background: none;
+  border: none;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 8px 12px;
+  text-align: left;
+  border-radius: 8px;
+  width: 100%;
+}
+
+.menuItem:hover {
+  background: var(--oat);
+}
+
+.menuItemDelete {
+  color: #c0392b;
+}
+
+.deleteConfirmRow {
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.deleteConfirmText {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.deleteConfirmBtns {
+  display: flex;
+  gap: 12px;
+}
+
+.deleteConfirmBtn {
+  background: none;
+  border: none;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #c0392b;
+  cursor: pointer;
+  padding: 0;
+}
+
+.deleteConfirmNo {
+  background: none;
+  border: none;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
 }
 
 .entryTitle {
@@ -312,54 +622,79 @@
   border-top: 1px solid var(--oat-dark);
 }
 
-.entryActions {
+/* ── Coming up nudge ─────────────────────────────────── */
+.comingUp {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 4px;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.actionBtn {
-  background: none;
-  border: none;
-  font-family: var(--font-nunito), sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 0;
-}
-
-.actionBtn:hover {
-  color: var(--text-secondary);
-}
-
-.deleteConfirmText {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.deleteConfirmBtn {
-  background: none;
-  border: none;
-  font-family: var(--font-nunito), sans-serif;
+.comingUpTitle {
   font-size: 12px;
   font-weight: 700;
-  color: #c0392b;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.comingUpChips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.comingUpChip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--oat);
+  border: 1.5px solid var(--oat-dark);
   cursor: pointer;
-  padding: 0;
+  font-family: var(--font-nunito), sans-serif;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.comingUpChip:hover {
+  box-shadow: 0 3px 12px rgba(0,0,0,0.10);
+}
+
+.comingUpChipIcon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.comingUpChipText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.comingUpChipLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: left;
+}
+
+.comingUpChipAge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
 }
 
 /* ── Locked / premium upsell ─────────────────────────── */
 .lockedCard {
-  margin-left: 32px;
   background: var(--terra-light);
   border-radius: 16px;
   padding: 16px 18px;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  box-shadow: var(--card-shadow);
 }
 
 .lockedTitle {
