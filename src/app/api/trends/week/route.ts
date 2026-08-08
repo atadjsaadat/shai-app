@@ -66,8 +66,10 @@ export async function GET(request: Request) {
 
   // Group by local date and sum nutrients
   const dayTotalsMap = new Map<string, Targets>()
+  let mealCount = 0
   for (const log of (logs ?? [])) {
     if (!log.food_name || log.is_hard_food_day) continue
+    mealCount++
     const localDate = toLocalDateStr(new Date(log.logged_at).getTime(), offsetMinutes)
     if (!dayTotalsMap.has(localDate)) {
       dayTotalsMap.set(localDate, { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0, fibre_g: 0, sugar_g: 0, sodium_mg: 0, iron_mg: 0 })
@@ -112,5 +114,5 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ days, targets, ageMonths, loggedCount, averages, tier })
+  return NextResponse.json({ days, targets, ageMonths, loggedCount, mealCount, averages, tier })
 }

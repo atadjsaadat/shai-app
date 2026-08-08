@@ -99,10 +99,15 @@
   height: 28px;
   border-radius: 50%;
   background: var(--oat-dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
+}
+
+.dotToday {
+  box-shadow: 0 0 0 2.5px var(--oat), 0 0 0 4px var(--terracotta);
+}
+
+.dotTodayEmpty {
+  border-color: var(--terracotta);
+  border-width: 2.5px;
 }
 
 .dayLabel {
@@ -115,6 +120,18 @@
 .dayLabelLocked {
   color: var(--text-muted);
   opacity: 0.6;
+}
+
+.dayLabelToday {
+  color: var(--terracotta);
+}
+
+.todayPip {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--terracotta);
+  margin-top: -2px;
 }
 
 /* ── Nutrient bars ───────────────────────────────────── */
@@ -182,55 +199,256 @@
   padding: 8px 0;
 }
 
-/* ── Premium upsell ──────────────────────────────────── */
-.premiumCard {
-  background: var(--terra-light);
+/* ── Food group strip ────────────────────────────────── */
+.foodGroupCard {
+  background: var(--oat);
   border-radius: 20px;
-  padding: 18px 20px;
+  padding: 14px 18px;
   display: flex;
   flex-direction: column;
+  gap: 10px;
+}
+
+.foodGroupStrip {
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  display: flex;
+  width: 100%;
+}
+
+.foodGroupSegment {
+  height: 100%;
+  transition: width 0.6s ease;
+}
+
+.foodGroupLegend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.foodGroupLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.foodGroupDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.foodGroupLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+/* ── Range chips (WHO energy) ────────────────────────── */
+.rangeChip {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.rangeChipGood {
+  background: var(--sage-light);
+  color: var(--sage-dark);
+}
+
+.rangeChipOff {
+  background: var(--oat-dark);
+  color: var(--text-muted);
+}
+
+.whoAttribution {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-top: -4px;
+}
+
+/* ── Best day callout ────────────────────────────────── */
+@keyframes starPop {
+  0%   { transform: scale(1)    rotate(0deg); }
+  20%  { transform: scale(1.8)  rotate(-25deg); }
+  40%  { transform: scale(1.4)  rotate(15deg); }
+  60%  { transform: scale(1.6)  rotate(-10deg); }
+  80%  { transform: scale(1.2)  rotate(5deg); }
+  100% { transform: scale(1)    rotate(0deg); }
+}
+
+@keyframes starBounce {
+  0%, 100% { transform: scale(1)    rotate(0deg); }
+  30%       { transform: scale(1.5)  rotate(-18deg); }
+  60%       { transform: scale(1.35) rotate(12deg); }
+}
+
+.bestDayCard {
+  background: var(--oat);
+  border-radius: 16px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  border: none;
+  width: 100%;
+  text-align: left;
+}
+
+.bestDayStar {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  animation: starPop 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both,
+             starBounce 1.4s ease-in-out 0.8s infinite;
+  transform-origin: center;
+}
+
+.bestDayText {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.bestDayLabel {
+  color: var(--terracotta);
+  font-weight: 700;
+}
+
+.bestDayChevron {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 0.25s ease;
+}
+
+.bestDayChevronOpen {
+  transform: rotate(180deg);
+}
+
+/* ── Day snapshot ────────────────────────────────────── */
+.snapshotCard {
+  background: var(--oat);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: -10px;
+}
+
+.snapshotHeader {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.snapshotDivider {
+  height: 1px;
+  background: var(--oat-dark);
+  margin: 2px 0;
+}
+
+.snapshotMealGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.snapshotMealLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+
+.snapshotEntry {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   gap: 8px;
 }
 
+.snapshotFoodWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.snapshotFood {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.snapshotServing {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.snapshotKcal {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.snapshotEmpty {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-align: center;
+  padding: 4px 0;
+}
+
+.snapshotLoading {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ── Premium upsell ──────────────────────────────────── */
+.premiumCard {
+  background: var(--terra-light);
+  border-radius: 16px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .premiumTitle {
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 700;
   color: var(--terra-dark);
 }
 
 .premiumText {
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.6;
-}
-
-/* ── Growth card ─────────────────────────────────────── */
-.growthCard {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--oat);
-  border-radius: 20px;
-  padding: 18px 20px;
-  text-decoration: none;
-  color: var(--text-primary);
-  transition: background 0.15s;
-}
-
-.growthCard:active { background: var(--oat-dark); }
-
-.growthTitle {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 3px;
-}
-
-.growthText {
   font-size: 12px;
-  color: var(--text-muted);
-  font-weight: 500;
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
+
 
 .premiumBadge {
   align-self: flex-start;
@@ -297,4 +515,13 @@
   font-weight: 500;
   opacity: 0.8;
   text-transform: capitalize;
+}
+
+/* ── Wins count ──────────────────────────────────────── */
+.winsCount {
+  color: var(--terracotta);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
 }

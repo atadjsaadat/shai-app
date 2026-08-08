@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import BottomNav from '@/components/BottomNav';
 import styles from './page.module.css';
@@ -24,10 +23,16 @@ interface DayData {
   locked: boolean;
 }
 
+interface ScoredDayData extends DayData {
+  score: number;
+}
+
 interface WeekData {
   days: DayData[];
   targets: Totals;
+  ageMonths: number;
   loggedCount: number;
+  mealCount: number;
   averages: Totals | null;
   tier: string;
 }
@@ -38,6 +43,15 @@ interface WinEntry {
   win_type: string;
   food_involved: string | null;
   parent_note: string | null;
+}
+
+interface DayEntry {
+  id: string;
+  meal_type: string | null;
+  food_name: string;
+  serving_size_description: string | null;
+  calories_kcal: number | null;
+  logged_at: string;
 }
 
 type NutrientDef = { key: keyof Totals; name: string; color: string }
@@ -55,6 +69,69 @@ const RIGHT_NUTRIENTS: NutrientDef[] = [
   { key: 'sodium_mg', name: 'Salt',  color: '#7AA5C4' },
   { key: 'iron_mg',   name: 'Iron',  color: '#B87333' },
 ];
+
+// Only score nutrients where more = better (exclude sugar and sodium)
+const SCORE_NUTRIENTS: (keyof Totals)[] = ['calories_kcal', 'protein_g', 'carbs_g', 'fat_g', 'fibre_g', 'iron_mg'];
+
+interface MacroGroup { label: string; color: string; min: number; max: number }
+interface MacroConfig { groups: MacroGroup[]; attribution: string }
+
+// WHO/IOM macronutrient target ranges by age — needs clinical sign-off before first real user
+function getMacroConfig(ageMonths: number): MacroConfig {
+  if (ageMonths < 7) {
+    // Under 6 months: milk-only, complementary food strip not meaningful
+    return {
+      groups: [
+        { label: 'Carbs',   color: '#B09585', min: 40, max: 55 },
+        { label: 'Protein', color: '#D4A72C', min: 8,  max: 12 },
+        { label: 'Fat',     color: '#A67BC4', min: 40, max: 55 },
+      ],
+      attribution: 'Based on WHO guidance for infants under 6 months — breastmilk or formula remains the primary source',
+    };
+  }
+  if (ageMonths < 13) {
+    // 6–12 months: complementary feeding — high fat important for brain development
+    return {
+      groups: [
+        { label: 'Carbs',   color: '#B09585', min: 30, max: 50 },
+        { label: 'Protein', color: '#D4A72C', min: 8,  max: 15 },
+        { label: 'Fat',     color: '#A67BC4', min: 40, max: 60 },
+      ],
+      attribution: 'Based on WHO complementary feeding recommendations for infants 6–12 months · complementary foods only, alongside breastmilk or formula',
+    };
+  }
+  if (ageMonths < 37) {
+    // 1–3 years (IOM / WHO)
+    return {
+      groups: [
+        { label: 'Carbs',   color: '#B09585', min: 45, max: 65 },
+        { label: 'Protein', color: '#D4A72C', min: 10, max: 15 },
+        { label: 'Fat',     color: '#A67BC4', min: 30, max: 40 },
+      ],
+      attribution: 'Based on WHO/IOM dietary guidance for children aged 1–3',
+    };
+  }
+  if (ageMonths < 73) {
+    // 4–6 years (IOM / WHO) — fat range slightly lower
+    return {
+      groups: [
+        { label: 'Carbs',   color: '#B09585', min: 45, max: 65 },
+        { label: 'Protein', color: '#D4A72C', min: 10, max: 15 },
+        { label: 'Fat',     color: '#A67BC4', min: 25, max: 35 },
+      ],
+      attribution: 'Based on WHO/IOM dietary guidance for children aged 4–6',
+    };
+  }
+  // 6+ years
+  return {
+    groups: [
+      { label: 'Carbs',   color: '#B09585', min: 45, max: 65 },
+      { label: 'Protein', color: '#D4A72C', min: 10, max: 15 },
+      { label: 'Fat',     color: '#A67BC4', min: 25, max: 35 },
+    ],
+    attribution: 'Based on WHO/IOM dietary guidance for children aged 6+',
+  };
+}
 
 const WIN_TYPE_LABELS: Record<string, string> = {
   new_food:    'New food tried',
@@ -74,12 +151,37 @@ const WIN_CHIP_COLOURS: Record<string, { bg: string; text: string }> = {
   other:       { bg: '#F0D8E4', text: '#803050' },
 };
 
+const MEAL_TYPE_LABELS: Record<string, string> = {
+  breakfast: 'Breakfast',
+  lunch: 'Lunch',
+  dinner: 'Dinner',
+  snack: 'Snack',
+  other: 'Other',
+};
+
+const MEAL_ORDER = ['breakfast', 'lunch', 'dinner', 'snack', 'other'];
+
+function scoreDay(totals: Totals, targets: Totals): number {
+  return SCORE_NUTRIENTS.filter(k => targets[k] > 0 && totals[k] >= targets[k] * 0.5).length;
+}
+
+function rangeStatus(value: number, min: number, max: number): { label: string; good: boolean } {
+  if (value >= min && value <= max) return { label: 'in range', good: true };
+  if (value < min) return { label: 'a little low', good: false };
+  return { label: 'a little high', good: false };
+}
+
 function formatValue(value: number, key: keyof Totals): string {
   if (key === 'calories_kcal') return String(Math.round(value));
   if (key === 'sodium_mg' || key === 'iron_mg') {
     return `${value < 10 ? value.toFixed(1) : Math.round(value)}mg`;
   }
   return `${value < 10 ? value.toFixed(1) : Math.round(value)}g`;
+}
+
+function formatTime(isoString: string): string {
+  const d = new Date(isoString);
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 function localDate(): string {
@@ -124,6 +226,8 @@ function NutrientCol({ nutrients, averages, targets }: {
 }
 
 export default function TrendsPage() {
+  const today = localDate();
+  const [activeChildId, setActiveChildId] = useState<string | null>(null);
   const [childName, setChildName] = useState<string | null>(null);
   const [data, setData] = useState<WeekData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -131,6 +235,9 @@ export default function TrendsPage() {
   const [weekWins, setWeekWins] = useState<WinEntry[]>([]);
   const [insight, setInsight] = useState<string | null>(null);
   const [insightLoading, setInsightLoading] = useState(false);
+  const [snapshotDate, setSnapshotDate] = useState<string | null>(null);
+  const [snapshotEntries, setSnapshotEntries] = useState<DayEntry[]>([]);
+  const [snapshotLoading, setSnapshotLoading] = useState(false);
 
   useEffect(() => {
     async function init() {
@@ -151,6 +258,7 @@ export default function TrendsPage() {
 
       if (!childId) { setNoChild(true); setLoading(false); return; }
 
+      setActiveChildId(childId);
       setChildName(name);
 
       const offset = -new Date().getTimezoneOffset();
@@ -174,7 +282,6 @@ export default function TrendsPage() {
 
       setLoading(false);
 
-      // Insight: read from shared weekly cache or call API (Sonnet)
       const cacheKey = `shai_weekly_summary_${monday}`;
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
@@ -197,6 +304,76 @@ export default function TrendsPage() {
     init();
   }, []);
 
+  async function toggleSnapshot(date: string) {
+    if (snapshotDate === date) {
+      setSnapshotDate(null);
+      setSnapshotEntries([]);
+      return;
+    }
+    setSnapshotDate(date);
+    setSnapshotEntries([]);
+    setSnapshotLoading(true);
+    try {
+      const offset = -new Date().getTimezoneOffset();
+      const res = await fetch(`/api/trends/day?childId=${activeChildId}&date=${date}&utcOffset=${offset}`);
+      const json = await res.json();
+      if (json.entries) setSnapshotEntries(json.entries);
+    } catch { /* silently fail */ }
+    setSnapshotLoading(false);
+  }
+
+  // Best day = day with most nutrient targets hit (≥50%), tiebreak on calories
+  const bestDay: ScoredDayData | null = data
+    ? data.days
+        .filter(d => !d.locked && d.totals)
+        .map(d => ({ ...d, score: scoreDay(d.totals!, data.targets) }))
+        .sort((a, b) => b.score - a.score || b.totals!.calories_kcal - a.totals!.calories_kcal)[0] ?? null
+    : null;
+
+  let macroSplit: [number, number, number] | null = null;
+  if (data?.averages) {
+    const carbsKcal = data.averages.carbs_g * 4;
+    const proteinKcal = data.averages.protein_g * 4;
+    const fatKcal = data.averages.fat_g * 9;
+    const total = carbsKcal + proteinKcal + fatKcal;
+    if (total > 0) {
+      const c = Math.round((carbsKcal / total) * 100);
+      const p = Math.round((proteinKcal / total) * 100);
+      macroSplit = [c, p, 100 - c - p];
+    }
+  }
+
+  const logCountText = data && data.mealCount > 0
+    ? `${data.mealCount} meal${data.mealCount !== 1 ? 's' : ''} · ${data.loggedCount} day${data.loggedCount !== 1 ? 's' : ''}`
+    : null;
+
+  const macroConfig = getMacroConfig(data?.ageMonths ?? 24);
+
+  // Snapshot grouping
+  const snapshotGroups: Record<string, DayEntry[]> = {};
+  for (const e of snapshotEntries) {
+    const k = e.meal_type ?? 'other';
+    (snapshotGroups[k] ??= []).push(e);
+  }
+  const snapshotGroupKeys = MEAL_ORDER.filter(k => snapshotGroups[k]);
+  const snapshotTotalKcal = snapshotEntries.reduce((s, e) => s + (e.calories_kcal ?? 0), 0);
+
+  // PREVIEW MOCK — remove before first real user
+  const displayMacroSplit: [number, number, number] = macroSplit ?? [52, 18, 30];
+  const displayBestDay: ScoredDayData | null = bestDay ?? (data ? {
+    date: data.days.find(d => d.dayLabel === 'Thu')?.date ?? data.days[data.days.length - 1]?.date ?? '',
+    dayLabel: 'Thu',
+    score: 5,
+    hasLogs: true,
+    locked: false,
+    totals: { calories_kcal: 1240, protein_g: 20, carbs_g: 80, fat_g: 30, fibre_g: 5, sugar_g: 10, sodium_mg: 300, iron_mg: 5 } as Totals,
+  } : null);
+  const displayWins: WinEntry[] = weekWins.length > 0 ? weekWins : (data ? [
+    { id: 'm1', logged_at: '', win_type: 'new_food', food_involved: 'mango', parent_note: null },
+    { id: 'm2', logged_at: '', win_type: 'ate_well', food_involved: null, parent_note: null },
+    { id: 'm3', logged_at: '', win_type: 'self_fed', food_involved: 'pasta', parent_note: null },
+  ] : []);
+
   return (
     <div className={styles.page}>
       <header className={styles.topBar}>
@@ -204,11 +381,12 @@ export default function TrendsPage() {
         {childName && <p className={styles.subtitle}>{childName}&apos;s week</p>}
       </header>
 
+      {/* ── Week dot strip ── */}
       <section>
         <div className={styles.sectionHeader}>
           <p className={styles.sectionLabel}>This week</p>
-          {!loading && data && (
-            <p className={styles.loggedCount}>{data.loggedCount} of 7 days logged</p>
+          {!loading && logCountText && (
+            <p className={styles.loggedCount}>{logCountText}</p>
           )}
         </div>
 
@@ -226,25 +404,24 @@ export default function TrendsPage() {
             <p className={styles.emptyHint}>No child profile found</p>
           ) : data ? (
             <div className={styles.dotsRow}>
-              {data.days.map((day) => (
-                <div key={day.date} className={styles.dayCol}>
-                  {day.locked ? (
-                    <div className={styles.dotLocked}>
-                      <svg width="9" height="11" viewBox="0 0 9 11" fill="none">
-                        <rect x="1" y="4.5" width="7" height="5.5" rx="1.2" stroke="currentColor" strokeWidth="1.2" />
-                        <path d="M2.5 4.5V3A2 2 0 0 1 6.5 3v1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                      </svg>
-                    </div>
-                  ) : day.hasLogs ? (
-                    <div className={styles.dotFilled} />
-                  ) : (
-                    <div className={styles.dotEmpty} />
-                  )}
-                  <span className={`${styles.dayLabel}${day.locked ? ` ${styles.dayLabelLocked}` : ''}`}>
-                    {day.dayLabel}
-                  </span>
-                </div>
-              ))}
+              {data.days.map((day) => {
+                const isToday = day.date === today;
+                return (
+                  <div key={day.date} className={styles.dayCol}>
+                    {day.locked ? (
+                      <div className={styles.dotLocked} />
+                    ) : day.hasLogs ? (
+                      <div className={`${styles.dotFilled}${isToday ? ` ${styles.dotToday}` : ''}`} />
+                    ) : (
+                      <div className={`${styles.dotEmpty}${isToday ? ` ${styles.dotTodayEmpty}` : ''}`} />
+                    )}
+                    <span className={`${styles.dayLabel}${day.locked ? ` ${styles.dayLabelLocked}` : ''}${isToday ? ` ${styles.dayLabelToday}` : ''}`}>
+                      {day.dayLabel}
+                    </span>
+                    {isToday && <div className={styles.todayPip} />}
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <p className={styles.emptyHint}>Tap Log below to start tracking</p>
@@ -252,12 +429,13 @@ export default function TrendsPage() {
         </div>
       </section>
 
+      {/* ── Nutrient average bars ── */}
       <section>
         <div className={styles.sectionHeader}>
           <p className={styles.sectionLabel}>
             {data?.tier === 'free' ? '3-day average' : '7-day average'}
           </p>
-          <p className={styles.rdaHint}>bar fills to RDA</p>
+          <p className={styles.rdaHint}>vs daily target</p>
         </div>
 
         <div className={styles.nutrientCard}>
@@ -276,6 +454,108 @@ export default function TrendsPage() {
         </div>
       </section>
 
+      {/* ── Energy from food (macro split + WHO ranges) ── */}
+      {displayMacroSplit && (
+        <section>
+          <div className={styles.sectionHeader}>
+            <p className={styles.sectionLabel}>Energy from food</p>
+          </div>
+          <div className={styles.foodGroupCard}>
+            <div className={styles.foodGroupStrip}>
+              {macroConfig.groups.map((g, i) => (
+                displayMacroSplit[i] > 0 ? (
+                  <div
+                    key={g.label}
+                    className={styles.foodGroupSegment}
+                    style={{ width: `${displayMacroSplit[i]}%`, background: g.color }}
+                  />
+                ) : null
+              ))}
+            </div>
+            <div className={styles.foodGroupLegend}>
+              {macroConfig.groups.map((g, i) => {
+                const pct = displayMacroSplit[i];
+                const status = rangeStatus(pct, g.min, g.max);
+                return (
+                  <div key={g.label} className={styles.foodGroupLegendItem}>
+                    <div className={styles.foodGroupDot} style={{ background: g.color }} />
+                    <span className={styles.foodGroupLabel}>{g.label} {pct}%</span>
+                    <span className={`${styles.rangeChip} ${status.good ? styles.rangeChipGood : styles.rangeChipOff}`}>
+                      {status.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <p className={styles.whoAttribution}>{macroConfig.attribution}</p>
+          </div>
+        </section>
+      )}
+
+      {/* ── Best day ── */}
+      {displayBestDay && (
+        <>
+          <button
+            className={styles.bestDayCard}
+            onClick={() => toggleSnapshot(displayBestDay.date)}
+          >
+            <span className={styles.bestDayStar}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--terracotta)" stroke="none">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            </span>
+            <span className={styles.bestDayText}>
+              <strong className={styles.bestDayLabel}>Best day:</strong> {displayBestDay.dayLabel} · {displayBestDay.score} of {SCORE_NUTRIENTS.length} targets hit
+            </span>
+            <svg
+              className={`${styles.bestDayChevron}${snapshotDate === displayBestDay.date ? ` ${styles.bestDayChevronOpen}` : ''}`}
+              width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+
+          {snapshotDate === displayBestDay.date && (
+            <div className={styles.snapshotCard}>
+              {snapshotLoading ? (
+                <p className={styles.snapshotLoading}>Loading meals…</p>
+              ) : snapshotEntries.length === 0 ? (
+                <p className={styles.snapshotEmpty}>No meals logged for this day yet</p>
+              ) : (
+                <>
+                  <p className={styles.snapshotHeader}>
+                    {displayBestDay.dayLabel}&apos;s meals · {Math.round(snapshotTotalKcal)} kcal total
+                  </p>
+                  {snapshotGroupKeys.map((key, idx) => (
+                    <div key={key}>
+                      {idx > 0 && <div className={styles.snapshotDivider} />}
+                      <div className={styles.snapshotMealGroup}>
+                        <p className={styles.snapshotMealLabel}>{MEAL_TYPE_LABELS[key]}</p>
+                        {snapshotGroups[key].map(e => (
+                          <div key={e.id} className={styles.snapshotEntry}>
+                            <div className={styles.snapshotFoodWrap}>
+                              <span className={styles.snapshotFood}>{e.food_name}</span>
+                              {e.serving_size_description && (
+                                <span className={styles.snapshotServing}>{e.serving_size_description}</span>
+                              )}
+                            </div>
+                            <span className={styles.snapshotKcal}>
+                              {e.calories_kcal != null && e.calories_kcal > 0 ? `${Math.round(e.calories_kcal)} kcal` : ''}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── Premium upsell ── */}
       {data?.tier === 'free' && (
         <div className={styles.premiumCard}>
           <p className={styles.premiumTitle}>See your full week</p>
@@ -286,6 +566,7 @@ export default function TrendsPage() {
         </div>
       )}
 
+      {/* ── SHAi's take ── */}
       {(insightLoading || insight) && (
         <section>
           <p className={styles.sectionLabel}>SHAi&apos;s take</p>
@@ -300,17 +581,18 @@ export default function TrendsPage() {
         </section>
       )}
 
-      {weekWins.length > 0 && (
+      {/* ── Wins ── */}
+      {displayWins.length > 0 && (
         <section>
-          <p className={styles.sectionLabel}>This week&apos;s wins</p>
+          <p className={styles.sectionLabel}>
+            This week&apos;s wins <span className={styles.winsCount}>· {displayWins.length}</span>
+          </p>
           <div className={styles.winsRow}>
-            {weekWins.map((w) => {
+            {displayWins.map((w) => {
               const c = WIN_CHIP_COLOURS[w.win_type] ?? WIN_CHIP_COLOURS['other'];
               return (
                 <div key={w.id} className={styles.winChip} style={{ background: c.bg, color: c.text }}>
-                  <span className={styles.winChipLabel}>
-                    {WIN_TYPE_LABELS[w.win_type] ?? w.win_type}
-                  </span>
+                  <span className={styles.winChipLabel}>{WIN_TYPE_LABELS[w.win_type] ?? w.win_type}</span>
                   {w.food_involved && (
                     <span className={styles.winChipFood}>{w.food_involved}</span>
                   )}
@@ -320,16 +602,6 @@ export default function TrendsPage() {
           </div>
         </section>
       )}
-
-      <Link href="/growth" className={styles.growthCard}>
-        <div>
-          <p className={styles.growthTitle}>Growth</p>
-          <p className={styles.growthText}>Weight, height and WHO percentile chart</p>
-        </div>
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-          <path d="M8 5l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </Link>
 
       <BottomNav />
     </div>
