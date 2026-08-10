@@ -14,7 +14,7 @@ const slides = [
   {
     graphic: '🍌',
     headline: "See exactly what's going in",
-    subtext: 'Iron, calcium, vitamins — tracked automatically against WHO targets.',
+    subtext: 'Iron, calcium, vitamins — tracked automatically against ESPGHAN targets.',
     bg: '#D4E8D6',
     border: '#7A9E7E',
   },

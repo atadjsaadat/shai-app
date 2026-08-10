@@ -223,7 +223,7 @@ SHAI's data layer is the product behind the product. Every design decision in th
 - Real-time, not recalled — logged in the moment, not reported in retrospect
 - Brand and SKU level — not just "iron-rich food" but exactly which Heinz product, which Organix pouch, which formula brand
 - Correlated — nutrition against sleep, growth, behaviour, developmental outcomes, weather, season, illness
-- Clinically validated thresholds — not self-reported wellness, actual WHO/NHS-benchmarked data
+- Clinically validated thresholds — not self-reported wellness, actual ESPGHAN/NHS-benchmarked data
 - NOVA classification on every barcode scan — processing level data that pharma and nutrition companies desperately want
 - Demographically diverse — Malta first (EU compliance from day one), then UAE, India, Australia
 
@@ -302,7 +302,7 @@ A warm, knowledgeable mum/dad friend — been there, gets it, no judgement. Conv
 
 **When data shows genuine concern:** nutrient consistently below 40% of target for 2+ weeks — surface once warmly with one specific actionable suggestion, never repeated in same session. Sustained significant deficits across multiple nutrients: "It might be worth a quick chat with your GP about [name]'s eating, just to put your mind at rest."
 
-**Guidance attribution always:** "according to NHS Start4Life guidance" / "based on WHO complementary feeding recommendations." Never SHAI's own opinion.
+**Guidance attribution always:** "according to ESPGHAN guidelines" (primary) / "according to NHS Start4Life guidance" (secondary) / "based on WHO recommendations" (fallback only). Never SHAI's own opinion.
 
 ---
 
@@ -384,8 +384,9 @@ If sustained deficits across multiple nutrients — say once:
 [name]'s eating, just to put your mind at rest."
 
 GUIDANCE ATTRIBUTION — ALWAYS:
-"according to NHS Start4Life guidance"
-"based on WHO complementary feeding recommendations"
+"according to ESPGHAN guidelines" — primary, for nutritional topics covered by ESPGHAN
+"according to NHS Start4Life guidance" — secondary, for topics not covered by ESPGHAN
+"based on WHO recommendations" — fallback only
 Never present guidance as SHAI's own opinion.
 
 LANGUAGE NEVER USED IN PARENT VIEW:
@@ -451,7 +452,7 @@ WHAT YOU NEVER DO:
 
 ## Weaning, Growth, Sleep, Recipes
 
-- **Weaning (4-12 months):** first food log, texture stage progression, baby-led vs purée both supported equally, all guidance attributed to NHS Start4Life/WHO. Transitions to toddler mode at 12 months.
+- **Weaning (4-12 months):** first food log, texture stage progression, baby-led vs purée both supported equally, all guidance attributed to ESPGHAN (primary), NHS Start4Life (secondary), WHO (fallback). Transitions to toddler mode at 12 months.
 - **Growth:** weight/height logged periodically, WHO growth curve plotted automatically, percentile shown warmly, recorded-by field.
 - **Sleep:** one-tap daily quality log (well/okay/poorly) from 6 months, optional duration and night-wakings, no sleep advice — SHAI is not a sleep app.
 - **Recipes:** 50-100 at launch, tagged by nutrient/allergen/texture/prep time/age/meal type, suggested against current gaps and known preferences.
@@ -577,7 +578,7 @@ age_band / sex / season / country / nutritional_averages / brand_frequency / pro
 | Adverse event reporting mechanism | Built before first user | Week 14 |
 | Letter of understanding with clinical contact | Solicitor drafts, clinician signs | Month 1-2 |
 | Clinical threshold definitions | Paediatric clinician signs off | Month 1-2 |
-| NHS/WHO guidance attribution review | Clinician confirms | Month 1-2 |
+| ESPGHAN/NHS guidance attribution review | Clinician confirms | Month 1-2 |
 | SHAI trademark (Nice Classes 42 + 44) | Solicitor files | Before public launch |
 | Data partnership agreement template | Solicitor drafts | Month 9-12 |
 | Product / professional indemnity / cyber liability insurance | Founder | Month 5 |
@@ -804,7 +805,7 @@ When Alexander says "ask the three questions":
 | DPIA (Data Protection Impact Assessment — GDPR Article 35 mandatory) | Week 13-14 | Solicitor under SHAI Ltd. |
 | Clinical partnership letter of understanding | Month 1-2 | Solicitor drafts, clinician signs |
 | Clinical threshold definitions | Month 1-2 | Paediatric clinician signs off |
-| NHS/WHO attribution review | Month 1-2 | Clinician confirms |
+| ESPGHAN/NHS attribution review | Month 1-2 | Clinician confirms |
 | Clinician referral disclosure review (Malta healthcare advertising rules) | Month 1-2 | Solicitor confirms |
 | Trademark SHAI (Nice Classes 42 + 44) | Before public launch | Solicitor files |
 | App Store health app compliance review (Apple guidelines, health disclaimers) | Month 9-12 | Solicitor + Apple guidelines |

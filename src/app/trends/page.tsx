@@ -76,7 +76,7 @@ const SCORE_NUTRIENTS: (keyof Totals)[] = ['calories_kcal', 'protein_g', 'carbs_
 interface MacroGroup { label: string; color: string; min: number; max: number }
 interface MacroConfig { groups: MacroGroup[]; attribution: string }
 
-// WHO/IOM macronutrient target ranges by age — needs clinical sign-off before first real user
+// ESPGHAN macronutrient target ranges by age — ⚠ numeric values need ESPGHAN clinical review before first real user
 function getMacroConfig(ageMonths: number): MacroConfig {
   if (ageMonths < 7) {
     // Under 6 months: milk-only, complementary food strip not meaningful
@@ -86,7 +86,7 @@ function getMacroConfig(ageMonths: number): MacroConfig {
         { label: 'Protein', color: '#D4A72C', min: 8,  max: 12 },
         { label: 'Fat',     color: '#A67BC4', min: 40, max: 55 },
       ],
-      attribution: 'Based on WHO guidance for infants under 6 months — breastmilk or formula remains the primary source',
+      attribution: 'Based on ESPGHAN guidelines for infants under 6 months — breastmilk or formula remains the primary source',
     };
   }
   if (ageMonths < 13) {
@@ -97,29 +97,29 @@ function getMacroConfig(ageMonths: number): MacroConfig {
         { label: 'Protein', color: '#D4A72C', min: 8,  max: 15 },
         { label: 'Fat',     color: '#A67BC4', min: 40, max: 60 },
       ],
-      attribution: 'Based on WHO complementary feeding recommendations for infants 6–12 months · complementary foods only, alongside breastmilk or formula',
+      attribution: 'Based on ESPGHAN complementary feeding guidelines for infants 6–12 months · complementary foods only, alongside breastmilk or formula',
     };
   }
   if (ageMonths < 37) {
-    // 1–3 years (IOM / WHO)
+    // 1–3 years (ESPGHAN / IOM)
     return {
       groups: [
         { label: 'Carbs',   color: '#B09585', min: 45, max: 65 },
         { label: 'Protein', color: '#D4A72C', min: 10, max: 15 },
         { label: 'Fat',     color: '#A67BC4', min: 30, max: 40 },
       ],
-      attribution: 'Based on WHO/IOM dietary guidance for children aged 1–3',
+      attribution: 'Based on ESPGHAN guidelines for children aged 1–3',
     };
   }
   if (ageMonths < 73) {
-    // 4–6 years (IOM / WHO) — fat range slightly lower
+    // 4–6 years (ESPGHAN / IOM) — fat range slightly lower
     return {
       groups: [
         { label: 'Carbs',   color: '#B09585', min: 45, max: 65 },
         { label: 'Protein', color: '#D4A72C', min: 10, max: 15 },
         { label: 'Fat',     color: '#A67BC4', min: 25, max: 35 },
       ],
-      attribution: 'Based on WHO/IOM dietary guidance for children aged 4–6',
+      attribution: 'Based on ESPGHAN guidelines for children aged 4–6',
     };
   }
   // 6+ years
@@ -129,7 +129,7 @@ function getMacroConfig(ageMonths: number): MacroConfig {
       { label: 'Protein', color: '#D4A72C', min: 10, max: 15 },
       { label: 'Fat',     color: '#A67BC4', min: 25, max: 35 },
     ],
-    attribution: 'Based on WHO/IOM dietary guidance for children aged 6+',
+    attribution: 'Based on ESPGHAN guidelines for children aged 6+',
   };
 }
 
@@ -454,7 +454,7 @@ export default function TrendsPage() {
         </div>
       </section>
 
-      {/* ── Energy from food (macro split + WHO ranges) ── */}
+      {/* ── Energy from food (macro split + ESPGHAN ranges) ── */}
       {displayMacroSplit && (
         <section>
           <div className={styles.sectionHeader}>

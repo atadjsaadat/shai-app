@@ -9,7 +9,7 @@ export interface Targets {
   iron_mg: number
 }
 
-// WHO / NHS UK reference values by age band
+// ESPGHAN / NHS UK reference values by age band — ⚠ numeric values need ESPGHAN clinical review before first real user
 export function getTargets(ageMonths: number): Targets {
   if (ageMonths < 7)  return { calories_kcal: 700,  protein_g: 10, carbs_g: 75,  fat_g: 30, fibre_g: 5,  sugar_g: 8,  sodium_mg: 320,  iron_mg: 11 }
   if (ageMonths < 13) return { calories_kcal: 800,  protein_g: 11, carbs_g: 90,  fat_g: 35, fibre_g: 5,  sugar_g: 10, sodium_mg: 400,  iron_mg: 11 }
