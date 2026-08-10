@@ -32,6 +32,7 @@
   color: var(--text-primary);
   cursor: pointer;
   padding: 0;
+  box-shadow: var(--btn-shadow);
 }
 
 .topBarTitle {
@@ -66,6 +67,7 @@
   font-size: 24px;
   font-weight: 300;
   line-height: 1;
+  box-shadow: var(--btn-shadow-primary);
 }
 
 /* ── Search bar ──────────────────────────────────────── */

@@ -31,6 +31,7 @@
   color: var(--text-primary);
   cursor: pointer;
   padding: 0;
+  box-shadow: var(--btn-shadow);
 }
 
 .title {
@@ -52,6 +53,7 @@
   cursor: pointer;
   color: white;
   flex-shrink: 0;
+  box-shadow: var(--btn-shadow-primary);
 }
 
 /* ── Scrollable content ── */
@@ -176,6 +178,7 @@
   font-weight: 700;
   cursor: pointer;
   transition: opacity 0.2s;
+  box-shadow: var(--btn-shadow-primary);
 }
 
 .saveBtn:disabled {
@@ -193,6 +196,7 @@
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
+  box-shadow: var(--btn-shadow);
 }
 
 /* ── Appointment card ── */
@@ -305,6 +309,7 @@
   color: var(--text-secondary);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
+  box-shadow: var(--btn-shadow);
 }
 
 .attendBtnActive {
@@ -323,6 +328,7 @@
   font-weight: 700;
   color: var(--text-secondary);
   cursor: pointer;
+  box-shadow: var(--btn-shadow);
 }
 
 .deleteBtn {

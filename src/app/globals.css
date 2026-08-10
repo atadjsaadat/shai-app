@@ -12,6 +12,9 @@
   --text-secondary: #7A6255;
   --text-muted: #B09585;
   --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  --btn-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --btn-shadow-primary: 0 4px 12px rgba(196, 113, 74, 0.28);
+  --btn-shadow-sage: 0 4px 12px rgba(122, 158, 126, 0.28);
 }
 
 *,

@@ -31,6 +31,7 @@
   color: var(--text-primary);
   cursor: pointer;
   padding: 0;
+  box-shadow: var(--btn-shadow);
 }
 
 .topBarTitle { flex: 1; }
@@ -76,6 +77,7 @@
   gap: 10px;
   margin-bottom: 12px;
   text-decoration: none;
+  box-shadow: var(--card-shadow);
 }
 
 @keyframes bellRing {
@@ -284,6 +286,7 @@
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
+  box-shadow: var(--btn-shadow-sage);
 }
 
 .skipBtn {

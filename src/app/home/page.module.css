@@ -38,6 +38,7 @@
   border-radius: 50%;
   background: var(--oat-dark);
   flex-shrink: 0;
+  box-shadow: var(--btn-shadow);
 }
 
 /* ── SHAi card ───────────────────────────────────────── */
@@ -257,6 +258,7 @@
   cursor: pointer;
   width: 100%;
   transition: opacity 0.15s;
+  box-shadow: var(--btn-shadow-primary);
 }
 
 .feedbackBtn:disabled {

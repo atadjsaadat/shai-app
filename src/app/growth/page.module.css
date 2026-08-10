@@ -29,6 +29,7 @@
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
+  box-shadow: var(--btn-shadow);
 }
 
 .title {
@@ -126,6 +127,7 @@
   cursor: pointer;
   outline: none;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
+  box-shadow: var(--btn-shadow);
 }
 
 .tabActive {
@@ -243,6 +245,7 @@
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
+  box-shadow: var(--btn-shadow);
 }
 
 .saveBtn {
@@ -285,7 +288,7 @@
   flex-direction: column;
   gap: 4px;
   margin-bottom: 6px;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--card-shadow);
 }
 
 .historyDate {

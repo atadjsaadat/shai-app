@@ -38,6 +38,7 @@
   flex-direction: column;
   align-items: center;
   gap: 6px;
+  box-shadow: var(--card-shadow);
 }
 
 .avatar {
@@ -229,6 +230,7 @@
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
+  box-shadow: var(--btn-shadow);
 }
 
 .allergyPickerChipSelected {
@@ -253,6 +255,7 @@
   font-weight: 700;
   cursor: pointer;
   flex: 1;
+  box-shadow: var(--btn-shadow-primary);
 }
 
 .allergyDoneBtn:disabled {
@@ -270,6 +273,7 @@
   font-weight: 700;
   color: var(--text-secondary);
   cursor: pointer;
+  box-shadow: var(--btn-shadow);
 }
 
 /* ── Tier badge ──────────────────────────────────────── */
@@ -308,6 +312,7 @@
   cursor: pointer;
   transition: opacity 0.15s;
   width: 100%;
+  box-shadow: var(--btn-shadow);
 }
 
 .signOutBtn:disabled {
@@ -480,6 +485,7 @@
   font-family: inherit;
   cursor: pointer;
   transition: opacity 0.15s;
+  box-shadow: var(--btn-shadow-primary);
 }
 
 .inviteBtn:disabled {
@@ -530,6 +536,7 @@
   font-family: inherit;
   cursor: pointer;
   text-decoration: none;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.28);
 }
 
 .copyBtn {
@@ -543,6 +550,7 @@
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
+  box-shadow: var(--btn-shadow);
 }
 
 .pendingSection {
@@ -566,6 +574,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  box-shadow: var(--card-shadow);
 }
 
 .pendingMeta {
@@ -677,6 +686,7 @@
   color: var(--text-primary);
   cursor: pointer;
   transition: background 0.1s;
+  box-shadow: var(--btn-shadow);
 }
 
 .pinPadBtn:active { background: var(--oat-dark); }
