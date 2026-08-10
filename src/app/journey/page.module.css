@@ -84,24 +84,25 @@
   color: var(--text-muted);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
+  box-shadow: var(--btn-shadow);
 }
 
 .segActive {
   background: var(--cream);
   color: var(--text-primary);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--btn-shadow);
 }
 
 .segActiveJournal {
   background: var(--terracotta);
   color: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--btn-shadow-primary);
 }
 
 .segActiveWins {
   background: var(--sage);
   color: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--btn-shadow-sage);
 }
 
 /* ── Composer ─────────────────────────────────────────── */
@@ -490,6 +491,7 @@
   color: var(--text-primary);
   outline: none;
   box-sizing: border-box;
+  box-shadow: var(--btn-shadow);
 }
 
 .searchInput::placeholder { color: var(--text-muted); }
