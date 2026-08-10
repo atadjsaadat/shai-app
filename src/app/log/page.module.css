@@ -35,14 +35,16 @@
 }
 
 .hardDayBtn {
-  background: none;
-  border: none;
+  background: var(--terra-light);
+  border: 1.5px solid rgba(196, 113, 74, 0.35);
+  border-radius: 20px;
   font-family: var(--font-nunito), sans-serif;
   font-size: 13px;
-  font-weight: 600;
-  color: var(--text-muted);
+  font-weight: 700;
+  color: var(--terra-dark);
   cursor: pointer;
-  padding: 6px 4px;
+  padding: 6px 14px;
+  box-shadow: var(--btn-shadow);
 }
 
 /* ── Meal type tabs ──────────────────────────────────── */
@@ -187,12 +189,14 @@
   background: var(--oat);
   color: var(--text-primary);
   border-bottom-left-radius: 4px;
+  box-shadow: var(--card-shadow);
 }
 
 .bubbleUser {
   background: var(--terracotta);
   color: white;
   border-bottom-right-radius: 4px;
+  box-shadow: var(--btn-shadow-primary);
 }
 
 /* Typing indicator */

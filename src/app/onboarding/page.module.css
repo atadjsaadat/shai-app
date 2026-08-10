@@ -77,12 +77,14 @@
   background: var(--oat);
   color: var(--text-primary);
   border-bottom-left-radius: 4px;
+  box-shadow: var(--card-shadow);
 }
 
 .bubbleUser {
   background: var(--terracotta);
   color: var(--cream);
   border-bottom-right-radius: 4px;
+  box-shadow: var(--btn-shadow-primary);
 }
 
 /* Typing indicator */

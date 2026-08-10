@@ -67,6 +67,22 @@ const MACROS: { key: keyof ParsedFoodItem; label: string; unit: string; color: s
   { key: 'iron_mg',       label: 'iron',  unit: 'mg', color: '#B87333' },
 ];
 
+function getQuickPickBg(pick: QuickPick): string | undefined {
+  const c = pick.carbs_g ?? 0;
+  const p = pick.protein_g ?? 0;
+  const f = pick.fat_g ?? 0;
+  const total = c + p + f;
+  if (total < 0.5) return undefined;
+  const candidates = [
+    { pct: c / total, color: 'rgba(176,149,133,0.28)' },
+    { pct: p / total, color: 'rgba(212,167,44,0.28)' },
+    { pct: f / total, color: 'rgba(166,123,196,0.28)' },
+  ].filter(m => m.pct >= 0.2).sort((a, b) => b.pct - a.pct);
+  if (!candidates.length) return undefined;
+  if (candidates.length === 1) return candidates[0].color;
+  return `linear-gradient(to right, ${candidates.map(m => m.color).join(', ')})`;
+}
+
 function detectMealType(): MealType {
   const h = new Date().getHours();
   if (h >= 5 && h < 10) return 'breakfast';
@@ -489,7 +505,11 @@ export default function LogPage() {
           {quickPicks
             .filter((p) => !hiddenPicks.has(p.food_name.toLowerCase().trim()))
             .map((pick) => (
-              <div key={pick.food_name} className={styles.quickPickChip}>
+              <div
+                key={pick.food_name}
+                className={styles.quickPickChip}
+                style={{ background: getQuickPickBg(pick) }}
+              >
                 <button className={styles.quickPickName} onClick={() => handleQuickPick(pick)}>
                   {pick.food_name}
                 </button>
