@@ -141,6 +141,7 @@
   padding: 3px;
   gap: 2px;
   flex-shrink: 0;
+  box-shadow: var(--btn-shadow);
 }
 
 .viewToggleBtn {
@@ -199,6 +200,7 @@
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
   white-space: nowrap;
+  box-shadow: var(--btn-shadow);
 }
 
 .filterChipIcon {
@@ -271,6 +273,7 @@
   color: var(--text-secondary);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
+  box-shadow: var(--btn-shadow);
 }
 
 .typeChipIcon {
@@ -334,6 +337,7 @@
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
+  box-shadow: var(--btn-shadow);
 }
 
 .saveBtn {
@@ -347,6 +351,7 @@
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
+  box-shadow: var(--btn-shadow-primary);
 }
 
 .saveBtn:disabled {
@@ -431,6 +436,7 @@
   color: var(--text-secondary);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
+  box-shadow: var(--btn-shadow);
 }
 
 .domainChipActive {
@@ -657,11 +663,7 @@
   cursor: pointer;
   font-family: var(--font-nunito), sans-serif;
   transition: border-color 0.15s, box-shadow 0.15s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-
-.comingUpChip:hover {
-  box-shadow: 0 3px 12px rgba(0,0,0,0.10);
+  box-shadow: var(--card-shadow);
 }
 
 .comingUpChipIcon {
