@@ -139,6 +139,7 @@
   max-height: 80px;
   overflow-y: auto;
   transition: border-color 0.15s;
+  box-shadow: var(--btn-shadow);
 }
 
 .textarea::placeholder {
@@ -161,6 +162,7 @@
   justify-content: center;
   flex-shrink: 0;
   transition: opacity 0.15s;
+  box-shadow: var(--btn-shadow-primary);
 }
 
 .sendBtn:disabled {
@@ -211,6 +213,7 @@
   width: 100%;
   max-width: 340px;
   margin-top: 8px;
+  box-shadow: var(--card-shadow);
 }
 
 .consentText {
@@ -278,6 +281,7 @@
   opacity: 0;
   transform: translateY(8px);
   transition: opacity 0.4s ease, transform 0.4s ease;
+  box-shadow: var(--btn-shadow-primary);
 }
 
 .proceedBtn.visible {
