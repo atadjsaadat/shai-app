@@ -6,7 +6,7 @@ async function getChild(userId: string) {
   const admin = createAdminClient()
   const { data } = await admin
     .from('children')
-    .select('id, name, date_of_birth, birth_weight_kg, birth_length_cm, gestational_age_at_birth, feeding_method_birth, allergies')
+    .select('id, name, date_of_birth, birth_weight_kg, birth_length_cm, gestational_age_at_birth, feeding_method_birth, allergies, intolerances')
     .eq('user_id', userId)
     .single()
   return data

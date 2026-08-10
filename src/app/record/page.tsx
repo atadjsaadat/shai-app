@@ -6,7 +6,7 @@ import styles from './page.module.css';
 
 const SECTIONS = [
   {
-    label: 'Baby book',
+    label: 'Milestones',
     href: '/baby-book',
     description: 'Milestones & memories',
     color: '#F0D5C8',
@@ -19,14 +19,15 @@ const SECTIONS = [
     ),
   },
   {
-    label: 'Health record',
+    label: 'Vaccinations',
     href: '/health-record',
-    description: 'Vaccinations & birth details',
+    description: 'Vaccination schedule & record',
     color: '#D4E8D6',
     textColor: '#4A7050',
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <polyline points="9 12 11 14 15 10"/>
       </svg>
     ),
   },
@@ -42,6 +43,12 @@ const SECTIONS = [
         <line x1="16" y1="2" x2="16" y2="6" />
         <line x1="8" y1="2" x2="8" y2="6" />
         <line x1="3" y1="10" x2="21" y2="10" />
+        <circle cx="8" cy="14" r="1" fill="currentColor" stroke="none"/>
+        <circle cx="12" cy="14" r="1" fill="currentColor" stroke="none"/>
+        <circle cx="16" cy="14" r="1" fill="currentColor" stroke="none"/>
+        <circle cx="8" cy="18" r="1" fill="currentColor" stroke="none"/>
+        <circle cx="12" cy="18" r="1" fill="currentColor" stroke="none"/>
+        <circle cx="16" cy="18" r="1" fill="currentColor" stroke="none"/>
       </svg>
     ),
   },
@@ -63,8 +70,8 @@ export default function RecordPage() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Record</h1>
-        <p className={styles.subtitle}>Health, growth &amp; milestones</p>
+        <h1 className={styles.title}>Baby Book</h1>
+        <p className={styles.subtitle}>Milestones, health &amp; growth</p>
       </header>
 
       <div className={styles.grid}>

@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
 
   const { data: records, error } = await admin
     .from('growth_records')
-    .select('id, recorded_at, weight_kg, height_cm, who_weight_percentile, who_height_percentile, who_bmi_percentile, notes')
+    .select('id, recorded_at, weight_kg, height_cm, head_cm, who_weight_percentile, who_height_percentile, who_head_percentile, who_bmi_percentile, notes')
     .eq('child_id', childId)
     .order('recorded_at', { ascending: true })
 
@@ -45,9 +45,9 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-  const { childId, recordedAt, weightKg, heightCm, notes } = await req.json()
+  const { childId, recordedAt, weightKg, heightCm, headCm, notes } = await req.json()
   if (!childId || !recordedAt) return NextResponse.json({ error: 'childId and recordedAt required' }, { status: 400 })
-  if (!weightKg && !heightCm) return NextResponse.json({ error: 'At least one of weightKg or heightCm required' }, { status: 400 })
+  if (!weightKg && !heightCm && !headCm) return NextResponse.json({ error: 'At least one of weightKg, heightCm, or headCm required' }, { status: 400 })
 
   const admin = createAdminClient()
 
@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
 
   const whoWeightPercentile = weightKg ? calcPercentile(weightKg, sex, months, 'weight') : null
   const whoHeightPercentile = heightCm ? calcPercentile(heightCm, sex, months, 'height') : null
+  const whoHeadPercentile = headCm ? calcPercentile(headCm, sex, months, 'head') : null
   const bmi = weightKg && heightCm ? calcBMI(weightKg, heightCm) : null
   const whoBmiPercentile = bmi ? calcPercentile(bmi, sex, months, 'weight') : null
 
@@ -81,13 +82,15 @@ export async function POST(req: NextRequest) {
       recorded_at: recordedAt,
       weight_kg: weightKg ?? null,
       height_cm: heightCm ?? null,
+      head_cm: headCm ?? null,
       who_weight_percentile: whoWeightPercentile,
       who_height_percentile: whoHeightPercentile,
+      who_head_percentile: whoHeadPercentile,
       who_bmi_percentile: whoBmiPercentile,
       notes: notes ?? null,
       season,
     })
-    .select('id, recorded_at, weight_kg, height_cm, who_weight_percentile, who_height_percentile, who_bmi_percentile')
+    .select('id, recorded_at, weight_kg, height_cm, head_cm, who_weight_percentile, who_height_percentile, who_head_percentile, who_bmi_percentile')
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

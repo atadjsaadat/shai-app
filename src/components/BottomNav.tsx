@@ -40,7 +40,7 @@ const TABS = [
     ),
   },
   {
-    label: 'Record',
+    label: 'Baby Book',
     href: '/record',
     activePaths: ['/baby-book', '/health-record', '/appointments', '/growth'],
     icon: (

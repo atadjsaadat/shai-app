@@ -10,7 +10,7 @@ export async function GET() {
   const [profileResult, childResult] = await Promise.all([
     supabase.from('profiles').select('tier, consent_data_research').eq('id', user.id).single(),
     admin.from('children')
-      .select('name, date_of_birth, sex, allergies, is_selective_eater, relationship_to_child')
+      .select('name, date_of_birth, sex, allergies, intolerances, is_selective_eater, relationship_to_child')
       .eq('user_id', user.id)
       .limit(1)
       .single(),

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import BottomNav from '@/components/BottomNav';
 import SHAiPresence from '@/components/SHAiPresence';
+import JournalLockScreen from '@/components/JournalLockScreen';
 import { createSpeechRecognition } from '@/lib/speech/recognition';
 import { compressPhoto } from '@/lib/storage/upload';
 import styles from './page.module.css';
@@ -27,6 +28,11 @@ interface JournalEntry {
   dictated: boolean;
   include_in_ai_context: boolean;
   created_at: string;
+}
+
+interface ChildProfile {
+  name: string;
+  date_of_birth: string | null;
 }
 
 interface Win {
@@ -71,8 +77,9 @@ function formatAge(days: number | null): string {
   if (days == null) return '';
   if (days < 30) return `${days} days old`;
   if (days < 365) return `${Math.floor(days / 30)} months old`;
-  const y = Math.floor(days / 365);
-  const m = Math.floor((days % 365) / 30);
+  let y = Math.floor(days / 365);
+  let m = Math.floor((days % 365) / 30);
+  if (m >= 12) { y += 1; m = 0; }
   return m > 0 ? `${y}y ${m}mo old` : `${y} years old`;
 }
 
@@ -91,6 +98,22 @@ function formatEntryDate(iso: string): string {
   const date = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
   const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
   return `${date} · ${time}`;
+}
+
+function formatEntryTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+function ageAtEntry(dob: string | null, createdAt: string): string {
+  if (!dob) return '';
+  const days = Math.floor((new Date(createdAt).getTime() - new Date(dob).getTime()) / 86400000);
+  if (days < 0) return '';
+  return formatAge(days);
+}
+
+function yearsAgoLabel(iso: string): string {
+  const years = new Date().getFullYear() - new Date(iso).getFullYear();
+  return years === 1 ? '1 year ago' : `${years} years ago`;
 }
 
 function MicButton({ listening, onClick, disabled }: { listening: boolean; onClick: () => void; disabled?: boolean }) {
@@ -117,6 +140,12 @@ export default function JourneyPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'journal' | 'wins'>('journal');
 
+  // Lock state: null = checking, true = locked, false = unlocked
+  const [locked, setLocked] = useState<boolean | null>(null);
+
+  // Child profile
+  const [child, setChild] = useState<ChildProfile | null>(null);
+
   // Journal state
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [journalLoading, setJournalLoading] = useState(true);
@@ -131,6 +160,7 @@ export default function JourneyPage() {
   const [journalSaving, setJournalSaving] = useState(false);
   const [cleaning, setCleaning] = useState(false);
   const [childId, setChildId] = useState<string | null>(null);
+  const [journalSearch, setJournalSearch] = useState('');
 
   const speechRef = useRef<ReturnType<typeof createSpeechRecognition> | null>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
@@ -162,6 +192,19 @@ export default function JourneyPage() {
   }, []);
 
   useEffect(() => {
+    fetch('/api/journal/pin')
+      .then(r => r.json())
+      .then(data => {
+        if (data.enabled && !sessionStorage.getItem('shai_journal_unlocked')) {
+          setLocked(true);
+        } else {
+          setLocked(false);
+        }
+      })
+      .catch(() => setLocked(false));
+  }, []);
+
+  useEffect(() => {
     const cid = localStorage.getItem('shai_active_child_id');
     setChildId(cid);
     fetch('/api/journey')
@@ -169,6 +212,12 @@ export default function JourneyPage() {
       .then(data => { if (data.entries) setEntries(data.entries); })
       .catch(() => {})
       .finally(() => setJournalLoading(false));
+    fetch('/api/children')
+      .then(r => r.json())
+      .then(data => {
+        if (data.childName) setChild({ name: data.childName, date_of_birth: data.childDob ?? null });
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -194,6 +243,40 @@ export default function JourneyPage() {
       .filter((w) => !activeFilter || w.win_type === activeFilter)
       .filter((w) => !q || [w.food_involved, w.parent_note].some((s) => s?.toLowerCase().includes(q)));
   }, [wins, search, activeFilter]);
+
+  const groupedEntries = useMemo(() => {
+    const groups = new Map<string, { dateLabel: string; items: { entry: JournalEntry; colourIdx: number }[] }>();
+    entries.forEach((entry, idx) => {
+      const d = new Date(entry.created_at);
+      const dateKey = d.toISOString().slice(0, 10);
+      const dateLabel = d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+      if (!groups.has(dateKey)) groups.set(dateKey, { dateLabel, items: [] });
+      groups.get(dateKey)!.items.push({ entry, colourIdx: idx });
+    });
+    return Array.from(groups.entries()).map(([dateKey, val]) => ({ dateKey, ...val }));
+  }, [entries]);
+
+  const onThisDay = useMemo(() => {
+    const today = new Date();
+    const mm = today.getMonth();
+    const dd = today.getDate();
+    const thisYear = today.getFullYear();
+    return entries.filter(e => {
+      const d = new Date(e.created_at);
+      return d.getMonth() === mm && d.getDate() === dd && d.getFullYear() < thisYear;
+    });
+  }, [entries]);
+
+  const filteredGroupedEntries = useMemo(() => {
+    const q = journalSearch.trim().toLowerCase();
+    if (!q) return groupedEntries;
+    return groupedEntries
+      .map(group => ({
+        ...group,
+        items: group.items.filter(({ entry }) => entry.content.toLowerCase().includes(q)),
+      }))
+      .filter(group => group.items.length > 0);
+  }, [groupedEntries, journalSearch]);
 
   const handleSaveNote = async () => {
     if (!selectedWin || savingNote) return;
@@ -403,13 +486,21 @@ export default function JourneyPage() {
 
   // ── Render ───────────────────────────────────────────
 
+  if (locked === null) return null;
+  if (locked) return <JournalLockScreen onUnlock={() => setLocked(false)} />;
+
   return (
     <div className={styles.page}>
       <header className={styles.topBar}>
         <p className={styles.title}>Journey</p>
         <div className={styles.topBarActions}>
           {activeTab === 'journal' && !composing && (
-            <button className={styles.newBtn} onClick={openComposer}>+ New</button>
+            <button className={styles.newBtn} onClick={openComposer} aria-label="New journal entry">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+              </svg>
+            </button>
           )}
           {activeTab === 'wins' && (
             <button className={styles.addWinBtn} onClick={() => setShowForm(true)} aria-label="Add win">
@@ -425,11 +516,11 @@ export default function JourneyPage() {
       {/* Segmented control */}
       <div className={styles.segControl}>
         <button
-          className={`${styles.seg}${activeTab === 'journal' ? ` ${styles.segActive}` : ''}`}
+          className={`${styles.seg}${activeTab === 'journal' ? ` ${styles.segActiveJournal}` : ''}`}
           onClick={() => setActiveTab('journal')}
         >Journal</button>
         <button
-          className={`${styles.seg}${activeTab === 'wins' ? ` ${styles.segActive}` : ''}`}
+          className={`${styles.seg}${activeTab === 'wins' ? ` ${styles.segActiveWins}` : ''}`}
           onClick={() => setActiveTab('wins')}
         >Wins</button>
       </div>
@@ -437,12 +528,50 @@ export default function JourneyPage() {
       {/* ── Journal tab ── */}
       {activeTab === 'journal' && (
         <>
+          {!composing && entries.length > 0 && (
+            <div className={styles.journalSearch}>
+              <svg className={styles.searchIcon} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input
+                className={styles.searchInput}
+                placeholder="Search journal…"
+                value={journalSearch}
+                onChange={e => setJournalSearch(e.target.value)}
+              />
+              {journalSearch && (
+                <button className={styles.searchClear} onClick={() => setJournalSearch('')}>×</button>
+              )}
+            </div>
+          )}
+
+          {onThisDay.length > 0 && !journalSearch && !composing && (
+            <div className={styles.onThisDay}>
+              <div className={styles.onThisDayHeader}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                <span className={styles.onThisDayLabel}>On this day</span>
+                <span className={styles.onThisDayAgo}>{yearsAgoLabel(onThisDay[0].created_at)}</span>
+              </div>
+              <p className={styles.onThisDayContent}>{onThisDay[0].content}</p>
+              <div className={styles.onThisDayFooter}>
+                {child?.date_of_birth && (
+                  <span className={styles.onThisDayAge}>{ageAtEntry(child.date_of_birth, onThisDay[0].created_at)}</span>
+                )}
+                {onThisDay.length > 1 && (
+                  <span className={styles.onThisDayMore}>+{onThisDay.length - 1} more from this day</span>
+                )}
+              </div>
+            </div>
+          )}
+
           {composing && (
             <div className={styles.composer}>
               <textarea
                 ref={composerRef}
                 className={styles.composerTextarea}
-                placeholder="What's on your mind…"
+                placeholder="What's on your mind today…"
                 value={composerText}
                 rows={4}
                 onChange={e => { setComposerText(e.target.value); autoResize(e.target); }}
@@ -478,68 +607,80 @@ export default function JourneyPage() {
                 Tap &quot;+ New&quot; to write your first entry. You can type or dictate — SHAi will use your entries to personalise its responses.
               </p>
             </div>
+          ) : filteredGroupedEntries.length === 0 && journalSearch ? (
+            <p className={styles.hint}>No entries match &ldquo;{journalSearch}&rdquo;</p>
           ) : (
             <div className={styles.entryList}>
-              {entries.map((entry, idx) => (
-                <div
-                  key={entry.id}
-                  className={styles.entryCard}
-                  style={{ '--note-bg': NOTE_COLOURS[idx % NOTE_COLOURS.length] } as React.CSSProperties}
-                >
-                  {editingId === entry.id ? (
-                    <>
-                      <p className={styles.dateChip}>{formatEntryDate(entry.created_at)}</p>
-                      <textarea
-                        ref={editRef}
-                        className={styles.editTextarea}
-                        value={editText}
-                        rows={4}
-                        onChange={e => { setEditText(e.target.value); autoResize(e.target); }}
-                      />
-                      {(listening && listenTarget === 'edit') && (
-                        <p className={styles.interimHint}>{editInterim || 'Listening…'}</p>
+              {filteredGroupedEntries.map(group => (
+                <div key={group.dateKey} className={styles.entryGroup}>
+                  <div className={styles.dateGroupHeader}>{group.dateLabel}</div>
+                  {group.items.map(({ entry, colourIdx }) => (
+                    <div
+                      key={entry.id}
+                      className={styles.entryCard}
+                      style={{ '--note-bg': NOTE_COLOURS[colourIdx % NOTE_COLOURS.length] } as React.CSSProperties}
+                    >
+                      {editingId === entry.id ? (
+                        <>
+                          <p className={styles.dateChip}>{formatEntryDate(entry.created_at)}</p>
+                          <textarea
+                            ref={editRef}
+                            className={styles.editTextarea}
+                            value={editText}
+                            rows={4}
+                            onChange={e => { setEditText(e.target.value); autoResize(e.target); }}
+                          />
+                          {(listening && listenTarget === 'edit') && (
+                            <p className={styles.interimHint}>{editInterim || 'Listening…'}</p>
+                          )}
+                          <div className={styles.editActions}>
+                            <MicButton
+                              listening={listening && listenTarget === 'edit'}
+                              onClick={() => toggleDictation('edit')}
+                            />
+                            <div className={styles.composerBtns}>
+                              <button className={styles.cancelBtn} onClick={cancelEdit}>Cancel</button>
+                              <button
+                                className={styles.saveBtn}
+                                onClick={saveEdit}
+                                disabled={!editText.trim() || journalSaving || cleaning}
+                              >
+                                {journalSaving ? 'Saving…' : 'Save'}
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className={styles.entryHeader}>
+                            <div className={styles.entryMeta}>
+                              <span className={styles.entryTime}>{formatEntryTime(entry.created_at)}</span>
+                              {child?.date_of_birth ? (
+                                <span className={styles.entryAgeChip}>{ageAtEntry(child.date_of_birth, entry.created_at)}</span>
+                              ) : null}
+                            </div>
+                            <div className={styles.entryBtns}>
+                              <button className={styles.iconBtn} onClick={() => startEdit(entry)} aria-label="Edit">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                </svg>
+                              </button>
+                              <button className={styles.iconBtn} onClick={() => deleteEntry(entry.id)} aria-label="Delete">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="3 6 5 6 21 6" />
+                                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                                  <path d="M10 11v6M14 11v6" />
+                                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                          <p className={styles.entryContent}>{entry.content}</p>
+                        </>
                       )}
-                      <div className={styles.editActions}>
-                        <MicButton
-                          listening={listening && listenTarget === 'edit'}
-                          onClick={() => toggleDictation('edit')}
-                        />
-                        <div className={styles.composerBtns}>
-                          <button className={styles.cancelBtn} onClick={cancelEdit}>Cancel</button>
-                          <button
-                            className={styles.saveBtn}
-                            onClick={saveEdit}
-                            disabled={!editText.trim() || journalSaving || cleaning}
-                          >
-                            {journalSaving ? 'Saving…' : 'Save'}
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className={styles.entryHeader}>
-                        <span className={styles.dateChip}>{formatEntryDate(entry.created_at)}</span>
-                        <div className={styles.entryBtns}>
-                          <button className={styles.iconBtn} onClick={() => startEdit(entry)} aria-label="Edit">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                            </svg>
-                          </button>
-                          <button className={styles.iconBtn} onClick={() => deleteEntry(entry.id)} aria-label="Delete">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <polyline points="3 6 5 6 21 6" />
-                              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                              <path d="M10 11v6M14 11v6" />
-                              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                      <p className={styles.entryContent}>{entry.content}</p>
-                    </>
-                  )}
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>

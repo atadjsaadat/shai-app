@@ -31,6 +31,26 @@ export async function POST(request: Request) {
   return NextResponse.json({ childId: child.id })
 }
 
+export async function PATCH(request: Request) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+
+  const body = await request.json()
+  if (!Array.isArray(body.allergies) || !Array.isArray(body.intolerances)) {
+    return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
+  }
+
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('children')
+    .update({ allergies: body.allergies, intolerances: body.intolerances })
+    .eq('user_id', user.id)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
+}
+
 export async function GET() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -39,12 +59,12 @@ export async function GET() {
   const admin = createAdminClient()
   const { data: child } = await admin
     .from('children')
-    .select('id, name')
+    .select('id, name, date_of_birth')
     .or(`user_id.eq.${user.id},linked_user_ids.cs.{${user.id}}`)
     .order('created_at', { ascending: true })
     .limit(1)
     .single()
 
-  if (!child) return NextResponse.json({ childId: null, childName: null })
-  return NextResponse.json({ childId: child.id, childName: child.name })
+  if (!child) return NextResponse.json({ childId: null, childName: null, childDob: null })
+  return NextResponse.json({ childId: child.id, childName: child.name, childDob: child.date_of_birth })
 }

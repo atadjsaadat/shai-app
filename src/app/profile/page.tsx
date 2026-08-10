@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import BottomNav from '@/components/BottomNav';
@@ -16,6 +16,7 @@ interface ChildData {
   date_of_birth: string | null;
   sex: 'male' | 'female' | 'not_specified' | null;
   allergies: string[] | null;
+  intolerances: string[] | null;
   is_selective_eater: boolean;
   relationship_to_child: string | null;
 }
@@ -32,6 +33,20 @@ interface PendingInvite {
 }
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+const ALLERGY_GROUPS = [
+  { label: 'Fruits',        items: ['Apple', 'Avocado', 'Banana', 'Cherry', 'Coconut', 'Kiwi', 'Mango', 'Peach', 'Pear', 'Strawberry'] },
+  { label: 'Grains',        items: ['Barley', 'Buckwheat', 'Maize', 'Oat', 'Rye', 'Wheat'] },
+  { label: 'Legumes',       items: ['Chickpea', 'Lentil', 'Pea', 'Peanut', 'Soy'] },
+  { label: 'Nuts & seeds',  items: ['Almond', 'Brazil nut', 'Cashew', 'Hazelnut', 'Pecan', 'Pistachio', 'Sesame', 'Sunflower seed', 'Walnut'] },
+  { label: 'Spices',        items: ['Mustard'] },
+  { label: 'Vegetables',    items: ['Celery', 'Garlic', 'Onion', 'Potato', 'Tomato'] },
+  { label: 'Egg',           items: ['Egg'] },
+  { label: 'Fish & seafood', items: ['Cod', 'Crab', 'Lobster', 'Mackerel', 'Salmon', 'Shrimp', 'Squid', 'Tuna'] },
+  { label: 'Meat',          items: ['Beef', 'Chicken', 'Lamb', 'Pork', 'Turkey'] },
+  { label: 'Milk',          items: ["Cow's milk", "Goat's milk"] },
+];
+const COMMON_INTOLERANCES = ['Lactose', 'Gluten', 'Fructose', 'Histamine', 'Sulphites'];
 
 function formatAge(dob: string | null | undefined): string {
   if (!dob) return '';
@@ -60,12 +75,10 @@ function capitalize(s: string | null | undefined): string {
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [email, setEmail] = useState<string | null>(null);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [child, setChild] = useState<ChildData | null>(null);
   const [loading, setLoading] = useState(true);
   const [consentSaving, setConsentSaving] = useState(false);
-  const [signingOut, setSigningOut] = useState(false);
   const [linkedPartners, setLinkedPartners] = useState<LinkedPartner[]>([]);
   const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
   const [childId, setChildId] = useState<string | null>(null);
@@ -74,15 +87,32 @@ export default function ProfilePage() {
   const [activeInviteLink, setActiveInviteLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  // Allergy editing state
+  const [allergyEditing, setAllergyEditing] = useState(false);
+  const [allergyDraft, setAllergyDraft] = useState<string[]>([]);
+  const [intoleranceDraft, setIntoleranceDraft] = useState<string[]>([]);
+  const [allergySaving, setAllergySaving] = useState(false);
+
+  // Journal lock state
+  type PinFlow = 'idle' | 'setup_enter' | 'setup_confirm' | 'disable_verify' | 'change_verify' | 'change_enter' | 'change_confirm';
+  const [journalLockEnabled, setJournalLockEnabled] = useState(false);
+  const [pinFlow, setPinFlow] = useState<PinFlow>('idle');
+  const privacyCardRef = useRef<HTMLDivElement>(null);
+  const privacySwipeRef = useRef<{x: number; y: number} | null>(null);
+  const [pinInput, setPinInput] = useState('');
+  const [pinFirst, setPinFirst] = useState('');
+  const [pinError, setPinError] = useState('');
+  const [pinSaving, setPinSaving] = useState(false);
+
   useEffect(() => {
     Promise.all([
       fetch('/api/profile'),
       fetch('/api/invite'),
+      fetch('/api/journal/pin'),
     ])
-      .then(async ([profileRes, inviteRes]) => {
+      .then(async ([profileRes, inviteRes, pinRes]) => {
         if (profileRes.status === 401) { router.replace('/login'); return; }
         const profileData = await profileRes.json();
-        setEmail(profileData.email);
         setProfile(profileData.profile);
         setChild(profileData.child);
 
@@ -92,6 +122,11 @@ export default function ProfilePage() {
           setPendingInvites(inviteData.pendingInvites ?? []);
           setChildId(inviteData.childId ?? null);
           setIsOwner(true);
+        }
+
+        if (pinRes.ok) {
+          const pinData = await pinRes.json();
+          setJournalLockEnabled(pinData.enabled ?? false);
         }
       })
       .catch(() => {})
@@ -154,24 +189,190 @@ export default function ProfilePage() {
     return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   }
 
-  async function handleSignOut() {
-    if (signingOut) return;
-    setSigningOut(true);
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-    } catch { /* ignore */ }
-    localStorage.removeItem('shai_active_child_id');
-    localStorage.removeItem('shai_child_name');
-    router.replace('/login');
+  function startPinFlow(flow: PinFlow) {
+    setPinFlow(flow);
+    setPinInput('');
+    setPinFirst('');
+    setPinError('');
   }
 
+  function cancelPinFlow() {
+    setPinFlow('idle');
+    setPinInput('');
+    setPinFirst('');
+    setPinError('');
+  }
+
+  async function handlePinDigit(digit: string) {
+    if (pinSaving) return;
+    const next = (pinInput + digit).slice(0, 4);
+    setPinInput(next);
+    if (next.length < 4) return;
+
+    // Auto-advance on 4th digit
+    if (pinFlow === 'setup_enter') {
+      setPinFirst(next);
+      setPinInput('');
+      setPinFlow('setup_confirm');
+      return;
+    }
+
+    if (pinFlow === 'setup_confirm') {
+      if (next !== pinFirst) {
+        setPinError('PINs don\'t match — try again');
+        setPinInput('');
+        setPinFlow('setup_enter');
+        setPinFirst('');
+        return;
+      }
+      setPinSaving(true);
+      const res = await fetch('/api/journal/pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: next }),
+      });
+      setPinSaving(false);
+      if (res.ok) {
+        setJournalLockEnabled(true);
+        sessionStorage.removeItem('shai_journal_unlocked');
+        cancelPinFlow();
+      } else {
+        setPinError('Something went wrong — try again');
+        setPinInput('');
+        setPinFlow('setup_enter');
+      }
+      return;
+    }
+
+    if (pinFlow === 'disable_verify') {
+      setPinSaving(true);
+      const res = await fetch('/api/journal/pin', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: next }),
+      });
+      setPinSaving(false);
+      if (res.ok) {
+        setJournalLockEnabled(false);
+        sessionStorage.removeItem('shai_journal_unlocked');
+        cancelPinFlow();
+      } else {
+        setPinError('Incorrect PIN — try again');
+        setPinInput('');
+      }
+      return;
+    }
+
+    if (pinFlow === 'change_verify') {
+      setPinSaving(true);
+      const res = await fetch('/api/journal/pin/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: next }),
+      });
+      const { valid } = await res.json();
+      setPinSaving(false);
+      if (valid) {
+        setPinInput('');
+        setPinFlow('change_enter');
+      } else {
+        setPinError('Incorrect PIN — try again');
+        setPinInput('');
+      }
+      return;
+    }
+
+    if (pinFlow === 'change_enter') {
+      setPinFirst(next);
+      setPinInput('');
+      setPinFlow('change_confirm');
+      return;
+    }
+
+    if (pinFlow === 'change_confirm') {
+      if (next !== pinFirst) {
+        setPinError('PINs don\'t match — try again');
+        setPinInput('');
+        setPinFlow('change_enter');
+        setPinFirst('');
+        return;
+      }
+      setPinSaving(true);
+      const res = await fetch('/api/journal/pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: next }),
+      });
+      setPinSaving(false);
+      if (res.ok) {
+        sessionStorage.removeItem('shai_journal_unlocked');
+        cancelPinFlow();
+      } else {
+        setPinError('Something went wrong — try again');
+        setPinInput('');
+        setPinFlow('change_enter');
+      }
+    }
+  }
+
+  function openAllergyEditor() {
+    setAllergyDraft(child?.allergies?.filter(Boolean) ?? []);
+    setIntoleranceDraft(child?.intolerances?.filter(Boolean) ?? []);
+    setAllergyEditing(true);
+  }
+
+  function handleAllergyToggle(a: string) {
+    setAllergyDraft(prev => prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a]);
+  }
+
+  function handleIntoleranceToggle(a: string) {
+    setIntoleranceDraft(prev => prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a]);
+  }
+
+  async function handleAllergyDone() {
+    if (allergySaving) return;
+    setAllergySaving(true);
+    try {
+      await fetch('/api/children', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ allergies: allergyDraft, intolerances: intoleranceDraft }),
+      });
+      setChild(c => c ? { ...c, allergies: allergyDraft, intolerances: intoleranceDraft } : c);
+      setAllergyEditing(false);
+    } catch { /* ignore */ }
+    setAllergySaving(false);
+  }
+
+  useEffect(() => {
+    const el = privacyCardRef.current;
+    if (!el) return;
+    const onStart = (e: TouchEvent) => {
+      if (pinFlow !== 'idle') return;
+      privacySwipeRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    };
+    const onEnd = (e: TouchEvent) => {
+      const start = privacySwipeRef.current;
+      if (!start || pinFlow !== 'idle') return;
+      privacySwipeRef.current = null;
+      const dx = e.changedTouches[0].clientX - start.x;
+      const dy = e.changedTouches[0].clientY - start.y;
+      if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return;
+      if (dx > 0 && !journalLockEnabled) startPinFlow('setup_enter');
+      else if (dx < 0 && journalLockEnabled) startPinFlow('disable_verify');
+    };
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchend', onEnd, { passive: true });
+    return () => {
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchend', onEnd);
+    };
+  }, [journalLockEnabled, pinFlow]);
+
   const allergies = child?.allergies?.filter(Boolean) ?? [];
+  const intolerances = child?.intolerances?.filter(Boolean) ?? [];
   const age = formatAge(child?.date_of_birth);
   const relationship = capitalize(child?.relationship_to_child);
-
-  const tierLabel = profile?.tier === 'premium' ? 'Premium'
-    : profile?.tier === 'clinical' ? 'Clinical'
-    : 'Free plan';
 
   return (
     <div className={styles.page}>
@@ -192,69 +393,223 @@ export default function ProfilePage() {
               <p className={styles.childName}>{child.name}</p>
               {age && <p className={styles.childAge}>{age}</p>}
               {relationship && (
-                <div className={styles.relationChip}>{relationship}</div>
+                <Link href="/account" className={styles.relationChip}>
+                  {relationship}
+                  <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 4 }}>
+                    <path d="M8 5l5 5-5 5"/>
+                  </svg>
+                </Link>
               )}
             </div>
           )}
 
           {/* Child details */}
           {child && (
-            <div className={styles.card}>
-              <p className={styles.cardTitle}>About {child.name}</p>
+            <section>
+            <div className={styles.sectionHeader}>
+              <p className={styles.sectionLabel}>About {child.name}</p>
+              {!allergyEditing && (
+                <button className={styles.allergyEditBtn} onClick={openAllergyEditor}>Edit</button>
+              )}
+            </div>
+            <div className={`${styles.card} ${styles.cardTerra}`}>
 
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Allergies</span>
-                {allergies.length > 0 ? (
-                  <div className={styles.chips}>
-                    {allergies.map(a => (
-                      <span key={a} className={styles.chip}>{capitalize(a)}</span>
-                    ))}
+              {allergyEditing ? (
+                <div className={styles.allergyEditor}>
+                  <p className={styles.allergyEditorSectionLabel}>Allergies</p>
+                  {ALLERGY_GROUPS.map(group => (
+                    <div key={group.label}>
+                      <p className={styles.allergyGroupLabel}>{group.label}</p>
+                      <div className={styles.allergyPicker}>
+                        {group.items.map(a => {
+                          const selected = allergyDraft.includes(a.toLowerCase());
+                          return (
+                            <button
+                              key={a}
+                              className={`${styles.allergyPickerChip}${selected ? ` ${styles.allergyPickerChipSelected}` : ''}`}
+                              onClick={() => handleAllergyToggle(a.toLowerCase())}
+                            >
+                              {a}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                  <p className={styles.allergyEditorSectionLabel}>Intolerances</p>
+                  <div className={styles.allergyPicker}>
+                    {COMMON_INTOLERANCES.map(a => {
+                      const selected = intoleranceDraft.includes(a.toLowerCase());
+                      return (
+                        <button
+                          key={a}
+                          className={`${styles.allergyPickerChip}${selected ? ` ${styles.allergyPickerChipSelected}` : ''}`}
+                          onClick={() => handleIntoleranceToggle(a.toLowerCase())}
+                        >
+                          {a}
+                        </button>
+                      );
+                    })}
                   </div>
-                ) : (
-                  <span className={styles.detailValue}>None recorded</span>
-                )}
-              </div>
+                  <div className={styles.allergyPickerActions}>
+                    <button className={styles.allergyDoneBtn} onClick={handleAllergyDone} disabled={allergySaving}>
+                      {allergySaving ? 'Saving…' : 'Done'}
+                    </button>
+                    <button className={styles.allergyCancelBtn} onClick={() => setAllergyEditing(false)}>Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {child.date_of_birth && (
+                    <div className={styles.detailRow}>
+                      <span className={styles.detailLabel}>Birthday</span>
+                      <span className={styles.detailValue}>{child.date_of_birth}</span>
+                    </div>
+                  )}
+                  {child.sex && child.sex !== 'not_specified' && (
+                    <div className={styles.detailRow}>
+                      <span className={styles.detailLabel}>Gender</span>
+                      <span className={styles.detailValue}>{child.sex === 'male' ? 'Boy' : 'Girl'}</span>
+                    </div>
+                  )}
+                  <div className={styles.detailRow}>
+                    <span className={styles.detailLabel}>Allergies</span>
+                    {allergies.length > 0 ? (
+                      <div className={styles.chips}>
+                        {allergies.map(a => (
+                          <span key={a} className={styles.chip}>{capitalize(a)}</span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className={styles.detailValue}>None recorded</span>
+                    )}
+                  </div>
+                  <div className={styles.detailRow}>
+                    <span className={styles.detailLabel}>Intolerances</span>
+                    {intolerances.length > 0 ? (
+                      <div className={styles.chips}>
+                        {intolerances.map(a => (
+                          <span key={a} className={styles.chip}>{capitalize(a)}</span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className={styles.detailValue}>None recorded</span>
+                    )}
+                  </div>
+                </>
+              )}
 
-              {child.is_selective_eater && (
+              {child.is_selective_eater && !allergyEditing && (
                 <div className={styles.detailRow}>
                   <span className={styles.detailLabel}>Eating style</span>
                   <span className={`${styles.chip} ${styles.chipAmber}`}>Selective eater</span>
                 </div>
               )}
             </div>
+            </section>
           )}
 
-          {/* Account */}
-          <div className={styles.card}>
-            <p className={styles.cardTitle}>Your account</p>
+          {/* Quick links */}
+          <section>
+          <p className={styles.sectionLabel}>Health</p>
+          <div className={`${styles.card} ${styles.cardSage}`}>
+            <Link href="/appointments" className={styles.linkRow}>
+              <span className={styles.linkLabel}>Appointments</span>
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8 5l5 5-5 5"/>
+              </svg>
+            </Link>
+            <Link href="/growth" className={styles.linkRow}>
+              <span className={styles.linkLabel}>Growth tracking</span>
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8 5l5 5-5 5"/>
+              </svg>
+            </Link>
+            <Link href="/health-record" className={styles.linkRow}>
+              <span className={styles.linkLabel}>Vaccinations</span>
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8 5l5 5-5 5"/>
+              </svg>
+            </Link>
+          </div>
+          </section>
 
-            <div className={styles.detailRow}>
-              <span className={styles.detailLabel}>Plan</span>
-              <span className={`${styles.tierBadge} ${profile?.tier === 'premium' ? styles.tierPremium : profile?.tier === 'clinical' ? styles.tierClinical : styles.tierFree}`}>
-                {tierLabel}
-              </span>
-            </div>
+          {/* Privacy / Journal lock */}
+          <section>
+          <p className={styles.sectionLabel}>Privacy</p>
+          <div ref={privacyCardRef} className={`${styles.card} ${styles.cardTerra}`}>
+            {pinFlow === 'idle' ? (
+              <div className={styles.toggleRow}>
+                <div className={styles.toggleText}>
+                  <p className={styles.toggleLabel}>Journal lock</p>
+                  <p className={styles.toggleDesc}>
+                    Protect your journal with a 4-digit PIN. Your entries stay private even if you share your phone.
+                  </p>
+                </div>
+                <button
+                  className={styles.toggleTrack}
+                  data-on={String(journalLockEnabled)}
+                  onClick={() => startPinFlow(journalLockEnabled ? 'disable_verify' : 'setup_enter')}
+                  role="switch"
+                  aria-checked={journalLockEnabled}
+                  aria-label="Toggle journal lock"
+                >
+                  <span className={styles.toggleThumb} />
+                </button>
+              </div>
+            ) : null}
 
-            {email && (
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Email</span>
-                <span className={styles.detailValue}>{email}</span>
+            {journalLockEnabled && pinFlow === 'idle' && (
+              <div className={styles.pinActions}>
+                <button className={styles.pinActionBtn} onClick={() => startPinFlow('change_verify')}>Change PIN</button>
               </div>
             )}
 
-            <button
-              className={styles.signOutBtn}
-              onClick={handleSignOut}
-              disabled={signingOut}
-            >
-              {signingOut ? 'Signing out…' : 'Sign out'}
-            </button>
+            {pinFlow !== 'idle' && (
+              <div className={styles.pinSetup}>
+                <p className={styles.pinSetupLabel}>
+                  {pinFlow === 'setup_enter'   && 'Set a 4-digit PIN'}
+                  {pinFlow === 'setup_confirm' && 'Confirm your PIN'}
+                  {pinFlow === 'disable_verify' && 'Enter your PIN to turn off lock'}
+                  {pinFlow === 'change_verify'  && 'Enter your current PIN'}
+                  {pinFlow === 'change_enter'   && 'Enter your new PIN'}
+                  {pinFlow === 'change_confirm' && 'Confirm your new PIN'}
+                </p>
+                {pinError && <p className={styles.pinError}>{pinError}</p>}
+                <div className={styles.pinDots}>
+                  {[0,1,2,3].map(i => (
+                    <div key={i} className={`${styles.pinDot}${pinInput.length > i ? ` ${styles.pinDotFilled}` : ''}`} />
+                  ))}
+                </div>
+                <div className={styles.pinPad}>
+                  {['1','2','3','4','5','6','7','8','9'].map(d => (
+                    <button key={d} className={styles.pinPadBtn} onClick={() => handlePinDigit(d)} disabled={pinSaving}>{d}</button>
+                  ))}
+                  <button className={styles.pinPadCancel} onClick={cancelPinFlow}>Cancel</button>
+                  <button className={styles.pinPadBtn} onClick={() => handlePinDigit('0')} disabled={pinSaving}>0</button>
+                  <button
+                    className={styles.pinPadBack}
+                    onClick={() => setPinInput(p => p.slice(0, -1))}
+                    disabled={pinSaving || pinInput.length === 0}
+                    aria-label="Delete"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
+                      <line x1="18" y1="9" x2="12" y2="15"/>
+                      <line x1="12" y1="9" x2="18" y2="15"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
+          </section>
 
           {/* Research consent */}
           {profile && (
-            <div className={styles.card}>
-              <p className={styles.cardTitle}>Research</p>
+            <section>
+            <p className={styles.sectionLabel}>Research</p>
+            <div className={`${styles.card} ${styles.cardSage}`}>
               <div className={styles.toggleRow}>
                 <div className={styles.toggleText}>
                   <p className={styles.toggleLabel}>Share anonymous data</p>
@@ -275,35 +630,14 @@ export default function ProfilePage() {
                 </button>
               </div>
             </div>
+            </section>
           )}
-
-          {/* Quick links */}
-          <div className={styles.card}>
-            <p className={styles.cardTitle}>Health</p>
-            <Link href="/appointments" className={styles.linkRow}>
-              <span className={styles.linkLabel}>Appointments</span>
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M8 5l5 5-5 5"/>
-              </svg>
-            </Link>
-            <Link href="/growth" className={styles.linkRow}>
-              <span className={styles.linkLabel}>Growth tracking</span>
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M8 5l5 5-5 5"/>
-              </svg>
-            </Link>
-            <Link href="/health-record" className={styles.linkRow}>
-              <span className={styles.linkLabel}>Health record</span>
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M8 5l5 5-5 5"/>
-              </svg>
-            </Link>
-          </div>
 
           {/* Partners */}
           {isOwner && (
-            <div className={styles.card}>
-              <p className={styles.cardTitle}>Partners</p>
+            <section>
+            <p className={styles.sectionLabel}>Partners</p>
+            <div className={`${styles.card} ${styles.cardSage}`}>
 
               {linkedPartners.length === 0 && pendingInvites.length === 0 && !activeInviteLink && (
                 <p className={styles.inviteEmptyText}>
@@ -409,15 +743,18 @@ export default function ProfilePage() {
                 </button>
               )}
             </div>
+            </section>
           )}
 
           {/* Community placeholder */}
+          <section>
+          <p className={styles.sectionLabel}>Community</p>
           <div className={styles.card}>
-            <p className={styles.cardTitle}>Community</p>
             <p className={styles.comingSoonText}>
               Connect with other parents, share wins, and learn from families on a similar journey. Coming in v2.
             </p>
           </div>
+          </section>
 
           <p className={styles.disclosure}>SHAi is an AI assistant.</p>
         </>

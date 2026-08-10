@@ -8,7 +8,7 @@ import type { Appointment, AppointmentType } from '@/lib/appointments/types'
 import { TYPE_LABELS, TYPE_COLORS } from '@/lib/appointments/types'
 
 const APPOINTMENT_TYPES: AppointmentType[] = [
-  'gp', 'paediatrician', 'health_visitor', 'dentist', 'hospital', 'specialist', 'other',
+  'gp', 'paediatrician', 'health_visitor', 'dentist', 'hospital', 'specialist', 'vaccination', 'other',
 ]
 
 interface FormState {
@@ -29,8 +29,19 @@ const EMPTY_FORM: FormState = {
   notes: '',
 }
 
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+const DAY_HEADERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+
 function todayString(): string {
   const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function toDateStr(iso: string): string {
+  const d = new Date(iso)
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
@@ -51,6 +62,36 @@ function formatDateTime(iso: string): string {
   const datePart = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
   const timePart = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true })
   return `${datePart} · ${timePart}`
+}
+
+function buildCalendarDays(year: number, month: number) {
+  const firstDay = new Date(year, month, 1).getDay()
+  const startOffset = (firstDay + 6) % 7 // Monday-first
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const prevDays = new Date(year, month, 0).getDate()
+
+  type Cell = { day: number; current: boolean; dateStr: string }
+  const cells: Cell[] = []
+
+  for (let i = startOffset - 1; i >= 0; i--) {
+    const d = prevDays - i
+    const y = month === 0 ? year - 1 : year
+    const m = month === 0 ? 12 : month
+    cells.push({ day: d, current: false, dateStr: `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}` })
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    cells.push({ day: d, current: true, dateStr: `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}` })
+  }
+
+  const trailing = cells.length % 7 === 0 ? 0 : 7 - (cells.length % 7)
+  for (let d = 1; d <= trailing; d++) {
+    const y = month === 11 ? year + 1 : year
+    const m = month === 11 ? 1 : month + 2
+    cells.push({ day: d, current: false, dateStr: `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}` })
+  }
+
+  return cells
 }
 
 function TypeBadge({ type }: { type: AppointmentType | null }) {
@@ -76,6 +117,11 @@ export default function AppointmentsPage() {
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
+  const today = todayString()
+  const [calYear, setCalYear] = useState(() => new Date().getFullYear())
+  const [calMonth, setCalMonth] = useState(() => new Date().getMonth())
+  const [selectedDay, setSelectedDay] = useState<string | null>(null)
+
   const load = useCallback(() => {
     fetch('/api/appointments')
       .then(r => {
@@ -93,8 +139,23 @@ export default function AppointmentsPage() {
   const upcoming = appointments.filter(a => new Date(a.scheduled_at) >= now)
   const past = appointments.filter(a => new Date(a.scheduled_at) < now).reverse()
 
+  const apptDates = new Set(appointments.map(a => toDateStr(a.scheduled_at)))
+
+  const visibleUpcoming = selectedDay ? upcoming.filter(a => toDateStr(a.scheduled_at) === selectedDay) : upcoming
+  const visiblePast = selectedDay ? past.filter(a => toDateStr(a.scheduled_at) === selectedDay) : past
+
+  function prevMonth() {
+    if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1) }
+    else setCalMonth(m => m - 1)
+  }
+
+  function nextMonth() {
+    if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1) }
+    else setCalMonth(m => m + 1)
+  }
+
   function openAdd() {
-    setForm({ ...EMPTY_FORM, date: todayString() })
+    setForm({ ...EMPTY_FORM, date: selectedDay ?? today })
     setEditingId(null)
     setFormError(null)
     setShowForm(true)
@@ -235,13 +296,14 @@ export default function AppointmentsPage() {
     )
   }
 
+  const calDays = buildCalendarDays(calYear, calMonth)
+
   return (
     <div className={styles.page}>
       <header className={styles.topBar}>
         <button className={styles.backBtn} onClick={() => router.back()} aria-label="Back">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="19" y1="12" x2="5" y2="12" />
-            <polyline points="12 19 5 12 12 5" />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
         <p className={styles.title}>Appointments</p>
@@ -256,7 +318,58 @@ export default function AppointmentsPage() {
       </header>
 
       <div className={styles.scroll}>
-        {/* Add / edit form */}
+
+        {/* ── Calendar ── */}
+        {!showForm && (
+          <div className={styles.calendar}>
+            <div className={styles.calNav}>
+              <button className={styles.calNavBtn} onClick={prevMonth} aria-label="Previous month">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+              <span className={styles.calMonthLabel}>{MONTH_NAMES[calMonth]} {calYear}</span>
+              <button className={styles.calNavBtn} onClick={nextMonth} aria-label="Next month">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            </div>
+            <div className={styles.calDayHeaders}>
+              {DAY_HEADERS.map((h, i) => <span key={i} className={styles.calDayHeader}>{h}</span>)}
+            </div>
+            <div className={styles.calGrid}>
+              {calDays.map((cell, i) => {
+                const isToday = cell.dateStr === today
+                const isSelected = cell.dateStr === selectedDay
+                const hasDot = apptDates.has(cell.dateStr)
+                return (
+                  <button
+                    key={i}
+                    className={[
+                      styles.calDay,
+                      !cell.current ? styles.calDayOther : '',
+                      isToday && !isSelected ? styles.calDayToday : '',
+                      isSelected ? styles.calDaySelected : '',
+                    ].filter(Boolean).join(' ')}
+                    onClick={() => setSelectedDay(isSelected ? null : cell.dateStr)}
+                    aria-label={cell.dateStr}
+                  >
+                    <span>{cell.day}</span>
+                    {hasDot && <span className={`${styles.calDot}${isSelected ? ` ${styles.calDotSelected}` : ''}`} />}
+                  </button>
+                )
+              })}
+            </div>
+            {selectedDay && (
+              <button className={styles.calClearBtn} onClick={() => setSelectedDay(null)}>
+                Show all
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* ── Add / edit form ── */}
         {showForm && (
           <div className={styles.form}>
             <p className={styles.formTitle}>{editingId ? 'Edit appointment' : 'New appointment'}</p>
@@ -345,18 +458,20 @@ export default function AppointmentsPage() {
         ) : (
           <>
             <section>
-              <p className={styles.sectionLabel}>Upcoming</p>
-              {upcoming.length === 0 ? (
-                <p className={styles.empty}>No upcoming appointments</p>
+              <p className={styles.sectionLabel}>
+                {selectedDay ? `${new Date(selectedDay + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}` : 'Upcoming'}
+              </p>
+              {visibleUpcoming.length === 0 ? (
+                <p className={styles.empty}>{selectedDay ? 'No appointments on this day' : 'No upcoming appointments'}</p>
               ) : (
-                upcoming.map(a => <AppointmentCard key={a.id} appt={a} />)
+                visibleUpcoming.map(a => <AppointmentCard key={a.id} appt={a} />)
               )}
             </section>
 
-            {past.length > 0 && (
+            {visiblePast.length > 0 && (
               <section>
                 <p className={styles.sectionLabel}>Past</p>
-                {past.map(a => <AppointmentCard key={a.id} appt={a} />)}
+                {visiblePast.map(a => <AppointmentCard key={a.id} appt={a} />)}
               </section>
             )}
           </>

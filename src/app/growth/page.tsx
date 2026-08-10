@@ -11,17 +11,23 @@ interface GrowthRecord {
   recorded_at: string
   weight_kg: number | null
   height_cm: number | null
+  head_cm: number | null
   who_weight_percentile: number | null
   who_height_percentile: number | null
+  who_head_percentile: number | null
   who_bmi_percentile: number | null
   notes: string | null
 }
 
-type Tab = 'weight' | 'height'
+type Tab = 'weight' | 'height' | 'head'
 
-const ACCENT_BOY     = '#3D86C8'
+const ACCENT_BOY     = '#C4714A'
 const ACCENT_GIRL    = '#E07A8F'
 const ACCENT_DEFAULT = '#C4714A'
+
+const WEIGHT_COLOR = '#C4714A'
+const HEIGHT_COLOR = '#D4A72C'
+const HEAD_COLOR   = '#7A9E7E'
 
 function accentForSex(sex: string | null): string {
   if (sex === 'male')   return ACCENT_BOY
@@ -47,6 +53,21 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+function formatShortDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+}
+
+function timeAgo(iso: string): string {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)
+  if (days === 0) return 'today'
+  if (days === 1) return 'yesterday'
+  if (days < 7) return `${days} days ago`
+  if (days < 14) return 'a week ago'
+  if (days < 30) return `${Math.floor(days / 7)} weeks ago`
+  if (days < 60) return 'a month ago'
+  return `${Math.floor(days / 30)} months ago`
+}
+
 function ageInMonths(dob: string, at: string): number {
   const birth = new Date(dob)
   const measured = new Date(at)
@@ -70,6 +91,7 @@ export default function GrowthPage() {
   const [formDate, setFormDate] = useState(new Date().toISOString().slice(0, 10))
   const [formWeight, setFormWeight] = useState('')
   const [formHeight, setFormHeight] = useState('')
+  const [formHead, setFormHead] = useState('')
   const [formNotes, setFormNotes] = useState('')
   const [error, setError] = useState<string | null>(null)
 
@@ -110,7 +132,7 @@ export default function GrowthPage() {
 
   async function handleSave() {
     if (!childId) return
-    if (!formWeight && !formHeight) { setError('Enter at least one measurement.'); return }
+    if (!formWeight && !formHeight && !formHead) { setError('Enter at least one measurement.'); return }
     setSaving(true)
     setError(null)
 
@@ -122,6 +144,7 @@ export default function GrowthPage() {
         recordedAt: new Date(formDate).toISOString(),
         weightKg: formWeight ? parseFloat(formWeight) : undefined,
         heightCm: formHeight ? parseFloat(formHeight) : undefined,
+        headCm: formHead ? parseFloat(formHead) : undefined,
         notes: formNotes || undefined,
       }),
     })
@@ -134,31 +157,44 @@ export default function GrowthPage() {
     setShowForm(false)
     setFormWeight('')
     setFormHeight('')
+    setFormHead('')
     setFormNotes('')
     setSaving(false)
   }
 
   const latest = records.length > 0 ? records[records.length - 1] : null
+  const prev   = records.length > 1 ? records[records.length - 2] : null
+
+  const weightGain = latest?.weight_kg != null && prev?.weight_kg != null
+    ? latest.weight_kg - prev.weight_kg : null
+  const heightGain = latest?.height_cm != null && prev?.height_cm != null
+    ? latest.height_cm - prev.height_cm : null
+  const headGain = latest?.head_cm != null && prev?.head_cm != null
+    ? latest.head_cm - prev.head_cm : null
 
   const chartPoints = records
-    .filter(r => (tab === 'weight' ? r.weight_kg : r.height_cm) != null)
+    .filter(r => (tab === 'weight' ? r.weight_kg : tab === 'height' ? r.height_cm : r.head_cm) != null)
     .map(r => ({
       age: dob ? Math.max(0, ageInMonths(dob, r.recorded_at)) : 0,
-      value: (tab === 'weight' ? r.weight_kg : r.height_cm) as number,
+      value: (tab === 'weight' ? r.weight_kg : tab === 'height' ? r.height_cm : r.head_cm) as number,
     }))
 
-  const tabActiveStyle = (t: Tab): React.CSSProperties | undefined =>
-    tab === t ? { background: hexToRgba(accent, 0.12), color: accent } : undefined
+  const tabAccent = tab === 'weight' ? WEIGHT_COLOR : tab === 'height' ? HEIGHT_COLOR : HEAD_COLOR
+
+  const tabActiveStyle = (t: Tab): React.CSSProperties | undefined => {
+    const c = t === 'weight' ? WEIGHT_COLOR : t === 'height' ? HEIGHT_COLOR : HEAD_COLOR
+    return tab === t ? { background: hexToRgba(c, 0.12), color: c, borderColor: c } : undefined
+  }
 
   return (
     <div
       className={styles.page}
-      style={{ '--child-accent': accent } as React.CSSProperties}
+      style={{ '--child-accent': tabAccent } as React.CSSProperties}
     >
       <header className={styles.topBar}>
         <button className={styles.back} onClick={() => router.back()} aria-label="Back">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path d="M12 15l-5-5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
         <div>
@@ -171,20 +207,38 @@ export default function GrowthPage() {
       {!loading && latest && (
         <div className={styles.statsRow}>
           {latest.weight_kg != null && (
-            <div className={styles.statCard}>
+            <div className={styles.statCard} style={{ borderTop: `3px solid ${WEIGHT_COLOR}` }}>
               <p className={styles.statValue}>{latest.weight_kg.toFixed(1)}<span className={styles.statUnit}>kg</span></p>
               <p className={styles.statLabel}>Weight</p>
               {latest.who_weight_percentile != null && (
-                <p className={styles.statPercentile}>{ordinal(latest.who_weight_percentile)} percentile</p>
+                <p className={styles.statPercentile} style={{ color: WEIGHT_COLOR }}>{ordinal(latest.who_weight_percentile)} percentile</p>
+              )}
+              {weightGain !== null && (
+                <p className={styles.statGain}>{weightGain >= 0 ? '+' : ''}{weightGain.toFixed(1)} kg since {formatShortDate(prev!.recorded_at)}</p>
               )}
             </div>
           )}
           {latest.height_cm != null && (
-            <div className={styles.statCard}>
+            <div className={styles.statCard} style={{ borderTop: `3px solid ${HEIGHT_COLOR}` }}>
               <p className={styles.statValue}>{latest.height_cm.toFixed(1)}<span className={styles.statUnit}>cm</span></p>
               <p className={styles.statLabel}>Height</p>
               {latest.who_height_percentile != null && (
-                <p className={styles.statPercentile}>{ordinal(latest.who_height_percentile)} percentile</p>
+                <p className={styles.statPercentile} style={{ color: HEIGHT_COLOR }}>{ordinal(latest.who_height_percentile)} percentile</p>
+              )}
+              {heightGain !== null && (
+                <p className={styles.statGain}>{heightGain >= 0 ? '+' : ''}{heightGain.toFixed(1)} cm since {formatShortDate(prev!.recorded_at)}</p>
+              )}
+            </div>
+          )}
+          {latest.head_cm != null && (
+            <div className={styles.statCard} style={{ borderTop: `3px solid ${HEAD_COLOR}` }}>
+              <p className={styles.statValue}>{latest.head_cm.toFixed(1)}<span className={styles.statUnit}>cm</span></p>
+              <p className={styles.statLabel}>Head</p>
+              {latest.who_head_percentile != null && (
+                <p className={styles.statPercentile} style={{ color: HEAD_COLOR }}>{ordinal(latest.who_head_percentile)} percentile</p>
+              )}
+              {headGain !== null && (
+                <p className={styles.statGain}>{headGain >= 0 ? '+' : ''}{headGain.toFixed(1)} cm since {formatShortDate(prev!.recorded_at)}</p>
               )}
             </div>
           )}
@@ -198,6 +252,9 @@ export default function GrowthPage() {
             </div>
           )}
         </div>
+      )}
+      {!loading && latest && (
+        <p className={styles.lastMeasured}>Last measured {timeAgo(latest.recorded_at)}</p>
       )}
 
       {/* Tab selector */}
@@ -216,6 +273,13 @@ export default function GrowthPage() {
         >
           Height
         </button>
+        <button
+          className={`${styles.tab}${tab === 'head' ? ` ${styles.tabActive}` : ''}`}
+          style={tabActiveStyle('head')}
+          onClick={() => setTab('head')}
+        >
+          Head
+        </button>
       </div>
 
       {/* Chart */}
@@ -226,7 +290,7 @@ export default function GrowthPage() {
         {loading ? (
           <div className={styles.chartPlaceholder}>Loading…</div>
         ) : (
-          <GrowthChart sex={sex} type={tab} points={chartPoints} />
+          <GrowthChart sex={sex} type={tab} points={chartPoints} lineColor={tabAccent} />
         )}
       </div>
 
@@ -273,6 +337,19 @@ export default function GrowthPage() {
             </div>
           </div>
           <div className={styles.field}>
+            <label className={styles.label}>Head circumference (cm)</label>
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.1"
+              min="0"
+              className={styles.input}
+              placeholder="e.g. 46.5"
+              value={formHead}
+              onChange={e => setFormHead(e.target.value)}
+            />
+          </div>
+          <div className={styles.field}>
             <label className={styles.label}>Notes (optional)</label>
             <input
               type="text"
@@ -289,7 +366,7 @@ export default function GrowthPage() {
             </button>
             <button
               className={styles.saveBtn}
-              style={{ boxShadow: `0 4px 16px ${hexToRgba(accent, 0.3)}` }}
+              style={{ boxShadow: `0 4px 16px ${hexToRgba(tabAccent, 0.3)}` }}
               onClick={handleSave}
               disabled={saving}
             >
@@ -300,7 +377,7 @@ export default function GrowthPage() {
       ) : (
         <button
           className={styles.addBtn}
-          style={{ boxShadow: `0 6px 20px ${hexToRgba(accent, 0.35)}` }}
+          style={{ boxShadow: `0 6px 20px ${hexToRgba(tabAccent, 0.35)}` }}
           onClick={() => setShowForm(true)}
         >
           + Add measurement
@@ -329,6 +406,14 @@ export default function GrowthPage() {
                       {r.height_cm.toFixed(1)} cm
                       {r.who_height_percentile != null && (
                         <span className={styles.historyPct}> · {ordinal(r.who_height_percentile)}</span>
+                      )}
+                    </span>
+                  )}
+                  {r.head_cm != null && (
+                    <span className={styles.historyVal}>
+                      HC {r.head_cm.toFixed(1)} cm
+                      {r.who_head_percentile != null && (
+                        <span className={styles.historyPct}> · {ordinal(r.who_head_percentile)}</span>
                       )}
                     </span>
                   )}

@@ -10,8 +10,9 @@ interface DataPoint {
 
 interface Props {
   sex: string
-  type: 'weight' | 'height'
+  type: 'weight' | 'height' | 'head'
   points: DataPoint[]
+  lineColor: string
 }
 
 // Right padding widened to 36 to give room for end-of-line percentile labels
@@ -21,24 +22,25 @@ const H = 200
 const PW = W - PAD.left - PAD.right  // 264
 const PH = H - PAD.top  - PAD.bottom // 156
 
-// Neutral warm-gray reference bands — don't compete with the child's accent color
-const BANDS: Array<{
-  key: 'p3' | 'p15' | 'p50' | 'p85' | 'p97'
-  label: string
-  stroke: string
-  width: number
-  dash?: string
-  endLabel?: string
-}> = [
-  { key: 'p3',  label: '3rd',  stroke: '#C0B5AB', width: 0.8, dash: '4 3', endLabel: '3rd' },
-  { key: 'p15', label: '15th', stroke: '#B0A59B', width: 0.8, dash: '4 3' },
-  { key: 'p50', label: '50th', stroke: '#7A6E66', width: 1.5, endLabel: '50th' },
-  { key: 'p85', label: '85th', stroke: '#B0A59B', width: 0.8, dash: '4 3' },
-  { key: 'p97', label: '97th', stroke: '#C0B5AB', width: 0.8, dash: '4 3', endLabel: '97th' },
-]
+type Band = { key: 'p3' | 'p15' | 'p50' | 'p85' | 'p97'; label: string; stroke: string; width: number; dash?: string; endLabel?: string }
 
-function yRange(type: 'weight' | 'height'): [number, number] {
-  return type === 'weight' ? [0, 25] : [40, 125]
+function getBands(type: 'weight' | 'height' | 'head'): Band[] {
+  const deep  = type === 'weight' ? '#9E5035' : type === 'height' ? '#8B6914' : '#4A7050'
+  const rich  = type === 'weight' ? '#C4714A' : type === 'height' ? '#D4A72C' : '#7A9E7E'
+  const faded = type === 'weight' ? '#E0B09A' : type === 'height' ? '#EDD898' : '#C0D8C2'
+  return [
+    { key: 'p3',  label: '3rd',  stroke: rich,  width: 1,   dash: '4 3', endLabel: '3rd' },
+    { key: 'p15', label: '15th', stroke: faded, width: 0.8, dash: '4 3' },
+    { key: 'p50', label: '50th', stroke: deep,  width: 1.8, endLabel: '50th' },
+    { key: 'p85', label: '85th', stroke: faded, width: 0.8, dash: '4 3' },
+    { key: 'p97', label: '97th', stroke: rich,  width: 1,   dash: '4 3', endLabel: '97th' },
+  ]
+}
+
+function yRange(type: 'weight' | 'height' | 'head'): [number, number] {
+  if (type === 'weight') return [0, 25]
+  if (type === 'height') return [40, 125]
+  return [28, 58]
 }
 
 function xPx(months: number): number {
@@ -62,11 +64,12 @@ function toPath(curve: Array<{ age: number; value: number }>, yMin: number, yMax
   return d
 }
 
-export default function GrowthChart({ sex, type, points }: Props) {
+export default function GrowthChart({ sex, type, points, lineColor }: Props) {
   const [yMin, yMax] = yRange(type)
   const unit = type === 'weight' ? 'kg' : 'cm'
-  const yTicks = type === 'weight' ? [0, 5, 10, 15, 20, 25] : [40, 60, 80, 100, 120]
+  const yTicks = type === 'weight' ? [0, 5, 10, 15, 20, 25] : type === 'height' ? [40, 60, 80, 100, 120] : [30, 35, 40, 45, 50, 55]
   const xTicks = [0, 12, 24, 36, 48, 60]
+  const BANDS = getBands(type)
 
   const childPath = points.length > 1 ? toPath(points, yMin, yMax) : null
   const lastPoint = points.length > 0 ? points[points.length - 1] : null
@@ -77,7 +80,7 @@ export default function GrowthChart({ sex, type, points }: Props) {
         viewBox={`0 0 ${W} ${H}`}
         width="100%"
         className={styles.svg}
-        aria-label={`${type === 'weight' ? 'Weight' : 'Height'} growth chart`}
+        aria-label={`${type === 'weight' ? 'Weight' : type === 'height' ? 'Height' : 'Head circumference'} growth chart`}
       >
         {/* Y grid lines */}
         {yTicks.map(v => (
@@ -123,7 +126,7 @@ export default function GrowthChart({ sex, type, points }: Props) {
           <path
             d={childPath}
             fill="none"
-            style={{ stroke: 'var(--child-accent, #C4714A)' }}
+            style={{ stroke: lineColor }}
             strokeWidth="2.5"
             strokeLinejoin="round"
             strokeLinecap="round"
@@ -137,7 +140,7 @@ export default function GrowthChart({ sex, type, points }: Props) {
             cx={xPx(p.age)}
             cy={yPx(p.value, yMin, yMax)}
             r="4.5"
-            style={{ fill: 'var(--child-accent, #C4714A)' }}
+            style={{ fill: lineColor }}
             stroke="#fff"
             strokeWidth="2"
           />
@@ -150,14 +153,14 @@ export default function GrowthChart({ sex, type, points }: Props) {
               cx={xPx(lastPoint.age)}
               cy={yPx(lastPoint.value, yMin, yMax)}
               r="8"
-              style={{ fill: 'var(--child-accent, #C4714A)' }}
+              style={{ fill: lineColor }}
               opacity="0.15"
             />
             <circle
               cx={xPx(lastPoint.age)}
               cy={yPx(lastPoint.value, yMin, yMax)}
               r="5.5"
-              style={{ fill: 'var(--child-accent, #C4714A)' }}
+              style={{ fill: lineColor }}
               stroke="#fff"
               strokeWidth="2"
             />
@@ -197,20 +200,20 @@ export default function GrowthChart({ sex, type, points }: Props) {
       <div className={styles.legend}>
         <span className={styles.legendItem}>
           <svg width="16" height="8" viewBox="0 0 16 8">
-            <line x1="0" y1="4" x2="16" y2="4" stroke="#7A6E66" strokeWidth="1.5" />
+            <line x1="0" y1="4" x2="16" y2="4" stroke={BANDS[2].stroke} strokeWidth="1.8" />
           </svg>
           50th
         </span>
         <span className={styles.legendItem}>
           <svg width="16" height="8" viewBox="0 0 16 8">
-            <line x1="0" y1="4" x2="16" y2="4" stroke="#C0B5AB" strokeWidth="0.8" strokeDasharray="4 3" />
+            <line x1="0" y1="4" x2="16" y2="4" stroke={BANDS[0].stroke} strokeWidth="1" strokeDasharray="4 3" />
           </svg>
           3rd / 97th
         </span>
         <span className={styles.legendItem}>
           <svg width="16" height="8" viewBox="0 0 16 8">
-            <line x1="0" y1="4" x2="16" y2="4" strokeWidth="2.5" style={{ stroke: 'var(--child-accent, #C4714A)' }} />
-            <circle cx="8" cy="4" r="3" style={{ fill: 'var(--child-accent, #C4714A)' }} />
+            <line x1="0" y1="4" x2="16" y2="4" strokeWidth="2.5" style={{ stroke: lineColor }} />
+            <circle cx="8" cy="4" r="3" style={{ fill: lineColor }} />
           </svg>
           {sex === 'male' ? 'Your son' : 'Your daughter'}
         </span>

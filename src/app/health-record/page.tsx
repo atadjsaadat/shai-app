@@ -1,22 +1,18 @@
 'use client';
 
-import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import BottomNav from '@/components/BottomNav';
 import { VACCINE_SCHEDULE } from '@/lib/health-record/types';
 import type { VaccinationRecord } from '@/lib/health-record/types';
+import type { Appointment } from '@/lib/appointments/types';
 import styles from './page.module.css';
 
 interface ChildProfile {
   id: string;
   name: string;
   date_of_birth: string | null;
-  birth_weight_kg: number | null;
-  birth_length_cm: number | null;
-  gestational_age_at_birth: number | null;
-  feeding_method_birth: string | null;
-  allergies: string[] | null;
 }
 
 function expectedDate(dob: string, months: number): string {
@@ -27,6 +23,12 @@ function expectedDate(dob: string, months: number): string {
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function formatApptShort(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) +
+    ' · ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true });
 }
 
 function todayLocalDate(): string {
@@ -42,6 +44,21 @@ export default function HealthRecordPage() {
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [dateInput, setDateInput] = useState('');
   const [saving, setSaving] = useState<string | null>(null);
+  const [vaccinationAppt, setVaccinationAppt] = useState<Appointment | null>(null);
+
+  useEffect(() => {
+    fetch('/api/appointments')
+      .then(r => r.json())
+      .then(data => {
+        if (!data.appointments) return;
+        const now = new Date();
+        const next = (data.appointments as Appointment[])
+          .filter(a => a.appointment_type === 'vaccination' && new Date(a.scheduled_at) >= now)
+          .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+        if (next.length > 0) setVaccinationAppt(next[0]);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch('/api/health-record')
@@ -63,7 +80,6 @@ export default function HealthRecordPage() {
     const existing = vaccinations.get(vaccineKey);
 
     if (existing) {
-      // Already given — untick (remove)
       setSaving(vaccineKey);
       const updated = new Map(vaccinations);
       updated.delete(vaccineKey);
@@ -80,7 +96,6 @@ export default function HealthRecordPage() {
       setSaving(null);
       setOpenKey(null);
     } else {
-      // Open date input
       setOpenKey(vaccineKey);
       setDateInput(todayLocalDate());
     }
@@ -108,23 +123,21 @@ export default function HealthRecordPage() {
     setSaving(null);
   }
 
-  const feedingLabel: Record<string, string> = {
-    breast: 'Breastfed',
-    formula: 'Formula',
-    expressed: 'Expressed milk',
-  };
+  const nextDueGroup = child?.date_of_birth
+    ? VACCINE_SCHEDULE.find(g => g.vaccines.some(v => !vaccinations.has(v.key)))
+    : null;
 
   return (
     <div className={styles.page}>
       <header className={styles.topBar}>
-        <button className={styles.backBtn} onClick={() => router.back()} aria-label="Back">
+        <button className={styles.backBtn} onClick={() => router.push('/record')} aria-label="Back">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
         <div className={styles.topBarTitle}>
-          <p className={styles.title}>Health record</p>
-          {child?.name && <p className={styles.subtitle}>{child.name}&apos;s book</p>}
+          <p className={styles.title}>Vaccinations</p>
+          {child?.name && <p className={styles.subtitle}>{child.name}&apos;s record</p>}
         </div>
       </header>
 
@@ -133,67 +146,41 @@ export default function HealthRecordPage() {
       ) : !child ? (
         <p className={styles.hint}>No child profile found.</p>
       ) : (
-        <>
-          {/* ── Birth details ─────────────────────────── */}
-          <section>
-            <p className={styles.sectionLabel}>Birth details</p>
-            <div className={styles.detailsCard}>
-              {child.birth_weight_kg ? (
-                <div className={styles.detailRow}>
-                  <span className={styles.detailName}>Birth weight</span>
-                  <span className={styles.detailValue}>{child.birth_weight_kg} kg</span>
-                </div>
-              ) : null}
-              {child.birth_length_cm ? (
-                <div className={styles.detailRow}>
-                  <span className={styles.detailName}>Birth length</span>
-                  <span className={styles.detailValue}>{child.birth_length_cm} cm</span>
-                </div>
-              ) : null}
-              {child.gestational_age_at_birth ? (
-                <div className={styles.detailRow}>
-                  <span className={styles.detailName}>Gestational age</span>
-                  <span className={styles.detailValue}>{child.gestational_age_at_birth} weeks</span>
-                </div>
-              ) : null}
-              {child.feeding_method_birth ? (
-                <div className={styles.detailRow}>
-                  <span className={styles.detailName}>Feeding at birth</span>
-                  <span className={styles.detailValue}>{feedingLabel[child.feeding_method_birth] ?? child.feeding_method_birth}</span>
-                </div>
-              ) : null}
-              {child.allergies && child.allergies.length > 0 ? (
-                <div className={styles.detailRow}>
-                  <span className={styles.detailName}>Allergies</span>
-                  <span className={styles.detailValue}>{child.allergies.join(', ')}</span>
-                </div>
-              ) : null}
-              {!child.birth_weight_kg && !child.birth_length_cm && !child.gestational_age_at_birth ? (
-                <p className={styles.detailEmpty}>
-                  Birth details not added yet.{' '}
-                  <Link href="/profile" className={styles.detailLink}>Add in profile</Link>
-                </p>
-              ) : null}
-            </div>
-          </section>
+        <section>
+          {vaccinationAppt && (
+            <Link href="/appointments" className={styles.reminderBanner}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={styles.reminderIcon}>
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              <div className={styles.reminderBody}>
+                <p className={styles.reminderLabel}>Vaccination appointment</p>
+                <p className={styles.reminderText}>{vaccinationAppt.title} · {formatApptShort(vaccinationAppt.scheduled_at)}</p>
+              </div>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={styles.reminderChevron}>
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </Link>
+          )}
 
-          {/* ── Growth link ───────────────────────────── */}
-          <Link href="/growth" className={styles.growthLink}>
-            <div>
-              <p className={styles.growthLinkTitle}>Growth chart</p>
-              <p className={styles.growthLinkSub}>Weight, height and WHO percentiles</p>
+          {nextDueGroup && !vaccinationAppt && (
+            <div className={styles.nextDueCard}>
+              <p className={styles.nextDueLabel}>Next due</p>
+              <p className={styles.nextDueTitle}>{nextDueGroup.label}</p>
+              <p className={styles.nextDueSub}>
+                {nextDueGroup.vaccines.filter(v => !vaccinations.has(v.key)).map(v => v.name).join(', ')}
+                {child.date_of_birth && nextDueGroup.month > 0 && (
+                  <> · {expectedDate(child.date_of_birth, nextDueGroup.month)}</>
+                )}
+                {nextDueGroup.month === 0 && <> · at birth</>}
+              </p>
             </div>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </Link>
-
-          {/* ── Vaccinations ──────────────────────────── */}
-          <section>
-            <p className={styles.sectionLabel}>Vaccinations</p>
-            <div className={styles.vaccineGroups}>
-              {VACCINE_SCHEDULE.map(group => (
-                <div key={group.label} className={styles.vaccineGroup}>
+          )}
+          <div className={styles.vaccineGroups}>
+            {VACCINE_SCHEDULE.map((group, i) => {
+              const colorClass = i % 2 === 0 ? styles.vaccineGroupSage : styles.vaccineGroupYellow;
+              return (
+                <div key={group.label} className={`${styles.vaccineGroup}${colorClass ? ` ${colorClass}` : ''}`}>
                   <div className={styles.vaccineGroupHeader}>
                     <span className={styles.vaccineGroupLabel}>{group.label}</span>
                     {child.date_of_birth && (
@@ -248,13 +235,13 @@ export default function HealthRecordPage() {
                     );
                   })}
                 </div>
-              ))}
-            </div>
-            <p className={styles.attribution}>
-              Based on the Malta national immunisation programme. Always follow your healthcare provider&apos;s guidance.
-            </p>
-          </section>
-        </>
+              );
+            })}
+          </div>
+          <p className={styles.attribution}>
+            Based on the Malta national immunisation programme. Always follow your healthcare provider&apos;s guidance.
+          </p>
+        </section>
       )}
 
       <BottomNav />

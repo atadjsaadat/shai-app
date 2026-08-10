@@ -3,11 +3,13 @@ import {
   PercentileBands,
   WFA_BOYS, WFA_GIRLS,
   HFA_BOYS, HFA_GIRLS,
+  HCFA_BOYS, HCFA_GIRLS,
 } from './who-data'
 
-function getTable(sex: string, type: 'weight' | 'height'): PercentileBands {
+function getTable(sex: string, type: 'weight' | 'height' | 'head'): PercentileBands {
   if (type === 'weight') return sex === 'male' ? WFA_BOYS : WFA_GIRLS
-  return sex === 'male' ? HFA_BOYS : HFA_GIRLS
+  if (type === 'height') return sex === 'male' ? HFA_BOYS : HFA_GIRLS
+  return sex === 'male' ? HCFA_BOYS : HCFA_GIRLS
 }
 
 // Linear interpolation between the two nearest key ages
@@ -34,7 +36,7 @@ export function calcPercentile(
   value: number,
   sex: string,
   ageMonths: number,
-  type: 'weight' | 'height',
+  type: 'weight' | 'height' | 'head',
 ): number {
   const table = getTable(sex, type)
   const b = interpolateBands(ageMonths, table)
@@ -55,7 +57,7 @@ export function calcBMI(weightKg: number, heightCm: number): number {
 // Returns [age, value] pairs for a reference curve — used by the SVG chart
 export function getRefCurve(
   sex: string,
-  type: 'weight' | 'height',
+  type: 'weight' | 'height' | 'head',
   band: keyof PercentileBands,
 ): Array<{ age: number; value: number }> {
   const table = getTable(sex, type)
