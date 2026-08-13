@@ -13,6 +13,18 @@ const FEED_COLOURS: Record<FeedType, string> = {
   expressed:'#7A9E7E',
 };
 
+const REMINDER_OPTIONS = [
+  { label: '1h',   mins: 60  },
+  { label: '1.5h', mins: 90  },
+  { label: '2h',   mins: 120 },
+  { label: '2.5h', mins: 150 },
+  { label: '3h',   mins: 180 },
+  { label: '3.5h', mins: 210 },
+  { label: '4h',   mins: 240 },
+];
+
+interface Alarm { dueAt: number; intervalMins: number }
+
 interface FeedRecord {
   id: string;
   logged_at: string;
@@ -49,6 +61,30 @@ function isToday(iso: string): boolean {
   return d.getDate() === n.getDate() && d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear();
 }
 
+function timeSince(iso: string): string {
+  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
+  if (mins < 1) return 'just now';
+  if (mins < 90) return `${mins} min ago`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${h}h${m > 0 ? ` ${m}m` : ''} ago`;
+}
+
+function timeUntil(ts: number): string {
+  const mins = Math.ceil((ts - Date.now()) / 60_000);
+  if (mins <= 0) return 'overdue';
+  if (mins < 90) return `in ${mins} min`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `in ${h}h${m > 0 ? ` ${m}m` : ''}`;
+}
+
+function ageDisplay(days: number): string {
+  if (days < 14) return `${days} days old`;
+  if (days < 70) return `${Math.floor(days / 7)} weeks old`;
+  return `${Math.floor(days / 30)} months old`;
+}
+
 function feedLabel(f: FeedRecord): string {
   const side = f.breast_side ? ` · ${f.breast_side[0].toUpperCase()}${f.breast_side.slice(1)}` : '';
   const type = f.feed_type === 'breast'
@@ -62,6 +98,12 @@ function feedLabel(f: FeedRecord): string {
 
 export default function FeedsTab() {
   const [feeds, setFeeds] = useState<FeedRecord[]>([]);
+  const [childId, setChildId] = useState<string | null>(null);
+  const [childName, setChildName] = useState<string | null>(null);
+  const [ageDays, setAgeDays] = useState<number | null>(null);
+  const [alarm, setAlarm] = useState<Alarm | null>(null);
+  const [reminderMins, setReminderMins] = useState<number | null>(null);
+  const [tick, setTick] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -75,13 +117,56 @@ export default function FeedsTab() {
   const [noReaction, setNoReaction] = useState(false);
 
   useEffect(() => {
-    const childId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
-    if (!childId) return;
-    fetch(`/api/newborn?childId=${childId}`)
+    const id = setInterval(() => setTick(t => t + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const cId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
+    const name = localStorage.getItem(STORAGE.CHILD_NAME);
+    setChildName(name);
+    if (!cId) return;
+    setChildId(cId);
+
+    try {
+      const stored = localStorage.getItem(STORAGE.feedAlarm(cId));
+      if (stored) setAlarm(JSON.parse(stored));
+    } catch { /* ignore */ }
+
+    try {
+      const storedMins = localStorage.getItem(STORAGE.feedReminderMins(cId));
+      if (storedMins) setReminderMins(Number(storedMins));
+    } catch { /* ignore */ }
+
+    fetch(`/api/newborn?childId=${cId}`)
       .then(r => r.json())
-      .then(json => { if (!json.error) setFeeds(json.feeds ?? []); })
+      .then(json => {
+        if (!json.error) {
+          setFeeds(json.feeds ?? []);
+          if (json.ageDays != null) setAgeDays(json.ageDays);
+        }
+      })
       .catch(() => {});
   }, []);
+
+  function applyReminder(mins: number | null) {
+    if (!childId) return;
+    setReminderMins(mins);
+    if (mins == null) {
+      localStorage.removeItem(STORAGE.feedReminderMins(childId));
+    } else {
+      localStorage.setItem(STORAGE.feedReminderMins(childId), String(mins));
+    }
+  }
+
+  function toggleReaction(r: string) {
+    setNoReaction(false);
+    setReactions(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r]);
+  }
+
+  function toggleNoReaction() {
+    setNoReaction(v => { if (!v) setReactions([]); return !v; });
+  }
 
   function openForm() {
     setFeedType('breast');
@@ -95,18 +180,9 @@ export default function FeedsTab() {
     setShowForm(true);
   }
 
-  function toggleReaction(r: string) {
-    setNoReaction(false);
-    setReactions(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r]);
-  }
-
-  function toggleNoReaction() {
-    setNoReaction(v => { if (!v) setReactions([]); return !v; });
-  }
-
   async function handleSave() {
-    const childId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
-    if (!childId) return;
+    const cId = childId ?? localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
+    if (!cId) return;
     setSaving(true);
     setSaveError(null);
 
@@ -118,7 +194,7 @@ export default function FeedsTab() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        childId,
+        childId: cId,
         feedType,
         breastSide: feedType === 'breast' ? breastSide : undefined,
         durationMinutes: feedType === 'breast' && duration ? duration : undefined,
@@ -129,21 +205,98 @@ export default function FeedsTab() {
     });
 
     const json = await res.json();
-    if (json.error) {
-      setSaveError(json.error);
-      setSaving(false);
-      return;
-    }
+    if (json.error) { setSaveError(json.error); setSaving(false); return; }
 
     setFeeds(prev => [json.feed, ...prev]);
+
+    const alarmKey = STORAGE.feedAlarm(cId);
+    if (reminderMins != null) {
+      const newAlarm: Alarm = { dueAt: new Date(loggedAt).getTime() + reminderMins * 60_000, intervalMins: reminderMins };
+      localStorage.setItem(alarmKey, JSON.stringify(newAlarm));
+      setAlarm(newAlarm);
+    } else {
+      localStorage.removeItem(alarmKey);
+      setAlarm(null);
+    }
+
     setShowForm(false);
     setSaving(false);
   }
 
+  const lastFeed = feeds[0] ?? null;
   const todayFeeds = feeds.filter(f => isToday(f.logged_at));
+  const alarmOverdue = alarm ? alarm.dueAt <= Date.now() : false;
 
   return (
     <div className={styles.container}>
+
+      {(childName || ageDays != null) && (
+        <div className={styles.header}>
+          {childName && <p className={styles.headerName}>{childName}</p>}
+          {ageDays != null && <p className={styles.headerAge}>{ageDisplay(ageDays)}</p>}
+        </div>
+      )}
+
+      <div className={`${styles.timerCard}${alarmOverdue ? ` ${styles.timerCardOverdue}` : ''}`}>
+        <div className={styles.timerMain}>
+          <p className={styles.timerLabel}>Last feed</p>
+          <p className={styles.timerValue} suppressHydrationWarning>
+            {lastFeed ? timeSince(lastFeed.logged_at) : 'None logged yet'}
+            {tick !== tick ? null : null}
+          </p>
+          {lastFeed && (
+            <p className={styles.timerSub}>{feedLabel(lastFeed)} · {formatTime(lastFeed.logged_at)}</p>
+          )}
+        </div>
+
+        {alarm && (
+          <div className={styles.alarmBox}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span suppressHydrationWarning>Next feed {timeUntil(alarm.dueAt)}</span>
+            <button
+              className={styles.alarmDismiss}
+              onClick={() => {
+                if (!childId) return;
+                localStorage.removeItem(STORAGE.feedAlarm(childId));
+                setAlarm(null);
+              }}
+              aria-label="Dismiss alarm"
+            >×</button>
+          </div>
+        )}
+
+        <div className={styles.reminderRow}>
+          <span className={styles.reminderLabel}>
+            {reminderMins != null
+              ? `Remind every ${REMINDER_OPTIONS.find(o => o.mins === reminderMins)?.label ?? `${reminderMins / 60}h`}`
+              : 'Feed reminders'}
+          </span>
+          <button
+            className={`${styles.toggle}${reminderMins != null ? ` ${styles.toggleOn}` : ''}`}
+            onClick={() => applyReminder(reminderMins != null ? null : 180)}
+            aria-label="Toggle feed reminders"
+          >
+            <span className={styles.toggleThumb} />
+          </button>
+        </div>
+
+        {reminderMins != null && (
+          <div className={styles.intervalRow}>
+            {REMINDER_OPTIONS.map(o => (
+              <button
+                key={o.mins}
+                className={`${styles.intervalBtn}${reminderMins === o.mins ? ` ${styles.intervalBtnActive}` : ''}`}
+                onClick={() => applyReminder(o.mins)}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
       {!showForm ? (
         <button className={styles.logBtn} onClick={openForm}>
           + Log a feed
@@ -278,13 +431,22 @@ export default function FeedsTab() {
           {todayFeeds.map(f => (
             <div key={f.id} className={styles.feedRow}>
               <span className={styles.feedTime}>{formatTime(f.logged_at)}</span>
-              <span className={styles.feedLabel}>{feedLabel(f)}</span>
+              <div className={styles.feedDetail}>
+                <span className={styles.feedLabel}>{feedLabel(f)}</span>
+                {f.reaction_type?.length && f.reaction_type[0] !== 'no_reaction' && (
+                  <div className={styles.reactionList}>
+                    {f.reaction_type.map(r => (
+                      <span key={r} className={styles.reactionTag}>{r}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
       )}
 
-      {!showForm && todayFeeds.length === 0 && (
+      {todayFeeds.length === 0 && !showForm && (
         <p className={styles.emptyHint}>No feeds logged today yet.</p>
       )}
     </div>

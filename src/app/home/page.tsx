@@ -314,7 +314,7 @@ export default function HomePage() {
       </div>
 
       {!loading && (
-        <Link href="/newborn" className={styles.newbornCard}>
+        <Link href="/log" className={styles.newbornCard}>
           <div className={styles.newbornCardIcon}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
