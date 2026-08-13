@@ -477,10 +477,18 @@
   box-shadow: var(--card-shadow);
 }
 
-.insightText {
+.insightList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 18px;
+  margin: 0;
+}
+
+.insightListItem {
   font-size: 14px;
   color: var(--text-secondary);
-  line-height: 1.65;
+  line-height: 1.6;
 }
 
 .insightLoading {
@@ -500,30 +508,37 @@
 /* ── Wins chips ──────────────────────────────────────── */
 .winsRow {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-direction: column;
+  gap: 10px;
   margin-top: 10px;
 }
 
 .winChip {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 10px 14px;
-  border-radius: 14px;
+  gap: 4px;
+  padding: 16px 18px;
+  border-radius: 16px;
   box-shadow: var(--card-shadow);
 }
 
+.winChipHeader {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
 .winChipLabel {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
 }
 
 .winChipFood {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
-  opacity: 0.8;
+  opacity: 0.75;
   text-transform: capitalize;
+  padding-left: 18px;
 }
 
 /* ── Wins count ──────────────────────────────────────── */
@@ -533,4 +548,100 @@
   font-weight: 700;
   text-transform: none;
   letter-spacing: 0;
+}
+
+/* ── Nutrient highlight chips ────────────────────────── */
+.highlightRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.highlightChip {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 12px;
+  padding: 9px 12px;
+}
+
+.highlightChipGreen {
+  background: var(--sage-light);
+}
+
+.highlightChipAmber {
+  background: var(--terra-light);
+}
+
+.highlightDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.highlightChipGreen .highlightDot {
+  background: var(--sage);
+}
+
+.highlightChipAmber .highlightDot {
+  background: var(--terracotta);
+}
+
+.highlightChipText {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.highlightChipGreen .highlightChipText {
+  color: var(--sage-dark);
+}
+
+.highlightChipAmber .highlightChipText {
+  color: var(--terra-dark);
+}
+
+/* ── Top foods ───────────────────────────────────────── */
+.topFoodsCard {
+  background: var(--oat);
+  border-radius: 18px;
+  padding: 14px 16px;
+  margin-top: 10px;
+  box-shadow: var(--card-shadow);
+}
+
+.topFoodsPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 2px;
+}
+
+.topFoodPill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--cream);
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 20px;
+  padding: 5px 10px 5px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.topFoodPillDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--terracotta);
+  flex-shrink: 0;
+}
+
+.topFoodPillCount {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-muted);
 }

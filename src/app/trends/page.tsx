@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import BottomNav from '@/components/BottomNav';
+import { STORAGE } from '@/lib/storage/keys';
 import styles from './page.module.css';
 
 interface Totals {
@@ -35,6 +36,7 @@ interface WeekData {
   mealCount: number;
   averages: Totals | null;
   tier: string;
+  topFoods: { name: string; count: number; category: string | null }[];
 }
 
 interface WinEntry {
@@ -72,6 +74,46 @@ const RIGHT_NUTRIENTS: NutrientDef[] = [
 
 // Only score nutrients where more = better (exclude sugar and sodium)
 const SCORE_NUTRIENTS: (keyof Totals)[] = ['calories_kcal', 'protein_g', 'carbs_g', 'fat_g', 'fibre_g', 'iron_mg'];
+
+const FOOD_CATEGORY_COLOURS: { keywords: string[]; color: string }[] = [
+  { keywords: ['fruit', 'apple', 'banana', 'pear', 'mango', 'grape', 'orange', 'strawberr', 'blueberr', 'melon', 'berry', 'peach', 'plum', 'kiwi'], color: '#E8734A' },
+  { keywords: ['vegetable', 'veg', 'broccoli', 'carrot', 'pea', 'spinach', 'kale', 'courgette', 'cucumber', 'tomato', 'pepper', 'sweet potato', 'cabbage', 'leek', 'onion', 'lettuce'], color: '#7A9E7E' },
+  { keywords: ['chicken', 'beef', 'fish', 'egg', 'lentil', 'bean', 'salmon', 'tuna', 'turkey', 'lamb', 'pork', 'tofu', 'meat', 'protein', 'legume'], color: '#D4A72C' },
+  { keywords: ['pasta', 'bread', 'rice', 'potato', 'oat', 'cereal', 'cracker', 'toast', 'noodle', 'pancake', 'wrap', 'grain', 'porridge', 'bagel', 'pitta'], color: '#B09585' },
+  { keywords: ['milk', 'yoghurt', 'yogurt', 'cheese', 'dairy', 'cream', 'fromage'], color: '#7AA5C4' },
+  { keywords: ['avocado', 'oil', 'nut', 'almond', 'peanut', 'cashew', 'walnut', 'seed', 'butter'], color: '#A67BC4' },
+];
+
+function getFoodColour(name: string, category: string | null): string {
+  const haystack = `${(category ?? '')} ${name}`.toLowerCase();
+  for (const { keywords, color } of FOOD_CATEGORY_COLOURS) {
+    if (keywords.some(k => haystack.includes(k))) return color;
+  }
+  return '#B09585';
+}
+
+const HIGHLIGHT_GOOD: { key: keyof Totals; label: string }[] = [
+  { key: 'protein_g',     label: 'Protein' },
+  { key: 'iron_mg',       label: 'Iron' },
+  { key: 'fibre_g',       label: 'Fibre' },
+  { key: 'fat_g',         label: 'Fat' },
+  { key: 'calories_kcal', label: 'Calories' },
+];
+const HIGHLIGHT_WATCH: { key: keyof Totals; label: string }[] = [
+  { key: 'sugar_g',   label: 'Sugar' },
+  { key: 'sodium_mg', label: 'Salt' },
+];
+
+function computeHighlights(averages: Totals, targets: Totals) {
+  const pct = (key: keyof Totals) => targets[key] > 0 ? (averages[key] / targets[key]) * 100 : 0;
+  const goodScored = HIGHLIGHT_GOOD.map(n => ({ label: n.label, pct: pct(n.key) }));
+  const green = goodScored.filter(n => n.pct >= 80).sort((a, b) => b.pct - a.pct)[0] ?? null;
+  const lowestGood = goodScored.filter(n => n.pct < 75).sort((a, b) => a.pct - b.pct)[0] ?? null;
+  const highestWatch = HIGHLIGHT_WATCH.map(n => ({ label: n.label, pct: pct(n.key) })).filter(n => n.pct > 130).sort((a, b) => b.pct - a.pct)[0] ?? null;
+  // Watch nutrients (excess sugar/salt) always take priority over low good nutrients
+  const amber = highestWatch ?? lowestGood;
+  return { green, amber, amberIsHigh: highestWatch !== null };
+}
 
 interface MacroGroup { label: string; color: string; min: number; max: number }
 interface MacroConfig { groups: MacroGroup[]; attribution: string }
@@ -241,8 +283,8 @@ export default function TrendsPage() {
 
   useEffect(() => {
     async function init() {
-      let childId = localStorage.getItem('shai_active_child_id');
-      let name = localStorage.getItem('shai_child_name');
+      let childId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
+      let name = localStorage.getItem(STORAGE.CHILD_NAME);
 
       if (!childId) {
         try {
@@ -250,8 +292,8 @@ export default function TrendsPage() {
           if (json.childId) {
             childId = json.childId;
             name = json.childName ?? null;
-            localStorage.setItem('shai_active_child_id', childId!);
-            if (name) localStorage.setItem('shai_child_name', name);
+            localStorage.setItem(STORAGE.ACTIVE_CHILD_ID, childId!);
+            if (name) localStorage.setItem(STORAGE.CHILD_NAME, name);
           }
         } catch { /* fall through */ }
       }
@@ -282,7 +324,7 @@ export default function TrendsPage() {
 
       setLoading(false);
 
-      const cacheKey = `shai_weekly_summary_${monday}`;
+      const cacheKey = STORAGE.weeklySummary(monday);
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
         setInsight(cached);
@@ -454,6 +496,28 @@ export default function TrendsPage() {
         </div>
       </section>
 
+      {/* ── Nutrient highlight chips ── */}
+      {data?.averages && (() => {
+        const { green, amber, amberIsHigh } = computeHighlights(data.averages!, data.targets);
+        if (!green && !amber) return null;
+        return (
+          <div className={styles.highlightRow}>
+            {green && (
+              <div className={`${styles.highlightChip} ${styles.highlightChipGreen}`}>
+                <div className={styles.highlightDot} />
+                <span className={styles.highlightChipText}>{green.label} on track</span>
+              </div>
+            )}
+            {amber && (
+              <div className={`${styles.highlightChip} ${styles.highlightChipAmber}`}>
+                <div className={styles.highlightDot} />
+                <span className={styles.highlightChipText}>{amber.label} {amberIsHigh ? 'a bit high this week' : 'worth a nudge'}</span>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       {/* ── Energy from food (macro split + ESPGHAN ranges) ── */}
       {displayMacroSplit && (
         <section>
@@ -566,18 +630,24 @@ export default function TrendsPage() {
         </div>
       )}
 
-      {/* ── SHAi's take ── */}
-      {(insightLoading || insight) && (
+      {/* ── Top foods ── */}
+      {data?.topFoods && data.topFoods.length > 0 && (
         <section>
-          <p className={styles.sectionLabel}>SHAi&apos;s take</p>
-          <div className={styles.insightCard}>
-            {insightLoading ? (
-              <p className={styles.insightLoading}>Getting SHAi&apos;s view…</p>
-            ) : (
-              <p className={styles.insightText}>{insight}</p>
-            )}
+          <p className={styles.sectionLabel}>Most eaten this week</p>
+          <div className={styles.topFoodsCard}>
+            <div className={styles.topFoodsPills}>
+              {data.topFoods.map((f, i) => {
+                const colour = getFoodColour(f.name, f.category);
+                return (
+                  <div key={i} className={styles.topFoodPill} style={{ borderColor: `${colour}55` }}>
+                    <div className={styles.topFoodPillDot} style={{ background: colour }} />
+                    {f.name}
+                    <span className={styles.topFoodPillCount}>×{f.count}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <p className={styles.aiDisclosure}>SHAi is an AI assistant.</p>
         </section>
       )}
 
@@ -592,7 +662,12 @@ export default function TrendsPage() {
               const c = WIN_CHIP_COLOURS[w.win_type] ?? WIN_CHIP_COLOURS['other'];
               return (
                 <div key={w.id} className={styles.winChip} style={{ background: c.bg, color: c.text }}>
-                  <span className={styles.winChipLabel}>{WIN_TYPE_LABELS[w.win_type] ?? w.win_type}</span>
+                  <div className={styles.winChipHeader}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none" style={{ opacity: 0.6, flexShrink: 0 }}>
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                    <span className={styles.winChipLabel}>{WIN_TYPE_LABELS[w.win_type] ?? w.win_type}</span>
+                  </div>
                   {w.food_involved && (
                     <span className={styles.winChipFood}>{w.food_involved}</span>
                   )}
@@ -600,6 +675,25 @@ export default function TrendsPage() {
               );
             })}
           </div>
+        </section>
+      )}
+
+      {/* ── SHAi's take ── */}
+      {(insightLoading || insight) && (
+        <section>
+          <p className={styles.sectionLabel}>SHAi&apos;s take</p>
+          <div className={styles.insightCard}>
+            {insightLoading ? (
+              <p className={styles.insightLoading}>Getting SHAi&apos;s view…</p>
+            ) : (
+              <ul className={styles.insightList}>
+                {insight!.split('\n').filter(l => l.trim()).map((line, i) => (
+                  <li key={i} className={styles.insightListItem}>{line.replace(/^-\s*/, '')}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <p className={styles.aiDisclosure}>SHAi is an AI assistant.</p>
         </section>
       )}
 
