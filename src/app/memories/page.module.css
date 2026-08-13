@@ -1057,7 +1057,7 @@
 }
 
 .winSaveBtn {
-  flex: 2;
+  flex: 1;
   background: #7A9E7E;
   color: white;
   border: none;
