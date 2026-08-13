@@ -122,7 +122,7 @@
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(196, 113, 74, 0.35);
+  box-shadow: var(--btn-shadow-primary);
   transition: opacity 0.15s, transform 0.1s;
   font-family: inherit;
 }
@@ -162,7 +162,7 @@
   border-radius: 12px;
   background: var(--cream);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.15s;
@@ -186,10 +186,10 @@
   flex: 1;
   padding: 9px 6px;
   border: 1.5px solid var(--oat-dark);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--cream);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.15s;
@@ -246,7 +246,7 @@
   border-radius: 20px;
   background: var(--cream);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.15s;
@@ -327,10 +327,10 @@
 .intervalBtn {
   padding: 8px 12px;
   border: 1.5px solid var(--oat-dark);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--cream);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.15s;
@@ -359,9 +359,9 @@
   padding: 13px;
   background: var(--oat);
   border: none;
-  border-radius: 13px;
+  border-radius: 14px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-secondary);
   cursor: pointer;
   font-family: inherit;
@@ -372,7 +372,7 @@
   padding: 13px;
   background: var(--terracotta);
   border: none;
-  border-radius: 13px;
+  border-radius: 14px;
   font-size: 14px;
   font-weight: 700;
   color: #fff;

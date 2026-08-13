@@ -451,7 +451,7 @@
   color: var(--text-muted);
   background: var(--oat-dark);
   padding: 3px 8px;
-  border-radius: 10px;
+  border-radius: 20px;
   flex-shrink: 0;
 }
 
@@ -460,7 +460,7 @@
   border: none;
   font-family: inherit;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-muted);
   cursor: pointer;
   padding: 0;
@@ -478,7 +478,7 @@
   background: var(--terracotta);
   color: #fff;
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 12px 20px;
   font-size: 14px;
   font-weight: 700;
@@ -529,14 +529,14 @@
   background: #25D366;
   color: #fff;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 10px 12px;
   font-size: 13px;
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
   text-decoration: none;
-  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.28);
+  box-shadow: var(--btn-shadow-primary);
 }
 
 .copyBtn {
@@ -544,7 +544,7 @@
   background: var(--oat-dark);
   color: var(--text-primary);
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 10px 12px;
   font-size: 13px;
   font-weight: 700;
@@ -591,10 +591,10 @@
 .revokeBtn {
   background: none;
   border: 1.5px solid var(--oat-dark);
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   font-family: inherit;
   color: var(--text-muted);
   cursor: pointer;
@@ -620,7 +620,7 @@
 .pinActionBtn {
   background: none;
   border: 1.5px solid var(--oat-dark);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 8px 14px;
   font-family: inherit;
   font-size: 13px;

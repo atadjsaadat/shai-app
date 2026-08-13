@@ -266,7 +266,7 @@
 .dateInput {
   background: var(--cream);
   border: 1.5px solid var(--oat-dark);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 7px 10px;
   font-family: var(--font-nunito), sans-serif;
   font-size: 13px;
@@ -280,7 +280,7 @@
   background: var(--sage);
   color: #fff;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 7px 14px;
   font-family: var(--font-nunito), sans-serif;
   font-size: 13px;
@@ -295,7 +295,7 @@
   font-family: var(--font-nunito), sans-serif;
   font-size: 13px;
   color: var(--text-muted);
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   padding: 0;
 }
