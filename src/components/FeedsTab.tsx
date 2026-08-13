@@ -80,6 +80,18 @@ function timeUntil(ts: number): string {
   return `in ${h}h${m > 0 ? ` ${m}m` : ''}`;
 }
 
+function formatMins(mins: number): string {
+  if (mins < 60) return `${mins} min`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
+
+function formatMl(ml: number): string {
+  if (ml < 1000) return `${Math.round(ml)}ml`;
+  return `${(ml / 1000).toFixed(1)}L`;
+}
+
 function ageDisplay(days: number): string {
   if (days < 14) return `${days} days old`;
   if (days < 70) return `${Math.floor(days / 7)} weeks old`;
@@ -121,6 +133,8 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
   const [totalCount, setTotalCount] = useState<number>(0);
   const [firstFeedAt, setFirstFeedAt] = useState<string | null>(null);
   const [nightFeedCount, setNightFeedCount] = useState<number>(0);
+  const [totalBreastMinutes, setTotalBreastMinutes] = useState<number>(0);
+  const [totalAmountMl, setTotalAmountMl] = useState<number>(0);
   const [alarm, setAlarm] = useState<Alarm | null>(null);
   const [reminderMins, setReminderMins] = useState<number | null>(null);
   const [tick, setTick] = useState(0);
@@ -173,6 +187,8 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
           if (json.totalCount != null) setTotalCount(json.totalCount);
           if (json.firstFeedAt) setFirstFeedAt(json.firstFeedAt);
           if (json.nightFeedCount != null) setNightFeedCount(json.nightFeedCount);
+          if (json.totalBreastMinutes != null) setTotalBreastMinutes(json.totalBreastMinutes);
+          if (json.totalAmountMl != null) setTotalAmountMl(json.totalAmountMl);
         }
       })
       .catch(() => {});
@@ -237,6 +253,14 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
     if (json.error) { setSaveError(json.error); setSaving(false); return; }
 
     setFeeds(prev => [json.feed, ...prev]);
+    setTotalCount(prev => prev + 1);
+    if (feedType === 'breast' && duration) {
+      const mins = parseInt(duration, 10);
+      if (!isNaN(mins)) setTotalBreastMinutes(prev => prev + mins);
+    } else if (feedType !== 'breast' && amount) {
+      const ml = parseFloat(amount);
+      if (!isNaN(ml)) setTotalAmountMl(prev => prev + ml);
+    }
 
     const alarmKey = STORAGE.feedAlarm(cId);
     if (reminderMins != null) {
@@ -255,6 +279,13 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
   const lastFeed = feeds[0] ?? null;
   const todayFeeds = feeds.filter(f => isToday(f.logged_at));
   const alarmOverdue = alarm ? alarm.dueAt <= Date.now() : false;
+
+  const todayBreastMins = todayFeeds
+    .filter(f => f.feed_type === 'breast' && f.duration_minutes != null)
+    .reduce((s, f) => s + (f.duration_minutes ?? 0), 0);
+  const todayMl = todayFeeds
+    .filter(f => f.feed_type !== 'breast' && f.amount_ml != null)
+    .reduce((s, f) => s + (f.amount_ml ?? 0), 0);
 
   const daysSinceLast = lastFeed
     ? Math.floor((Date.now() - new Date(lastFeed.logged_at).getTime()) / 86_400_000)
@@ -302,6 +333,18 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
               <div className={`${styles.archiveStat} ${styles.archiveNightStat}`}>
                 <span className={styles.archiveStatValue}>{nightFeedCount.toLocaleString()}</span>
                 <span className={styles.archiveStatLabel}>night feeds</span>
+              </div>
+            )}
+            {totalBreastMinutes > 0 && (
+              <div className={styles.archiveStat}>
+                <span className={styles.archiveStatValue}>{formatMins(totalBreastMinutes)}</span>
+                <span className={styles.archiveStatLabel}>breastfeeding</span>
+              </div>
+            )}
+            {totalAmountMl > 0 && (
+              <div className={styles.archiveStat}>
+                <span className={styles.archiveStatValue}>{formatMl(totalAmountMl)}</span>
+                <span className={styles.archiveStatLabel}>fed total</span>
               </div>
             )}
           </div>
@@ -424,6 +467,18 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
             <p className={styles.feedCounter}>
               {totalCount.toLocaleString()} feed{totalCount !== 1 ? 's' : ''} logged with {childName ?? 'your little one'} since birth
             </p>
+          )}
+          {todayBreastMins > 0 && (
+            <p className={styles.feedCounter}>{formatMins(todayBreastMins)} of breast feeding today</p>
+          )}
+          {todayMl > 0 && (
+            <p className={styles.feedCounter}>{formatMl(todayMl)} fed today</p>
+          )}
+          {totalBreastMinutes > 0 && (
+            <p className={styles.feedCounter}>{formatMins(totalBreastMinutes)} of breastfeeding since birth</p>
+          )}
+          {totalAmountMl > 0 && (
+            <p className={styles.feedCounter}>{formatMl(totalAmountMl)} fed since birth</p>
           )}
         </div>
 

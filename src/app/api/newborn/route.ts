@@ -41,7 +41,11 @@ export async function GET(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const [{ data: firstFeedRows, count: totalCount }, { count: nightFeedCount }] = await Promise.all([
+  const [
+    { data: firstFeedRows, count: totalCount },
+    { count: nightFeedCount },
+    { data: allFeedStats },
+  ] = await Promise.all([
     admin
       .from('newborn_feed_logs')
       .select('logged_at', { count: 'exact' })
@@ -53,7 +57,19 @@ export async function GET(req: NextRequest) {
       .select('id', { count: 'exact', head: true })
       .eq('child_id', childId)
       .eq('is_night_feed', true),
+    admin
+      .from('newborn_feed_logs')
+      .select('feed_type, duration_minutes, amount_ml')
+      .eq('child_id', childId),
   ])
+
+  const totalBreastMinutes = allFeedStats
+    ?.filter(f => f.feed_type === 'breast' && f.duration_minutes != null)
+    ?.reduce((s, f) => s + (f.duration_minutes as number), 0) ?? 0
+
+  const totalAmountMl = allFeedStats
+    ?.filter(f => f.feed_type !== 'breast' && f.amount_ml != null)
+    ?.reduce((s, f) => s + (f.amount_ml as number), 0) ?? 0
 
   return NextResponse.json({
     feeds: feeds ?? [],
@@ -61,6 +77,8 @@ export async function GET(req: NextRequest) {
     totalCount: totalCount ?? 0,
     firstFeedAt: firstFeedRows?.[0]?.logged_at ?? null,
     nightFeedCount: nightFeedCount ?? 0,
+    totalBreastMinutes,
+    totalAmountMl,
   })
 }
 
