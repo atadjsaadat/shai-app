@@ -1053,7 +1053,7 @@
   font-weight: 700;
   color: var(--text-secondary);
   cursor: pointer;
-  box-shadow: var(--btn-shadow);
+  box-shadow: var(--card-shadow);
 }
 
 .winSaveBtn {
@@ -1068,7 +1068,7 @@
   font-weight: 700;
   cursor: pointer;
   transition: opacity 0.2s;
-  box-shadow: var(--btn-shadow-sage);
+  box-shadow: var(--card-shadow);
 }
 
 .winSaveBtn:disabled {
