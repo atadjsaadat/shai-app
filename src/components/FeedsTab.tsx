@@ -242,7 +242,6 @@ export default function FeedsTab() {
           <p className={styles.timerLabel}>Last feed</p>
           <p className={styles.timerValue} suppressHydrationWarning>
             {lastFeed ? timeSince(lastFeed.logged_at) : 'None logged yet'}
-            {tick !== tick ? null : null}
           </p>
           {lastFeed && (
             <p className={styles.timerSub}>{feedLabel(lastFeed)} · {formatTime(lastFeed.logged_at)}</p>
