@@ -1,0 +1,212 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--cream);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 0 40px;
+  width: 100%;
+  max-width: 340px;
+}
+
+.lockIcon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--oat);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--terracotta);
+}
+
+.heading {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.sub {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: -12px 0 0;
+  min-height: 20px;
+  text-align: center;
+}
+
+.subError {
+  color: var(--terracotta);
+}
+
+.dots {
+  display: flex;
+  gap: 18px;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15%       { transform: translateX(-8px); }
+  30%       { transform: translateX(8px); }
+  45%       { transform: translateX(-6px); }
+  60%       { transform: translateX(6px); }
+  75%       { transform: translateX(-3px); }
+  90%       { transform: translateX(3px); }
+}
+
+.shake {
+  animation: shake 0.55s ease;
+}
+
+.dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--oat-dark);
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.dotFilled {
+  background: var(--terracotta);
+  border-color: var(--terracotta);
+}
+
+.pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.padBtn {
+  height: 68px;
+  border-radius: 18px;
+  border: none;
+  background: var(--oat);
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.padBtn:active {
+  background: var(--oat-dark);
+}
+
+.padBtn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.padEmpty {
+  /* grid spacer */
+}
+
+.padBackspace {
+  height: 68px;
+  border-radius: 18px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.padBackspace:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.forgotLink {
+  background: none;
+  border: none;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 0;
+  margin-top: 4px;
+}
+
+.passwordWrap {
+  position: relative;
+  width: 100%;
+}
+
+.passwordInput {
+  width: 100%;
+  background: var(--oat);
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 14px;
+  padding: 14px 44px 14px 16px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 15px;
+  color: var(--text-primary);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.passwordInput:focus {
+  border-color: var(--terracotta);
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.verifyBtn {
+  width: 100%;
+  background: var(--terracotta);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 15px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.verifyBtn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.backLink {
+  background: none;
+  border: none;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 0;
+}
