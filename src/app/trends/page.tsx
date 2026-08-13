@@ -28,6 +28,14 @@ interface ScoredDayData extends DayData {
   score: number;
 }
 
+interface FeedDayData {
+  date: string;
+  dayLabel: string;
+  count: number;
+  totalMl: number;
+  totalMinutes: number;
+}
+
 interface WeekData {
   days: DayData[];
   targets: Totals;
@@ -37,6 +45,7 @@ interface WeekData {
   averages: Totals | null;
   tier: string;
   topFoods: { name: string; count: number; category: string | null }[];
+  feedDays: FeedDayData[];
 }
 
 interface WinEntry {
@@ -470,6 +479,41 @@ export default function TrendsPage() {
           )}
         </div>
       </section>
+
+      {/* ── Feeds ── */}
+      {data?.feedDays && data.feedDays.some(d => d.count > 0) && (() => {
+        const withFeeds = data.feedDays.filter(d => d.count > 0);
+        const avgFeeds = Math.round(data.feedDays.reduce((s, d) => s + d.count, 0) / withFeeds.length);
+        const totalMl = data.feedDays.reduce((s, d) => s + d.totalMl, 0);
+        const totalMinutes = data.feedDays.reduce((s, d) => s + d.totalMinutes, 0);
+        const avgMl = totalMl > 0 ? Math.round(totalMl / withFeeds.length) : null;
+        const avgMins = totalMinutes > 0 ? Math.round(totalMinutes / withFeeds.length) : null;
+        return (
+          <section>
+            <div className={styles.sectionHeader}>
+              <p className={styles.sectionLabel}>Feeds</p>
+              <p className={styles.loggedCount}>{avgFeeds} avg per day</p>
+            </div>
+            <div className={styles.feedsCard}>
+              <div className={styles.feedsRow}>
+                {data.feedDays.map(d => (
+                  <div key={d.date} className={styles.feedsDayCol}>
+                    <span className={`${styles.feedsCount}${d.count === 0 ? ` ${styles.feedsCountEmpty}` : ''}`}>
+                      {d.count > 0 ? d.count : '—'}
+                    </span>
+                    <span className={styles.feedsDayLabel}>{d.dayLabel}</span>
+                  </div>
+                ))}
+              </div>
+              {(avgMl || avgMins) && (
+                <p className={styles.feedsSummary}>
+                  {avgMl ? `${avgMl}ml avg per feed day` : `${avgMins} min avg per feed day`}
+                </p>
+              )}
+            </div>
+          </section>
+        );
+      })()}
 
       {/* ── Nutrient average bars ── */}
       <section>

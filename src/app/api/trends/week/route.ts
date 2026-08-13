@@ -55,14 +55,36 @@ export async function GET(request: Request) {
   const utcRangeStart = new Date((todayMs - 6 * 86_400_000) - offsetMinutes * 60_000).toISOString()
   const utcRangeEnd   = new Date((todayMs + 86_400_000 - 1) - offsetMinutes * 60_000).toISOString()
 
-  const { data: logs, error } = await admin
-    .from('food_logs')
-    .select('logged_at, calories_kcal, protein_g, carbs_g, fat_g, fibre_g, sugar_g, sodium_mg, iron_mg, is_hard_food_day, food_name')
-    .eq('child_id', childId)
-    .gte('logged_at', utcRangeStart)
-    .lte('logged_at', utcRangeEnd)
+  const [{ data: logs, error }, { data: feedLogs }] = await Promise.all([
+    admin
+      .from('food_logs')
+      .select('logged_at, calories_kcal, protein_g, carbs_g, fat_g, fibre_g, sugar_g, sodium_mg, iron_mg, is_hard_food_day, food_name, product_category')
+      .eq('child_id', childId)
+      .gte('logged_at', utcRangeStart)
+      .lte('logged_at', utcRangeEnd),
+    admin
+      .from('newborn_feed_logs')
+      .select('logged_at, feed_type, duration_minutes, amount_ml')
+      .eq('child_id', childId)
+      .gte('logged_at', utcRangeStart)
+      .lte('logged_at', utcRangeEnd),
+  ])
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  const feedDayMap = new Map<string, { count: number; totalMl: number; totalMinutes: number }>()
+  for (const f of (feedLogs ?? [])) {
+    const d = toLocalDateStr(new Date(f.logged_at).getTime(), offsetMinutes)
+    if (!feedDayMap.has(d)) feedDayMap.set(d, { count: 0, totalMl: 0, totalMinutes: 0 })
+    const agg = feedDayMap.get(d)!
+    agg.count++
+    if (f.amount_ml) agg.totalMl += f.amount_ml
+    if (f.duration_minutes) agg.totalMinutes += f.duration_minutes
+  }
+  const feedDays = localDates.map(({ date, dayLabel }) => {
+    const agg = feedDayMap.get(date)
+    return { date, dayLabel, count: agg?.count ?? 0, totalMl: agg?.totalMl ?? 0, totalMinutes: agg?.totalMinutes ?? 0 }
+  })
 
   // Group by local date and sum nutrients
   const dayTotalsMap = new Map<string, Targets>()
@@ -114,5 +136,16 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ days, targets, ageMonths, loggedCount, mealCount, averages, tier })
+  // Top foods by frequency
+  const foodCounts = new Map<string, { name: string; count: number; category: string | null }>()
+  for (const log of (logs ?? [])) {
+    if (!log.food_name || log.is_hard_food_day) continue
+    const key = log.food_name.toLowerCase().trim()
+    const existing = foodCounts.get(key)
+    if (existing) existing.count++
+    else foodCounts.set(key, { name: log.food_name, count: 1, category: log.product_category ?? null })
+  }
+  const topFoods = [...foodCounts.values()].sort((a, b) => b.count - a.count).slice(0, 5)
+
+  return NextResponse.json({ days, targets, ageMonths, loggedCount, mealCount, averages, tier, topFoods, feedDays })
 }

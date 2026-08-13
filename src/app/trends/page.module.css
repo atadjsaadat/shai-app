@@ -645,3 +645,59 @@
   font-weight: 800;
   color: var(--text-muted);
 }
+
+/* ── Feeds section ───────────────────────────────────── */
+.feedsCard {
+  background: var(--oat);
+  border-radius: 20px;
+  padding: 18px 16px 14px;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.feedsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.feedsDayCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+}
+
+.feedsCount {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--terracotta);
+  line-height: 1;
+}
+
+.feedsCountEmpty {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--oat-dark);
+}
+
+.feedsDayLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.feedsSummary {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+  border-top: 1px solid var(--oat-dark);
+  padding-top: 10px;
+  margin: 0;
+}
