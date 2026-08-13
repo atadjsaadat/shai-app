@@ -313,7 +313,7 @@ export default function HomePage() {
         <p className={styles.shaiMessage}>{shaiMessage}</p>
       </div>
 
-      {!loading && ageMonths < 8 && (
+      {!loading && ageMonths < 24 && (
         <Link href="/newborn" className={styles.newbornCard}>
           <div className={styles.newbornCardIcon}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
