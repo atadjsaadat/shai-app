@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { STORAGE } from '@/lib/storage/keys';
+import SHAiPresence from '@/components/SHAiPresence';
 import styles from './FeedsTab.module.css';
 
 type FeedType = 'breast' | 'formula' | 'expressed';
@@ -85,6 +86,22 @@ function ageDisplay(days: number): string {
   return `${Math.floor(days / 30)} months old`;
 }
 
+function dominantType(feeds: FeedRecord[]): 'breast' | 'formula' | 'expressed' | 'mixed' {
+  if (!feeds.length) return 'mixed';
+  const counts = { breast: 0, formula: 0, expressed: 0 };
+  for (const f of feeds) counts[f.feed_type]++;
+  const max = Math.max(...Object.values(counts));
+  const leaders = (Object.keys(counts) as FeedType[]).filter(k => counts[k] === max);
+  return leaders.length === 1 ? leaders[0] : 'mixed';
+}
+
+const ARCHIVE_COPY: Record<string, (name: string) => string> = {
+  breast:    (n) => `Every latch, every let-down, every feed in the dark — ${n} needed you and you were there, every single time.`,
+  formula:   (n) => `Every bottle prepared, every feed given — ${n} needed you and you were there, every single time.`,
+  expressed: (n) => `Every pump session, every bottle filled with care — ${n} needed you and you were there, every single time.`,
+  mixed:     (n) => `However you fed ${n}, every single time you showed up for them. That's what they'll carry.`,
+};
+
 function feedLabel(f: FeedRecord): string {
   const side = f.breast_side ? ` · ${f.breast_side[0].toUpperCase()}${f.breast_side.slice(1)}` : '';
   const type = f.feed_type === 'breast'
@@ -103,6 +120,7 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
   const [ageDays, setAgeDays] = useState<number | null>(null);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [firstFeedAt, setFirstFeedAt] = useState<string | null>(null);
+  const [nightFeedCount, setNightFeedCount] = useState<number>(0);
   const [alarm, setAlarm] = useState<Alarm | null>(null);
   const [reminderMins, setReminderMins] = useState<number | null>(null);
   const [tick, setTick] = useState(0);
@@ -154,6 +172,7 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
           if (json.ageDays != null) setAgeDays(json.ageDays);
           if (json.totalCount != null) setTotalCount(json.totalCount);
           if (json.firstFeedAt) setFirstFeedAt(json.firstFeedAt);
+          if (json.nightFeedCount != null) setNightFeedCount(json.nightFeedCount);
         }
       })
       .catch(() => {});
@@ -248,21 +267,53 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
 
   if (isArchive) {
     const name = childName ?? 'your little one';
+    const dominant = dominantType(feeds);
+    const weeks = firstFeedAt && lastFeed
+      ? Math.round((new Date(lastFeed.logged_at).getTime() - new Date(firstFeedAt).getTime()) / (7 * 86_400_000))
+      : null;
+
     return (
       <div className={styles.container}>
         <div className={styles.archiveCard}>
-          <p className={styles.archiveTitle}>The feeding chapter</p>
+          <div className={styles.archiveHeader}>
+            <SHAiPresence expression="celebrating" size={40} />
+            <p className={styles.archiveTitle}>The feeding chapter</p>
+          </div>
+          <div className={styles.archiveDivider} />
+
+          {weeks !== null ? (
+            <>
+              <p className={styles.archiveBigNumber}>{weeks}</p>
+              <p className={styles.archiveBigLabel}>weeks feeding {name}</p>
+            </>
+          ) : (
+            <>
+              <p className={styles.archiveBigNumber}>{totalCount.toLocaleString()}</p>
+              <p className={styles.archiveBigLabel}>feeds with {name}</p>
+            </>
+          )}
+
+          <div className={styles.archiveStats}>
+            <div className={styles.archiveStat}>
+              <span className={styles.archiveStatValue}>{totalCount.toLocaleString()}</span>
+              <span className={styles.archiveStatLabel}>feeds total</span>
+            </div>
+            {nightFeedCount > 0 && (
+              <div className={`${styles.archiveStat} ${styles.archiveNightStat}`}>
+                <span className={styles.archiveStatValue}>{nightFeedCount.toLocaleString()}</span>
+                <span className={styles.archiveStatLabel}>night feeds</span>
+              </div>
+            )}
+          </div>
+
           <div className={styles.archiveDates}>
             {firstFeedAt && <span>{formatDateShort(firstFeedAt)}</span>}
             <span className={styles.archiveDash}>→</span>
             {lastFeed && <span>{formatDateShort(lastFeed.logged_at)}</span>}
           </div>
-          <p className={styles.archiveCount}>
-            {totalCount.toLocaleString()} feed{totalCount !== 1 ? 's' : ''} logged with {name}
-          </p>
-          <p className={styles.archiveMessage}>
-            Every one of those feeds was {name} and you, together. That&apos;s something to carry.
-          </p>
+
+          <p className={styles.archiveMessage}>{ARCHIVE_COPY[dominant](name)}</p>
+
           <button className={styles.archiveStillFeeding} onClick={openForm}>
             Still feeding? Log one
           </button>

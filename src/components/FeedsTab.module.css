@@ -464,8 +464,14 @@
   padding: 24px 22px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
   box-shadow: var(--card-shadow);
+}
+
+.archiveHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
 .archiveTitle {
@@ -475,44 +481,95 @@
   margin: 0;
 }
 
+.archiveDivider {
+  height: 1px;
+  background: var(--oat-dark);
+  margin-bottom: 24px;
+}
+
+.archiveBigNumber {
+  font-size: 56px;
+  font-weight: 800;
+  color: var(--terracotta);
+  line-height: 1;
+  text-align: center;
+  margin: 0;
+}
+
+.archiveBigLabel {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: center;
+  margin: 6px 0 24px;
+}
+
+.archiveStats {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-bottom: 14px;
+}
+
+.archiveStat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.archiveStatValue {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.archiveStatLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.archiveNightStat .archiveStatValue {
+  color: var(--sage-dark);
+}
+
 .archiveDates {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-muted);
+  margin-bottom: 20px;
 }
 
 .archiveDash {
   color: var(--oat-dark);
 }
 
-.archiveCount {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--terracotta);
-  margin: 4px 0 0;
-}
-
 .archiveMessage {
   font-size: 14px;
   color: var(--text-secondary);
-  line-height: 1.65;
-  margin: 4px 0 0;
+  line-height: 1.7;
+  text-align: center;
+  padding: 0 4px;
+  margin-bottom: 20px;
 }
 
 .archiveStillFeeding {
-  margin-top: 8px;
   background: none;
   border: 1.5px solid var(--oat-dark);
   border-radius: 12px;
-  padding: 11px 18px;
+  padding: 12px 18px;
   font-size: 14px;
   font-weight: 700;
   color: var(--text-secondary);
   cursor: pointer;
   font-family: inherit;
-  align-self: flex-start;
+  width: 100%;
   box-shadow: var(--btn-shadow);
 }

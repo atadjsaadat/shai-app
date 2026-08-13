@@ -41,18 +41,26 @@ export async function GET(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const { data: firstFeedRows, count: totalCount } = await admin
-    .from('newborn_feed_logs')
-    .select('logged_at', { count: 'exact' })
-    .eq('child_id', childId)
-    .order('logged_at', { ascending: true })
-    .limit(1)
+  const [{ data: firstFeedRows, count: totalCount }, { count: nightFeedCount }] = await Promise.all([
+    admin
+      .from('newborn_feed_logs')
+      .select('logged_at', { count: 'exact' })
+      .eq('child_id', childId)
+      .order('logged_at', { ascending: true })
+      .limit(1),
+    admin
+      .from('newborn_feed_logs')
+      .select('id', { count: 'exact', head: true })
+      .eq('child_id', childId)
+      .eq('is_night_feed', true),
+  ])
 
   return NextResponse.json({
     feeds: feeds ?? [],
     ageDays,
     totalCount: totalCount ?? 0,
     firstFeedAt: firstFeedRows?.[0]?.logged_at ?? null,
+    nightFeedCount: nightFeedCount ?? 0,
   })
 }
 
