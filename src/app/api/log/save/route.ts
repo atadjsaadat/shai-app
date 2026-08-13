@@ -7,12 +7,14 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-  const { childId, items, mealType, isHardFoodDay, reactionType }: {
+  const { childId, items, mealType, isHardFoodDay, reactionType, isWin, winDescription }: {
     childId: string
     items: ParsedFoodItem[]
     mealType: MealType
     isHardFoodDay: boolean
     reactionType?: string[] | null
+    isWin?: boolean
+    winDescription?: string | null
   } = await request.json()
 
   if (!childId) return NextResponse.json({ error: 'No child profile found — please complete setup first.' }, { status: 400 })
@@ -84,10 +86,41 @@ export async function POST(request: Request) {
     dha_mg:           item.dha_mg,
     vitamin_k_mcg:    item.vitamin_k_mcg,
     reaction_type:    reactionType ?? null,
+    is_win:           isWin ?? false,
+    win_description:  winDescription ?? null,
   }))
 
   const { error } = await admin.from('food_logs').insert(rows)
-  return error
-    ? NextResponse.json({ error: error.message }, { status: 500 })
-    : NextResponse.json({ success: true })
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  if (isWin) {
+    const { data: child } = await admin
+      .from('children')
+      .select('date_of_birth')
+      .eq('id', childId)
+      .single()
+
+    const child_age_days = child?.date_of_birth
+      ? Math.floor((Date.now() - new Date(child.date_of_birth).getTime()) / 86_400_000)
+      : null
+
+    const month = new Date().getMonth()
+    const season =
+      month >= 2 && month <= 4 ? 'spring' :
+      month >= 5 && month <= 7 ? 'summer' :
+      month >= 8 && month <= 10 ? 'autumn' : 'winter'
+
+    const { error: winError } = await admin.from('wins').insert({
+      child_id:          childId,
+      logged_by_user_id: user.id,
+      win_type:          'ate_well',
+      food_involved:     items.map(i => i.food_name).join(', '),
+      parent_note:       winDescription ?? null,
+      child_age_days,
+      season,
+    })
+    if (winError) console.error('[win insert]', winError.message)
+  }
+
+  return NextResponse.json({ success: true })
 }

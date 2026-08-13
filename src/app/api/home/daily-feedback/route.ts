@@ -21,12 +21,17 @@ export async function POST(req: NextRequest) {
   const anthropic = createAnthropicClient()
   const journalContext = await getJournalContext(user.id)
 
-  const response = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 200,
-    ...(journalContext ? { system: journalContext } : {}),
-    messages: [{ role: 'user', content: buildDailyFeedbackPrompt(childName, ageMonths, nutrients) }],
-  })
+  let response
+  try {
+    response = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 200,
+      ...(journalContext ? { system: journalContext } : {}),
+      messages: [{ role: 'user', content: buildDailyFeedbackPrompt(childName, ageMonths, nutrients) }],
+    })
+  } catch {
+    return NextResponse.json({ feedback: `${childName} is doing great — keep it up!` })
+  }
 
   const raw = response.content[0].type === 'text' ? response.content[0].text.trim() : ''
   const feedback = raw.replace(/^#+\s*[^\n]*\n+/g, '').trim()

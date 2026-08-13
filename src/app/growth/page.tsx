@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import BottomNav from '@/components/BottomNav'
 import GrowthChart from '@/components/GrowthChart'
+import HeadCircumferenceView from '@/components/HeadCircumferenceView'
+import { STORAGE } from '@/lib/storage/keys'
 import styles from './page.module.css'
 
 interface GrowthRecord {
@@ -97,8 +99,8 @@ export default function GrowthPage() {
 
   useEffect(() => {
     async function init() {
-      let cId = localStorage.getItem('shai_active_child_id')
-      const name = localStorage.getItem('shai_child_name')
+      let cId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID)
+      const name = localStorage.getItem(STORAGE.CHILD_NAME)
       setChildName(name)
 
       if (!cId) {
@@ -106,7 +108,7 @@ export default function GrowthPage() {
           const json = await fetch('/api/children').then(r => r.json())
           if (json.childId) {
             cId = json.childId
-            localStorage.setItem('shai_active_child_id', cId!)
+            localStorage.setItem(STORAGE.ACTIVE_CHILD_ID, cId!)
           }
         } catch { /* fall through */ }
       }
@@ -192,7 +194,7 @@ export default function GrowthPage() {
       style={{ '--child-accent': tabAccent } as React.CSSProperties}
     >
       <header className={styles.topBar}>
-        <button className={styles.back} onClick={() => router.back()} aria-label="Back">
+        <button className={styles.back} onClick={() => router.push('/baby-book')} aria-label="Back">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
@@ -207,7 +209,7 @@ export default function GrowthPage() {
       {!loading && latest && (
         <div className={styles.statsRow}>
           {latest.weight_kg != null && (
-            <div className={styles.statCard} style={{ borderTop: `3px solid ${WEIGHT_COLOR}` }}>
+            <div className={`${styles.statCard} ${styles.statCardWeight}`}>
               <p className={styles.statValue}>{latest.weight_kg.toFixed(1)}<span className={styles.statUnit}>kg</span></p>
               <p className={styles.statLabel}>Weight</p>
               {latest.who_weight_percentile != null && (
@@ -219,7 +221,7 @@ export default function GrowthPage() {
             </div>
           )}
           {latest.height_cm != null && (
-            <div className={styles.statCard} style={{ borderTop: `3px solid ${HEIGHT_COLOR}` }}>
+            <div className={`${styles.statCard} ${styles.statCardHeight}`}>
               <p className={styles.statValue}>{latest.height_cm.toFixed(1)}<span className={styles.statUnit}>cm</span></p>
               <p className={styles.statLabel}>Height</p>
               {latest.who_height_percentile != null && (
@@ -231,7 +233,7 @@ export default function GrowthPage() {
             </div>
           )}
           {latest.head_cm != null && (
-            <div className={styles.statCard} style={{ borderTop: `3px solid ${HEAD_COLOR}` }}>
+            <div className={`${styles.statCard} ${styles.statCardHead}`}>
               <p className={styles.statValue}>{latest.head_cm.toFixed(1)}<span className={styles.statUnit}>cm</span></p>
               <p className={styles.statLabel}>Head</p>
               {latest.who_head_percentile != null && (
@@ -243,7 +245,7 @@ export default function GrowthPage() {
             </div>
           )}
           {latest.weight_kg != null && latest.height_cm != null && latest.who_bmi_percentile != null && (
-            <div className={styles.statCard}>
+            <div className={`${styles.statCard} ${styles.statCardBmi}`}>
               <p className={styles.statValue}>
                 {(latest.weight_kg / Math.pow(latest.height_cm / 100, 2)).toFixed(1)}
               </p>
@@ -254,7 +256,7 @@ export default function GrowthPage() {
         </div>
       )}
       {!loading && latest && (
-        <p className={styles.lastMeasured}>Last measured {timeAgo(latest.recorded_at)}</p>
+        <p className={styles.lastMeasured}>Last recorded {timeAgo(latest.recorded_at)}</p>
       )}
 
       {/* Tab selector */}
@@ -289,6 +291,17 @@ export default function GrowthPage() {
       >
         {loading ? (
           <div className={styles.chartPlaceholder}>Loading…</div>
+        ) : tab === 'head' ? (
+          <HeadCircumferenceView
+            headCm={latest?.head_cm ?? null}
+            percentile={latest?.who_head_percentile ?? null}
+            gain={headGain}
+            prevDateLabel={prev ? formatShortDate(prev.recorded_at) : null}
+            headPoints={dob ? records
+              .filter(r => r.head_cm != null)
+              .map(r => ({ age: Math.max(0, ageInMonths(dob, r.recorded_at)), value: r.head_cm as number }))
+              : []}
+          />
         ) : (
           <GrowthChart sex={sex} type={tab} points={chartPoints} lineColor={tabAccent} />
         )}
@@ -297,7 +310,7 @@ export default function GrowthPage() {
       {/* Add measurement form */}
       {showForm ? (
         <div className={styles.formCard}>
-          <p className={styles.formTitle}>Add measurement</p>
+          <p className={styles.formTitle}>Add a measurement</p>
           <div className={styles.field}>
             <label className={styles.label}>Date</label>
             <input
@@ -380,14 +393,14 @@ export default function GrowthPage() {
           style={{ boxShadow: `0 6px 20px ${hexToRgba(tabAccent, 0.35)}` }}
           onClick={() => setShowForm(true)}
         >
-          + Add measurement
+          Record a measurement
         </button>
       )}
 
       {/* History */}
       {records.length > 0 && (
         <section>
-          <p className={styles.historyLabel}>History</p>
+          <p className={styles.historyLabel}>Measurements</p>
           <div className={styles.historyList}>
             {[...records].reverse().map(r => (
               <div key={r.id} className={styles.historyRow}>
@@ -411,7 +424,7 @@ export default function GrowthPage() {
                   )}
                   {r.head_cm != null && (
                     <span className={styles.historyVal}>
-                      HC {r.head_cm.toFixed(1)} cm
+                      Head {r.head_cm.toFixed(1)} cm
                       {r.who_head_percentile != null && (
                         <span className={styles.historyPct}> · {ordinal(r.who_head_percentile)}</span>
                       )}

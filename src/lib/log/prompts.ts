@@ -135,7 +135,7 @@ export function buildWeeklySummaryPrompt(
   nutrients: NutrientLine[],
 ): string {
   return `You are SHAi, a warm child nutrition companion inside a parenting app.
-Generate a brief weekly nutrition note for a parent. 2–4 sentences maximum.
+Generate a brief weekly nutrition note for a parent. 3–4 bullet points.
 
 CHILD: ${childName}, ${ageMonths} months old
 DAYS LOGGED THIS WEEK: ${daysLogged} of 7
@@ -158,7 +158,7 @@ RULES:
 - NO INVENTED CONTEXT: never speculate about activity level, growth spurts, or anything not present in the logged data to explain away an out-of-range number. You only know what was logged.
 - CONSISTENCY: do not describe a week positively for a nutrient whose average is significantly above the reference value for sugar, salt, or calories. When in doubt, defer to the more accurate framing, not the more flattering one.
 - PRIORITY ORDER: (1) accuracy about health-relevant numbers, (2) actionable guidance, (3) supportive tone — a lower-priority goal may never cause a higher-priority one to be omitted, softened, or contradicted
-- Plain text only — no bullet points, no headers, no asterisks, no emoji`;
+- Format: 3–4 bullet points, one per line, each starting with "- ". Each bullet max 15 words — short, specific, no filler. No headers, no asterisks, no emoji.`;
 }
 
 export function buildDailyFeedbackPrompt(

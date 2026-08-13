@@ -10,15 +10,21 @@ export async function PATCH(
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
   const { id } = await params
-  const { parent_note } = await req.json()
+  const { parent_note, win_type, food_involved, photo_url } = await req.json()
+
+  const updates: Record<string, unknown> = {}
+  if (parent_note !== undefined) updates.parent_note = parent_note?.trim() || null
+  if (win_type !== undefined) updates.win_type = win_type
+  if (food_involved !== undefined) updates.food_involved = food_involved?.trim() || null
+  if (photo_url !== undefined) updates.photo_url = photo_url
 
   const admin = createAdminClient()
   const { data, error } = await admin
     .from('wins')
-    .update({ parent_note: parent_note?.trim() || null })
+    .update(updates)
     .eq('id', id)
     .eq('logged_by_user_id', user.id)
-    .select('id, parent_note')
+    .select('id, logged_at, win_type, food_involved, parent_note, child_age_days, photo_url')
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

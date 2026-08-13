@@ -6,6 +6,7 @@ import SHAiPresence from '@/components/SHAiPresence';
 import styles from './page.module.css';
 import type { Message, OnboardingData, ChatApiResponse } from '@/lib/onboarding/types';
 import { createChildProfile, updateResearchConsent } from '@/lib/children/create';
+import { STORAGE } from '@/lib/storage/keys';
 
 const OPENING_MESSAGE =
   "Hi! I'm SHAI — so lovely to meet you. I'm here to help you get everything set up for your little one. First things first — what's your baby's name?";
@@ -149,8 +150,8 @@ export default function OnboardingPage() {
               setSaving(false);
               return;
             }
-            localStorage.setItem('shai_active_child_id', childId);
-            if (collected.childName) localStorage.setItem('shai_child_name', collected.childName);
+            localStorage.setItem(STORAGE.ACTIVE_CHILD_ID, childId);
+            if (collected.childName) localStorage.setItem(STORAGE.CHILD_NAME, collected.childName);
             await updateResearchConsent(consentResearch);
             router.push('/onboarding/partner-invite');
           }}

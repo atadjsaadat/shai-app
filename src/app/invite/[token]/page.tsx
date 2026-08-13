@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import SHAiPresence from '@/components/SHAiPresence'
 import SHAiBrand from '@/components/SHAiBrand'
+import { STORAGE } from '@/lib/storage/keys'
 import styles from './page.module.css'
 
 type Phase = 'loading' | 'invalid' | 'ready' | 'accepting' | 'accepted' | 'already_linked'
@@ -71,8 +72,8 @@ export default function InviteAcceptPage() {
       if (!res.ok) {
         if (json.childId) {
           // Already linked — just go home
-          if (json.childName) localStorage.setItem('shai_child_name', json.childName)
-          if (json.childId) localStorage.setItem('shai_active_child_id', json.childId)
+          if (json.childName) localStorage.setItem(STORAGE.CHILD_NAME, json.childName)
+          if (json.childId) localStorage.setItem(STORAGE.ACTIVE_CHILD_ID, json.childId)
           setPhase('already_linked')
           return
         }
@@ -81,8 +82,8 @@ export default function InviteAcceptPage() {
         return
       }
 
-      if (json.childName) localStorage.setItem('shai_child_name', json.childName)
-      if (json.childId) localStorage.setItem('shai_active_child_id', json.childId)
+      if (json.childName) localStorage.setItem(STORAGE.CHILD_NAME, json.childName)
+      if (json.childId) localStorage.setItem(STORAGE.ACTIVE_CHILD_ID, json.childId)
       setPhase('accepted')
     } catch {
       setError('Something went wrong. Please try again.')

@@ -58,10 +58,10 @@
   line-height: 1.2;
 }
 
-.cardDesc {
+.cardStat {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   margin: 0;
   line-height: 1.4;
-  opacity: 0.75;
+  opacity: 0.85;
 }

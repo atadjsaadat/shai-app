@@ -125,12 +125,17 @@ export async function GET(request: Request) {
   const anthropic = createAnthropicClient()
   const journalContext = await getJournalContext(user.id, childId)
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 300,
-    ...(journalContext ? { system: journalContext } : {}),
-    messages: [{ role: 'user', content: buildWeeklySummaryPrompt(childName, ageMonths, daysLogged, nutrients) }],
-  })
+  let response
+  try {
+    response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 300,
+      ...(journalContext ? { system: journalContext } : {}),
+      messages: [{ role: 'user', content: buildWeeklySummaryPrompt(childName, ageMonths, daysLogged, nutrients) }],
+    })
+  } catch {
+    return NextResponse.json({ summary: `${childName} had a good week — ${daysLogged} day${daysLogged !== 1 ? 's' : ''} logged. Keep going!` })
+  }
 
   const raw = response.content[0].type === 'text' ? response.content[0].text.trim() : ''
   const summary = raw.replace(/^#+\s*[^\n]*\n+/g, '').trim()

@@ -52,6 +52,11 @@
   padding-top: 4px;
 }
 
+@keyframes logPulse {
+  0%, 100% { transform: scale(1);    box-shadow: 0 4px 16px rgba(196, 113, 74, 0.38); }
+  50%       { transform: scale(1.1); box-shadow: 0 6px 22px rgba(196, 113, 74, 0.55); }
+}
+
 .logBtn {
   width: 52px;
   height: 52px;
@@ -65,6 +70,7 @@
   justify-content: center;
   text-decoration: none;
   margin-top: -28px;
+  animation: logPulse 2s ease-in-out infinite;
 }
 
 .logLabel {

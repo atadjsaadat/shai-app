@@ -9,12 +9,17 @@ export async function POST(req: NextRequest) {
 
   const anthropic = createClient();
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 512,
-    system: buildSystemPrompt(collected),
-    messages: messages.map((m) => ({ role: m.role, content: m.content })),
-  });
+  let response
+  try {
+    response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 512,
+      system: buildSystemPrompt(collected),
+      messages: messages.map((m) => ({ role: m.role, content: m.content })),
+    });
+  } catch {
+    return NextResponse.json({ message: "Sorry, I'm having a moment — could you try that again?", collected: {}, complete: false });
+  }
 
   const raw = response.content[0].type === 'text' ? response.content[0].text : '';
 

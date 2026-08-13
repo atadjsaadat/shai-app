@@ -29,8 +29,8 @@ const TABS = [
     ),
   },
   {
-    label: 'Journey',
-    href: '/journey',
+    label: 'Memories',
+    href: '/memories',
     activePaths: [] as string[],
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -41,7 +41,7 @@ const TABS = [
   },
   {
     label: 'Baby Book',
-    href: '/record',
+    href: '/baby-book',
     activePaths: ['/baby-book', '/health-record', '/appointments', '/growth'],
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
