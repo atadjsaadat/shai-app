@@ -101,6 +101,8 @@ export default function FeedsTab() {
   const [childId, setChildId] = useState<string | null>(null);
   const [childName, setChildName] = useState<string | null>(null);
   const [ageDays, setAgeDays] = useState<number | null>(null);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [firstFeedAt, setFirstFeedAt] = useState<string | null>(null);
   const [alarm, setAlarm] = useState<Alarm | null>(null);
   const [reminderMins, setReminderMins] = useState<number | null>(null);
   const [tick, setTick] = useState(0);
@@ -144,6 +146,8 @@ export default function FeedsTab() {
         if (!json.error) {
           setFeeds(json.feeds ?? []);
           if (json.ageDays != null) setAgeDays(json.ageDays);
+          if (json.totalCount != null) setTotalCount(json.totalCount);
+          if (json.firstFeedAt) setFirstFeedAt(json.firstFeedAt);
         }
       })
       .catch(() => {});
@@ -227,6 +231,119 @@ export default function FeedsTab() {
   const todayFeeds = feeds.filter(f => isToday(f.logged_at));
   const alarmOverdue = alarm ? alarm.dueAt <= Date.now() : false;
 
+  const daysSinceLast = lastFeed
+    ? Math.floor((Date.now() - new Date(lastFeed.logged_at).getTime()) / 86_400_000)
+    : null;
+  const isArchive = totalCount > 0 && daysSinceLast !== null && daysSinceLast >= 14;
+
+  function formatDateShort(iso: string): string {
+    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  if (isArchive) {
+    const name = childName ?? 'your little one';
+    return (
+      <div className={styles.container}>
+        <div className={styles.archiveCard}>
+          <p className={styles.archiveTitle}>The feeding chapter</p>
+          <div className={styles.archiveDates}>
+            {firstFeedAt && <span>{formatDateShort(firstFeedAt)}</span>}
+            <span className={styles.archiveDash}>→</span>
+            {lastFeed && <span>{formatDateShort(lastFeed.logged_at)}</span>}
+          </div>
+          <p className={styles.archiveCount}>
+            {totalCount.toLocaleString()} feed{totalCount !== 1 ? 's' : ''} logged with {name}
+          </p>
+          <p className={styles.archiveMessage}>
+            Every one of those feeds was {name} and you, together. That&apos;s something to carry.
+          </p>
+          <button className={styles.archiveStillFeeding} onClick={openForm}>
+            Still feeding? Log one
+          </button>
+        </div>
+        {showForm && (
+          <div className={styles.form}>
+            <div className={styles.typeRow}>
+              {(['breast', 'formula', 'expressed'] as FeedType[]).map(t => (
+                <button
+                  key={t}
+                  className={`${styles.typeBtn}${feedType === t ? ` ${styles.typeBtnActive}` : ''}`}
+                  style={feedType === t
+                    ? { background: FEED_COLOURS[t], borderColor: FEED_COLOURS[t], color: '#fff', boxShadow: `0 3px 10px ${FEED_COLOURS[t]}4D` }
+                    : { borderColor: FEED_COLOURS[t], color: FEED_COLOURS[t] }
+                  }
+                  onClick={() => setFeedType(t)}
+                >
+                  {t[0].toUpperCase() + t.slice(1)}
+                </button>
+              ))}
+            </div>
+            {feedType === 'breast' && (
+              <>
+                <div className={styles.field}>
+                  <p className={styles.fieldLabel}>Side</p>
+                  <div className={styles.sideRow}>
+                    {(['left', 'right', 'both'] as BreastSide[]).map(s => (
+                      <button
+                        key={s}
+                        className={`${styles.sideBtn}${breastSide === s ? ` ${styles.sideBtnActive}` : ''}`}
+                        style={breastSide === s ? { borderColor: FEED_COLOURS.breast, color: FEED_COLOURS.breast } : undefined}
+                        onClick={() => setBreastSide(s)}
+                      >
+                        {s[0].toUpperCase() + s.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className={styles.field}>
+                  <p className={styles.fieldLabel}>Duration (minutes, optional)</p>
+                  <input
+                    type="number" inputMode="numeric" min="1" max="60"
+                    className={styles.input}
+                    style={{ '--input-focus-color': FEED_COLOURS[feedType] } as React.CSSProperties}
+                    placeholder="e.g. 15" value={duration}
+                    onChange={e => setDuration(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+            {feedType !== 'breast' && (
+              <div className={styles.field}>
+                <p className={styles.fieldLabel}>Amount (ml, optional)</p>
+                <input
+                  type="number" inputMode="decimal" min="0" step="5"
+                  className={styles.input}
+                  style={{ '--input-focus-color': FEED_COLOURS[feedType] } as React.CSSProperties}
+                  placeholder="e.g. 90" value={amount}
+                  onChange={e => setAmount(e.target.value)}
+                />
+              </div>
+            )}
+            <div className={styles.field}>
+              <p className={styles.fieldLabel}>Time</p>
+              <input
+                type="time" className={styles.input}
+                style={{ '--input-focus-color': FEED_COLOURS[feedType] } as React.CSSProperties}
+                value={logTime} onChange={e => setLogTime(e.target.value)}
+              />
+            </div>
+            {saveError && <p className={styles.error}>{saveError}</p>}
+            <div className={styles.formBtns}>
+              <button className={styles.cancelBtn} onClick={() => setShowForm(false)}>Cancel</button>
+              <button
+                className={styles.saveBtn}
+                style={{ background: FEED_COLOURS[feedType], boxShadow: `0 4px 14px ${FEED_COLOURS[feedType]}4D` }}
+                onClick={handleSave} disabled={saving}
+              >
+                {saving ? 'Saving…' : 'Save feed'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className={styles.container}>
 
@@ -245,6 +362,11 @@ export default function FeedsTab() {
           </p>
           {lastFeed && (
             <p className={styles.timerSub}>{feedLabel(lastFeed)} · {formatTime(lastFeed.logged_at)}</p>
+          )}
+          {totalCount > 0 && (
+            <p className={styles.feedCounter}>
+              {totalCount.toLocaleString()} feed{totalCount !== 1 ? 's' : ''} logged with {childName ?? 'your little one'} since birth
+            </p>
           )}
         </div>
 

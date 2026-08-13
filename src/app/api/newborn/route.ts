@@ -41,7 +41,19 @@ export async function GET(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  return NextResponse.json({ feeds: feeds ?? [], ageDays })
+  const { data: firstFeedRows, count: totalCount } = await admin
+    .from('newborn_feed_logs')
+    .select('logged_at', { count: 'exact' })
+    .eq('child_id', childId)
+    .order('logged_at', { ascending: true })
+    .limit(1)
+
+  return NextResponse.json({
+    feeds: feeds ?? [],
+    ageDays,
+    totalCount: totalCount ?? 0,
+    firstFeedAt: firstFeedRows?.[0]?.logged_at ?? null,
+  })
 }
 
 export async function POST(req: NextRequest) {
