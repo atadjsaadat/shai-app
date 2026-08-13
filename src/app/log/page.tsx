@@ -8,26 +8,36 @@ import BarcodeScanner from '@/components/BarcodeScanner';
 import styles from './page.module.css';
 import { saveFoodLog } from '@/lib/log/save';
 import type { LogMessage, ParseApiResponse, MealType, ParsedFoodItem } from '@/lib/log/types';
-import type { QuickPick } from '@/app/api/log/quick-picks/route';
+import type { MealFavourite } from '@/app/api/log/meal-favourites/route';
+import { STORAGE } from '@/lib/storage/keys';
 
 const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack', 'hydration'];
 
 const REACTION_OPTIONS = [
-  'Rash / redness',
-  'Allergic response',
-  'Constipation',
-  'Soft stool',
-  'Vomiting',
-  'Excessive wind',
-  'Hives / swelling',
-  'Unusually unsettled',
+  { label: 'Rash / redness',      bg: '#F5D4DC', color: '#8A3050' },
+  { label: 'Allergic response',   bg: '#F5D4DC', color: '#8A3050' },
+  { label: 'Hives / swelling',    bg: '#F5D4DC', color: '#8A3050' },
+  { label: 'Constipation',        bg: '#FDE8C8', color: '#7A5020' },
+  { label: 'Soft stool',          bg: '#FDE8C8', color: '#7A5020' },
+  { label: 'Vomiting',            bg: '#FDE8C8', color: '#7A5020' },
+  { label: 'Excessive wind',      bg: '#FDE8C8', color: '#7A5020' },
+  { label: 'Unusually unsettled', bg: '#EDE5F5', color: '#7A5B94' },
 ]
 
 const PORTION_OPTIONS = [
-  { label: '½ ×', value: 0.5 },
-  { label: '1 ×', value: 1 },
-  { label: '1½ ×', value: 1.5 },
-  { label: '2 ×', value: 2 },
+  { id: '1tsp',     label: '1 tsp',        value: 0.04, bg: '#EDE5F5', color: '#7A5B94' },
+  { id: '1tbsp',    label: '1 tbsp',       value: 0.13, bg: '#EDE5F5', color: '#7A5B94' },
+  { id: 'qtr',      label: '¼ cup',        value: 0.25, bg: '#F0D5C8', color: '#9E5035' },
+  { id: 'half',     label: '½ cup',        value: 0.5,  bg: '#F0D5C8', color: '#9E5035' },
+  { id: 'one',      label: '1 cup',        value: 1.0,  bg: '#F0D5C8', color: '#9E5035' },
+  { id: 'onehalf',  label: '1½ cups',      value: 1.5,  bg: '#F0D5C8', color: '#9E5035' },
+  { id: 'two',      label: '2 cups',       value: 2.0,  bg: '#F0D5C8', color: '#9E5035' },
+  { id: 'sm-bowl',  label: 'Small bowl',   value: 0.5,  bg: '#D4E8D6', color: '#4A7050' },
+  { id: 'md-bowl',  label: 'Medium bowl',  value: 1.0,  bg: '#D4E8D6', color: '#4A7050' },
+  { id: 'lg-bowl',  label: 'Large bowl',   value: 1.5,  bg: '#D4E8D6', color: '#4A7050' },
+  { id: 'sm-plate', label: 'Small plate',  value: 1.0,  bg: '#D4E4F0', color: '#3A6080' },
+  { id: 'md-plate', label: 'Medium plate', value: 1.5,  bg: '#D4E4F0', color: '#3A6080' },
+  { id: 'lg-plate', label: 'Large plate',  value: 2.0,  bg: '#D4E4F0', color: '#3A6080' },
 ]
 
 const NUTRIENT_KEYS: (keyof ParsedFoodItem)[] = [
@@ -56,6 +66,22 @@ const MEAL_LABELS: Record<MealType, string> = {
   hydration: 'Hydration',
 };
 
+const MEAL_COLOURS: Record<MealType, string> = {
+  breakfast: '#D4A72C',
+  lunch:     '#7A9E7E',
+  dinner:    '#C4714A',
+  snack:     '#A67BC4',
+  hydration: '#7AA5C4',
+};
+
+const MEAL_EXAMPLES: Record<MealType, string[]> = {
+  breakfast:  ['Porridge with milk', 'Weetabix with banana', 'Toast with butter'],
+  lunch:      ['Cheese sandwich and cucumber', 'Pasta with tomato sauce', 'Chicken wrap'],
+  dinner:     ['Fish pie with peas', 'Chicken, rice and broccoli', 'Spaghetti bolognese'],
+  snack:      ['Rice cake with peanut butter', 'Apple slices', 'Yoghurt'],
+  hydration:  ['Water, about 150ml', 'Whole milk, half a cup', 'Diluted orange juice'],
+};
+
 const MACROS: { key: keyof ParsedFoodItem; label: string; unit: string; color: string }[] = [
   { key: 'calories_kcal', label: 'cal',   unit: '',   color: '#C4714A' },
   { key: 'protein_g',     label: 'pro',   unit: 'g',  color: '#D4A72C' },
@@ -67,21 +93,6 @@ const MACROS: { key: keyof ParsedFoodItem; label: string; unit: string; color: s
   { key: 'iron_mg',       label: 'iron',  unit: 'mg', color: '#B87333' },
 ];
 
-function getQuickPickBg(pick: QuickPick): string | undefined {
-  const c = pick.carbs_g ?? 0;
-  const p = pick.protein_g ?? 0;
-  const f = pick.fat_g ?? 0;
-  const total = c + p + f;
-  if (total < 0.5) return undefined;
-  const candidates = [
-    { pct: c / total, color: 'rgba(176,149,133,0.28)' },
-    { pct: p / total, color: 'rgba(212,167,44,0.28)' },
-    { pct: f / total, color: 'rgba(166,123,196,0.28)' },
-  ].filter(m => m.pct >= 0.2).sort((a, b) => b.pct - a.pct);
-  if (!candidates.length) return undefined;
-  if (candidates.length === 1) return candidates[0].color;
-  return `linear-gradient(to right, ${candidates.map(m => m.color).join(', ')})`;
-}
 
 function detectMealType(): MealType {
   const h = new Date().getHours();
@@ -100,16 +111,30 @@ type Phase = 'chatting' | 'confirming' | 'saving' | 'saved';
 const HARD_DAY_ACK =
   "That's okay — some days are just like that. You showed up, and that's what matters.";
 
-function FoodItemCard({ item, multiplier = 1 }: { item: ParsedFoodItem; multiplier?: number }) {
-  const servingLabel =
-    multiplier === 0.5 ? '½' : multiplier === 1.5 ? '1½' : String(multiplier)
-  const servingDesc = multiplier !== 1 && item.serving_size_description
-    ? `${servingLabel} × ${item.serving_size_description}`
-    : item.serving_size_description
+function FoodItemCard({ item, multiplier = 1, portionLabel, isWin, onWinToggle }: {
+  item: ParsedFoodItem;
+  multiplier?: number;
+  portionLabel?: string | null;
+  isWin?: boolean;
+  onWinToggle?: () => void;
+}) {
+  const servingDesc = portionLabel ?? item.serving_size_description;
   return (
     <div className={styles.foodItem}>
       <div className={styles.foodItemTop}>
-        <span className={styles.foodName}>{item.food_name}</span>
+        <div className={styles.foodItemTitleRow}>
+          <span className={styles.foodName}>{item.food_name}</span>
+          {onWinToggle && (
+            <button
+              className={`${styles.winInlineBtn}${isWin ? ` ${styles.winInlineBtnActive}` : ''}`}
+              onClick={onWinToggle}
+              aria-label="Mark as a win"
+              type="button"
+            >
+              🎉
+            </button>
+          )}
+        </div>
         {servingDesc && (
           <span className={styles.serving}>{servingDesc}</span>
         )}
@@ -145,13 +170,17 @@ export default function LogPage() {
   const [parsedData, setParsedData] = useState<ParseApiResponse | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [childValidated, setChildValidated] = useState(false);
-  const [quickPicks, setQuickPicks] = useState<QuickPick[]>([]);
-  const [hiddenPicks, setHiddenPicks] = useState<Set<string>>(new Set());
+  const [mealFavourites, setMealFavourites] = useState<MealFavourite[]>([]);
   const [showScanner, setShowScanner] = useState(false);
-  const [portionMultiplier, setPortionMultiplier] = useState(1);
+  const [portionSelection, setPortionSelection] = useState<string | null>(null);
+  const selectedPortion = PORTION_OPTIONS.find(o => o.id === portionSelection) ?? null;
+  const portionMultiplier = selectedPortion?.value ?? 1;
   const [reactions, setReactions] = useState<string[]>([]);
   const [noReaction, setNoReaction] = useState(false);
   const [distressLevel, setDistressLevel] = useState<1 | 2 | 3 | null>(null);
+  const [isWin, setIsWin] = useState(false);
+  const [winNote, setWinNote] = useState('');
+  const [showWinToast, setShowWinToast] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -159,43 +188,74 @@ export default function LogPage() {
   const [logListening, setLogListening] = useState(false);
   const [logCleaning, setLogCleaning] = useState(false);
 
+  const [addSideOpen, setAddSideOpen] = useState(false);
+  const [addSideInput, setAddSideInput] = useState('');
+  const [addSideThinking, setAddSideThinking] = useState(false);
+  const [fromFavourite, setFromFavourite] = useState(false);
+  const [favouritesEditMode, setFavouritesEditMode] = useState(false);
+  const [dismissedFavourites, setDismissedFavourites] = useState<Set<string>>(new Set());
+
   const loadQuickPicks = useCallback((meal: MealType) => {
-    const key = `shai_hidden_picks_${meal}`;
-    const hidden = JSON.parse(localStorage.getItem(key) ?? '[]') as string[];
-    setHiddenPicks(new Set(hidden));
-    fetch(`/api/log/quick-picks?mealType=${meal}`)
+    const key = STORAGE.dismissedFavourites(meal);
+    const dismissed = JSON.parse(localStorage.getItem(key) ?? '[]') as string[];
+    setDismissedFavourites(new Set(dismissed));
+    setFavouritesEditMode(false);
+    fetch(`/api/log/meal-favourites?mealType=${meal}`)
       .then((r) => r.json())
-      .then((json) => setQuickPicks(json.picks ?? []))
+      .then((json) => setMealFavourites(json.meals ?? []))
       .catch(() => {});
   }, []);
 
-  const handleQuickPick = (pick: QuickPick) => {
-    const foodItem: ParsedFoodItem = {
-      food_name: pick.food_name,
-      serving_size_description: pick.serving_size_description ?? '',
-      calories_kcal: pick.calories_kcal, protein_g: pick.protein_g,
-      carbs_g: pick.carbs_g, fat_g: pick.fat_g, fibre_g: pick.fibre_g,
-      sugar_g: pick.sugar_g, saturated_fat_g: pick.saturated_fat_g, sodium_mg: pick.sodium_mg, iron_mg: pick.iron_mg,
-      calcium_mg: pick.calcium_mg, vitamin_c_mg: pick.vitamin_c_mg,
-      vitamin_a_mcg: pick.vitamin_a_mcg, vitamin_d_mcg: pick.vitamin_d_mcg,
-      zinc_mg: pick.zinc_mg, omega3_mg: pick.omega3_mg, b12_mcg: pick.b12_mcg,
-      b6_mg: pick.b6_mg, folate_mcg: pick.folate_mcg, magnesium_mg: pick.magnesium_mg,
-      potassium_mg: pick.potassium_mg, omega6_mg: pick.omega6_mg,
-      iodine_mcg: pick.iodine_mcg, selenium_mcg: pick.selenium_mcg,
-      phosphorus_mg: pick.phosphorus_mg, choline_mg: pick.choline_mg,
-      dha_mg: pick.dha_mg, vitamin_k_mcg: pick.vitamin_k_mcg,
-      confidence_score: 0.9,
-    };
-    setParsedData({ message: '', foodItems: [foodItem], clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: true });
-    setPhase('confirming');
+  const handleDismissFavourite = (name: string) => {
+    const key = STORAGE.dismissedFavourites(mealType);
+    const existing = JSON.parse(localStorage.getItem(key) ?? '[]') as string[];
+    const updated = Array.from(new Set([...existing, name]));
+    localStorage.setItem(key, JSON.stringify(updated));
+    setDismissedFavourites(new Set(updated));
   };
 
-  const handleHidePick = (foodName: string) => {
-    const key = `shai_hidden_picks_${mealType}`;
-    const existing = JSON.parse(localStorage.getItem(key) ?? '[]') as string[];
-    const updated = Array.from(new Set([...existing, foodName.toLowerCase().trim()]));
-    localStorage.setItem(key, JSON.stringify(updated));
-    setHiddenPicks(new Set(updated));
+  async function handleAddSide() {
+    const text = addSideInput.trim();
+    if (!text || addSideThinking || !parsedData) return;
+    setAddSideThinking(true);
+    try {
+      const res = await fetch('/api/log/parse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [{ role: 'user', content: text }], mealType }),
+      });
+      const data: ParseApiResponse = await res.json();
+      if (data.foodItems?.length) {
+        setParsedData({ ...parsedData, foodItems: [...parsedData.foodItems, ...data.foodItems] });
+      }
+    } catch { /* silently fail */ }
+    setAddSideInput('');
+    setAddSideOpen(false);
+    setAddSideThinking(false);
+  }
+
+  const handleMealFavourite = (fav: MealFavourite) => {
+    const foodItem: ParsedFoodItem = {
+      food_name: fav.name,
+      serving_size_description: null,
+      calories_kcal: fav.calories_kcal, protein_g: fav.protein_g,
+      carbs_g: fav.carbs_g, fat_g: fav.fat_g, fibre_g: fav.fibre_g,
+      sugar_g: fav.sugar_g, saturated_fat_g: fav.saturated_fat_g, sodium_mg: fav.sodium_mg,
+      iron_mg: fav.iron_mg, calcium_mg: fav.calcium_mg, vitamin_c_mg: fav.vitamin_c_mg,
+      vitamin_a_mcg: fav.vitamin_a_mcg, vitamin_d_mcg: fav.vitamin_d_mcg,
+      zinc_mg: fav.zinc_mg, omega3_mg: fav.omega3_mg, b12_mcg: fav.b12_mcg,
+      b6_mg: fav.b6_mg, folate_mcg: fav.folate_mcg, magnesium_mg: fav.magnesium_mg,
+      potassium_mg: fav.potassium_mg, omega6_mg: fav.omega6_mg,
+      iodine_mcg: fav.iodine_mcg, selenium_mcg: fav.selenium_mcg,
+      phosphorus_mg: fav.phosphorus_mg, choline_mg: fav.choline_mg,
+      dha_mg: fav.dha_mg, vitamin_k_mcg: fav.vitamin_k_mcg,
+      confidence_score: 0.9,
+    };
+    setPortionSelection(null);
+    resetReactions();
+    setFromFavourite(true);
+    setParsedData({ message: '', foodItems: [foodItem], clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: true });
+    setPhase('confirming');
   };
 
   useEffect(() => {
@@ -235,24 +295,24 @@ export default function LogPage() {
 
   // Always resolve child from DB; localStorage is just a cache for same-device speed
   useEffect(() => {
-    const storedId = localStorage.getItem('shai_active_child_id');
+    const storedId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
     fetch('/api/children')
       .then((r) => r.json())
       .then((json) => {
         if (json.childId) {
-          localStorage.setItem('shai_active_child_id', json.childId);
-          if (json.childName) localStorage.setItem('shai_child_name', json.childName);
-          const name = json.childName ?? localStorage.getItem('shai_child_name');
+          localStorage.setItem(STORAGE.ACTIVE_CHILD_ID, json.childId);
+          if (json.childName) localStorage.setItem(STORAGE.CHILD_NAME, json.childName);
+          const name = json.childName ?? localStorage.getItem(STORAGE.CHILD_NAME);
           if (name) setMessages([{ id: '0', role: 'assistant', content: `What did ${name} have? The more detail the better — ingredients, type, and roughly how much.` }]);
           setChildValidated(true);
         } else {
-          localStorage.removeItem('shai_active_child_id');
-          localStorage.removeItem('shai_child_name');
+          localStorage.removeItem(STORAGE.ACTIVE_CHILD_ID);
+          localStorage.removeItem(STORAGE.CHILD_NAME);
           router.replace('/onboarding');
         }
       })
       .catch(() => {
-        const name = localStorage.getItem('shai_child_name');
+        const name = localStorage.getItem(STORAGE.CHILD_NAME);
         if (name) setMessages([{ id: '0', role: 'assistant', content: `What did ${name} have? The more detail the better — ingredients, type, and roughly how much.` }]);
         if (storedId) setChildValidated(true);
         else router.replace('/onboarding');
@@ -298,7 +358,7 @@ export default function LogPage() {
     setNoReaction(v => { if (!v) setReactions([]); return !v; });
   };
 
-  const resetReactions = () => { setReactions([]); setNoReaction(false); };
+  const resetReactions = () => { setReactions([]); setNoReaction(false); setIsWin(false); setWinNote(''); };
 
   const handleBarcodeDetect = useCallback(async (barcode: string) => {
     setShowScanner(false);
@@ -315,7 +375,7 @@ export default function LogPage() {
       }
       if (!res.ok) throw new Error('lookup failed');
       const { item } = await res.json();
-      setPortionMultiplier(1);
+      setPortionSelection(null);
       resetReactions();
       setParsedData({ message: '', foodItems: [item], clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: true });
       setPhase('confirming');
@@ -394,15 +454,15 @@ export default function LogPage() {
     setPhase('saving');
     setSaveError(null);
 
-    let childId = localStorage.getItem('shai_active_child_id') ?? '';
+    let childId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID) ?? '';
     if (!childId) {
       const res = await fetch('/api/children');
       if (res.ok) {
         const json = await res.json();
         if (json.childId) {
           childId = json.childId;
-          localStorage.setItem('shai_active_child_id', json.childId);
-          if (json.childName) localStorage.setItem('shai_child_name', json.childName);
+          localStorage.setItem(STORAGE.ACTIVE_CHILD_ID, json.childId);
+          if (json.childName) localStorage.setItem(STORAGE.CHILD_NAME, json.childName);
         }
       }
     }
@@ -415,6 +475,8 @@ export default function LogPage() {
       parsedData.mealType,
       parsedData.isHardFoodDay,
       reactionType,
+      isWin,
+      winNote.trim() || null,
     );
 
     if (error) {
@@ -428,8 +490,8 @@ export default function LogPage() {
     const monday = (() => {
       const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d.toISOString().slice(0, 10);
     })();
-    localStorage.removeItem(`shai_daily_feedback_${today}`);
-    localStorage.removeItem(`shai_weekly_summary_${monday}`);
+    localStorage.removeItem(STORAGE.dailyFeedback(today));
+    localStorage.removeItem(STORAGE.weeklySummary(monday));
 
     setPhase('saved');
     loadQuickPicks(mealType);
@@ -437,20 +499,23 @@ export default function LogPage() {
 
   const handleEdit = () => {
     setParsedData(null);
-    setPortionMultiplier(1);
+    setPortionSelection(null);
     resetReactions();
+    setAddSideOpen(false);
+    setAddSideInput('');
+    setFromFavourite(false);
     setPhase('chatting');
-    setMessages((prev) => [
-      ...prev,
-      { id: generateId(), role: 'assistant', content: "No problem — what would you like to change?" },
-    ]);
+    setMessages([{ id: generateId(), role: 'assistant', content: "No problem — what would you like to change?" }]);
     setTimeout(() => textareaRef.current?.focus(), 80);
   };
 
   const handleLogAnother = () => {
-    setPortionMultiplier(1);
+    setPortionSelection(null);
     resetReactions();
-    const name = localStorage.getItem('shai_child_name');
+    setAddSideOpen(false);
+    setAddSideInput('');
+    setFromFavourite(false);
+    const name = localStorage.getItem(STORAGE.CHILD_NAME);
     setMessages([
       { id: generateId(), role: 'assistant', content: name ? `What else did ${name} have?` : "What else did they have?" },
     ]);
@@ -491,40 +556,63 @@ export default function LogPage() {
           <button
             key={type}
             className={`${styles.tab} ${mealType === type ? styles.tabActive : ''}`}
-            onClick={() => phase === 'chatting' && setMealType(type)}
-            disabled={phase !== 'chatting'}
+            style={mealType === type
+              ? { background: MEAL_COLOURS[type], borderColor: MEAL_COLOURS[type] }
+              : { borderColor: MEAL_COLOURS[type], color: MEAL_COLOURS[type] }
+            }
+            onClick={() => {
+              if (phase === 'saving' || type === mealType) return;
+              setMealType(type);
+              setParsedData(null);
+              setPortionSelection(null);
+              resetReactions();
+              setAddSideOpen(false);
+              setAddSideInput('');
+              setFromFavourite(false);
+              setPhase('chatting');
+              setMessages([{ id: generateId(), role: 'assistant', content: "What did your little one have? The more detail the better — ingredients, type, and roughly how much." }]);
+            }}
+            disabled={phase === 'saving'}
           >
             {MEAL_LABELS[type]}
           </button>
         ))}
       </div>
 
-      {/* ── Quick picks ── */}
-      {phase === 'chatting' && quickPicks.some((p) => !hiddenPicks.has(p.food_name.toLowerCase().trim())) && (
-        <div className={styles.quickPicksRow}>
-          {quickPicks
-            .filter((p) => !hiddenPicks.has(p.food_name.toLowerCase().trim()))
-            .map((pick) => (
-              <div
-                key={pick.food_name}
-                className={styles.quickPickChip}
-                style={{ background: getQuickPickBg(pick) }}
-              >
-                <button className={styles.quickPickName} onClick={() => handleQuickPick(pick)}>
-                  {pick.food_name}
-                </button>
-                <button className={styles.quickPickRemove} onClick={() => handleHidePick(pick.food_name)} aria-label="Remove">
-                  ×
+      {/* ── Meal favourites ── */}
+      {phase === 'chatting' && mealFavourites.filter(f => !dismissedFavourites.has(f.name)).length > 0 && (
+        <div className={styles.favouritesSection}>
+          <div className={styles.favouritesHeader}>
+            <p className={styles.favouritesLabel}><span className={styles.favouritesIcon}>😋</span> Favourites</p>
+            <button
+              className={`${styles.favouritesEditBtn}${favouritesEditMode ? ` ${styles.favouritesEditBtnActive}` : ''}`}
+              onClick={() => setFavouritesEditMode(m => !m)}
+            >
+              {favouritesEditMode ? 'Done' : 'Edit'}
+            </button>
+          </div>
+          <div className={styles.favouritesChips}>
+            {mealFavourites.filter(f => !dismissedFavourites.has(f.name)).map((fav) => (
+              <div key={fav.name} className={styles.favouriteChipWrap}>
+                {favouritesEditMode && (
+                  <button className={styles.favouriteDismiss} onClick={() => handleDismissFavourite(fav.name)} aria-label="Remove">✕</button>
+                )}
+                <button
+                  className={styles.favouriteChip}
+                  onClick={() => !favouritesEditMode && handleMealFavourite(fav)}
+                >
+                  {fav.name}
                 </button>
               </div>
             ))}
+          </div>
         </div>
       )}
 
       <p className={styles.aiDisclosure}>SHAI is an AI assistant.</p>
 
       {/* ── Messages ── */}
-      <div className={`${styles.messages} ${phase === 'chatting' ? styles.messagesChat : ''} ${distressLevel === 3 ? styles.messagesWithCard : ''}`}>
+      <div className={`${styles.messages} ${messages.length <= 1 && phase === 'chatting' ? styles.messagesStart : ''} ${phase === 'chatting' ? styles.messagesChat : ''} ${distressLevel === 3 ? styles.messagesWithCard : ''}`}>
         {messages.map((msg, i) => (
           <div
             key={msg.id}
@@ -546,6 +634,24 @@ export default function LogPage() {
             </div>
           </div>
         ))}
+
+        {messages.length === 1 && phase === 'chatting' && (
+          <div className={styles.exampleHint}>
+            <p className={styles.exampleLabel}>For example</p>
+            <div className={styles.exampleChips}>
+              {MEAL_EXAMPLES[mealType].map((ex) => (
+                <button
+                  key={ex}
+                  className={styles.exampleChip}
+                  style={{ borderColor: MEAL_COLOURS[mealType], color: MEAL_COLOURS[mealType] }}
+                  onClick={() => setInput(ex)}
+                >
+                  {ex}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {isThinking && (
           <div className={`${styles.row} ${styles.rowAssistant}`}>
@@ -586,6 +692,10 @@ export default function LogPage() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={logCleaning}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
           />
           <button
             className={styles.barcodeBtn}
@@ -640,40 +750,89 @@ export default function LogPage() {
             </div>
           ) : (
             <>
-              <div className={styles.foodList}>
-                {parsedData.foodItems.map((item, i) => (
-                  <FoodItemCard key={i} item={item} multiplier={portionMultiplier} />
-                ))}
-              </div>
-              {parsedData.foodItems[0]?.data_source === 'barcode' && (
-                <div className={styles.portionRow}>
-                  <span className={styles.portionLabel}>How much?</span>
-                  {PORTION_OPTIONS.map(({ label, value }) => (
-                    <button
-                      key={value}
-                      className={`${styles.portionChip}${portionMultiplier === value ? ` ${styles.portionChipActive}` : ''}`}
-                      onClick={() => setPortionMultiplier(value)}
-                      disabled={phase === 'saving'}
-                    >
-                      {label}
-                    </button>
-                  ))}
+              {showWinToast && isWin && (
+                <div className={styles.winToast}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--sage-dark)" stroke="none">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                  </svg>
+                  Win added to your jar!
                 </div>
               )}
+
+              <div className={styles.foodList}>
+                {parsedData.foodItems.map((item, i) => (
+                  <FoodItemCard
+                    key={i}
+                    item={item}
+                    multiplier={portionMultiplier}
+                    portionLabel={selectedPortion?.label}
+                    isWin={isWin}
+                    onWinToggle={() => {
+                      setIsWin(w => {
+                        if (!w) {
+                          setShowWinToast(true);
+                          setTimeout(() => setShowWinToast(false), 2200);
+                        }
+                        return !w;
+                      });
+                      setWinNote('');
+                    }}
+                  />
+                ))}
+              </div>
+
+              {fromFavourite && addSideOpen ? (
+                <div className={styles.addSideRow}>
+                  <input
+                    className={styles.addSideInput}
+                    placeholder="e.g. handful of broccoli"
+                    value={addSideInput}
+                    onChange={(e) => setAddSideInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleAddSide(); }}
+                    autoFocus
+                    autoComplete="off"
+                    disabled={addSideThinking}
+                  />
+                  <button className={styles.addSideBtn} onClick={handleAddSide} disabled={!addSideInput.trim() || addSideThinking}>
+                    {addSideThinking ? '…' : 'Add'}
+                  </button>
+                  <button className={styles.addSideCancel} onClick={() => { setAddSideOpen(false); setAddSideInput(''); }}>✕</button>
+                </div>
+              ) : fromFavourite ? (
+                <button className={styles.addSideTrigger} onClick={() => setAddSideOpen(true)} disabled={phase === 'saving'}>
+                  + Add a side
+                </button>
+              ) : null}
+
+              <div className={styles.portionRow}>
+                <span className={styles.portionLabel}>Meal portion</span>
+                {PORTION_OPTIONS.map(({ id, label, bg, color }) => (
+                  <button
+                    key={id}
+                    className={`${styles.portionChip}${portionSelection === id ? ` ${styles.portionChipActive}` : ''}`}
+                    style={portionSelection !== id ? { background: bg, color } : undefined}
+                    onClick={() => setPortionSelection(portionSelection === id ? null : id)}
+                    disabled={phase === 'saving'}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
               {parsedData.mealType !== 'hydration' && (
                 <div className={styles.reactionSection}>
                   <p className={styles.reactionLabel}>
                     Any reaction? <span className={styles.reactionOptional}>(optional)</span>
                   </p>
                   <div className={styles.reactionChips}>
-                    {REACTION_OPTIONS.map(r => (
+                    {REACTION_OPTIONS.map(({ label, bg, color }) => (
                       <button
-                        key={r}
-                        className={`${styles.reactionChip}${reactions.includes(r) ? ` ${styles.reactionChipActive}` : ''}`}
-                        onClick={() => toggleReaction(r)}
+                        key={label}
+                        className={`${styles.reactionChip}${reactions.includes(label) ? ` ${styles.reactionChipActive}` : ''}`}
+                        style={!reactions.includes(label) ? { background: bg, color } : undefined}
+                        onClick={() => toggleReaction(label)}
                         disabled={phase === 'saving'}
                       >
-                        {r}
+                        {label}
                       </button>
                     ))}
                     <button
@@ -687,6 +846,17 @@ export default function LogPage() {
                 </div>
               )}
             </>
+          )}
+
+          {isWin && (
+            <input
+              className={styles.winNoteInput}
+              placeholder="Add a note (optional) — e.g. tried broccoli for the first time!"
+              value={winNote}
+              onChange={(e) => setWinNote(e.target.value)}
+              autoComplete="off"
+              disabled={phase === 'saving'}
+            />
           )}
 
           {saveError && <p className={styles.saveError}>{saveError}</p>}
@@ -722,7 +892,11 @@ export default function LogPage() {
           <div className={styles.savedInner}>
             <SHAiPresence expression="celebrating" size={40} />
             <p className={styles.savedText}>
-              {parsedData?.isHardFoodDay ? "Noted. You're doing great." : 'All logged!'}
+              {parsedData?.isHardFoodDay
+                ? "Noted. You're doing great."
+                : isWin
+                ? 'Congratulations! Win added to your jar.'
+                : 'All logged!'}
             </p>
           </div>
           <div className={styles.savedBtns}>
