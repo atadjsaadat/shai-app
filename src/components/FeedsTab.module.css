@@ -1,0 +1,240 @@
+.container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 16px 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.logBtn {
+  width: 100%;
+  padding: 16px;
+  background: var(--terracotta);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--btn-shadow-primary);
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+
+.form {
+  background: var(--oat);
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: var(--card-shadow);
+}
+
+.typeRow {
+  display: flex;
+  gap: 8px;
+}
+
+.typeBtn {
+  flex: 1;
+  padding: 10px 6px;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 12px;
+  background: var(--cream);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.typeBtnActive {
+  background: var(--terracotta);
+  border-color: var(--terracotta);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(196, 113, 74, 0.3);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fieldLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.sideRow {
+  display: flex;
+  gap: 8px;
+}
+
+.sideBtn {
+  flex: 1;
+  padding: 9px 6px;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 12px;
+  background: var(--cream);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.sideBtnActive {
+  background: var(--oat-dark);
+  border-color: var(--text-muted);
+  color: var(--text-primary);
+}
+
+.input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 12px;
+  background: var(--cream);
+  font-size: 15px;
+  color: var(--text-primary);
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: inherit;
+}
+
+.input:focus {
+  border-color: var(--terracotta);
+}
+
+.chipGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  padding: 8px 14px;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 20px;
+  background: var(--cream);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.chipActive {
+  background: var(--terra-light);
+  border-color: var(--terracotta);
+  color: var(--terra-dark);
+}
+
+.chipNoReaction {
+  background: var(--sage-light);
+  border-color: var(--sage);
+  color: var(--sage-dark);
+}
+
+.error {
+  font-size: 13px;
+  color: #c0392b;
+  font-weight: 500;
+  margin: 0;
+}
+
+.formBtns {
+  display: flex;
+  gap: 10px;
+}
+
+.cancelBtn {
+  flex: 1;
+  padding: 13px;
+  background: none;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: var(--btn-shadow);
+}
+
+.saveBtn {
+  flex: 2;
+  padding: 13px;
+  background: var(--terracotta);
+  border: none;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  font-family: inherit;
+  box-shadow: var(--btn-shadow-primary);
+}
+
+.saveBtn:disabled {
+  opacity: 0.6;
+}
+
+.feedList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.listLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.feedRow {
+  background: var(--oat);
+  border-radius: 14px;
+  padding: 13px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--card-shadow);
+}
+
+.feedTime {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.feedLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.emptyHint {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 8px 0;
+  font-weight: 500;
+  margin: 0;
+}

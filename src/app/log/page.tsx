@@ -5,6 +5,7 @@ import { createSpeechRecognition } from '@/lib/speech/recognition';
 import { useRouter } from 'next/navigation';
 import SHAiPresence from '@/components/SHAiPresence';
 import BarcodeScanner from '@/components/BarcodeScanner';
+import FeedsTab from '@/components/FeedsTab';
 import styles from './page.module.css';
 import { saveFoodLog } from '@/lib/log/save';
 import type { LogMessage, ParseApiResponse, MealType, ParsedFoodItem } from '@/lib/log/types';
@@ -161,6 +162,7 @@ function FoodItemCard({ item, multiplier = 1, portionLabel, isWin, onWinToggle }
 export default function LogPage() {
   const router = useRouter();
   const [mealType, setMealType] = useState<MealType>(detectMealType);
+  const [activeTab, setActiveTab] = useState<MealType | 'feeds'>(detectMealType);
   const [messages, setMessages] = useState<LogMessage[]>([
     { id: '0', role: 'assistant', content: "What did your little one have? The more detail the better — ingredients, type, and roughly how much." },
   ]);
@@ -543,7 +545,7 @@ export default function LogPage() {
             <polyline points="12 19 5 12 12 5" />
           </svg>
         </button>
-        {phase === 'chatting' && (
+        {phase === 'chatting' && activeTab !== 'feeds' && (
           <button className={styles.hardDayBtn} onClick={handleHardFoodDay}>
             Hard day
           </button>
@@ -552,16 +554,27 @@ export default function LogPage() {
 
       {/* ── Meal type tabs ── */}
       <div className={styles.tabsRow}>
+        <button
+          className={`${styles.tab} ${activeTab === 'feeds' ? styles.tabActive : ''}`}
+          style={activeTab === 'feeds'
+            ? { background: '#7AA5C4', borderColor: '#7AA5C4' }
+            : { borderColor: '#7AA5C4', color: '#7AA5C4' }
+          }
+          onClick={() => setActiveTab('feeds')}
+        >
+          Feeds
+        </button>
         {MEAL_TYPES.map((type) => (
           <button
             key={type}
-            className={`${styles.tab} ${mealType === type ? styles.tabActive : ''}`}
-            style={mealType === type
+            className={`${styles.tab} ${activeTab === type ? styles.tabActive : ''}`}
+            style={activeTab === type
               ? { background: MEAL_COLOURS[type], borderColor: MEAL_COLOURS[type] }
               : { borderColor: MEAL_COLOURS[type], color: MEAL_COLOURS[type] }
             }
             onClick={() => {
-              if (phase === 'saving' || type === mealType) return;
+              if (phase === 'saving' || activeTab === type) return;
+              setActiveTab(type);
               setMealType(type);
               setParsedData(null);
               setPortionSelection(null);
@@ -578,6 +591,8 @@ export default function LogPage() {
           </button>
         ))}
       </div>
+
+      {activeTab === 'feeds' ? <FeedsTab /> : (<>
 
       {/* ── Meal favourites ── */}
       {phase === 'chatting' && mealFavourites.filter(f => !dismissedFavourites.has(f.name)).length > 0 && (
@@ -909,6 +924,7 @@ export default function LogPage() {
           </div>
         </div>
       )}
+      </>)}
     </div>
   );
 }
