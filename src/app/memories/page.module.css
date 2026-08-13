@@ -653,8 +653,14 @@
   z-index: 200;
 }
 
-.detailSheet {
+.detailSheetWrap {
   position: relative;
+  width: 100%;
+  max-height: 88dvh;
+  border-radius: 24px 24px 0 0;
+}
+
+.detailSheet {
   width: 100%;
   background: var(--cream);
   border-radius: 24px 24px 0 0;

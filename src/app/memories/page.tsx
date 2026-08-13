@@ -833,15 +833,7 @@ export default function JourneyPage() {
         const c = winColour(w.win_type);
         return (
           <div className={styles.detailOverlay} onClick={() => setSelectedWin(null)}>
-            <div className={styles.detailSheet} onClick={(e) => e.stopPropagation()}>
-              {w.photo_url ? (
-                <div className={styles.detailPhotoWrap}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={w.photo_url} alt="Food photo" className={styles.detailPhoto} />
-                </div>
-              ) : (
-                <div className={styles.detailBand} style={{ background: c.bg }} />
-              )}
+            <div className={styles.detailSheetWrap} onClick={(e) => e.stopPropagation()}>
               <div className={styles.detailControls}>
                 <button className={styles.detailClose} onClick={() => { setSelectedWin(null); closeWinEdit(); }} aria-label="Close">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -858,6 +850,15 @@ export default function JourneyPage() {
                   </button>
                 )}
               </div>
+              <div className={styles.detailSheet}>
+              {w.photo_url ? (
+                <div className={styles.detailPhotoWrap}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={w.photo_url} alt="Food photo" className={styles.detailPhoto} />
+                </div>
+              ) : (
+                <div className={styles.detailBand} style={{ background: c.bg }} />
+              )}
 
               {editingWin ? (
                 <div className={styles.detailBody}>
@@ -955,6 +956,7 @@ export default function JourneyPage() {
                   )}
                 </div>
               )}
+              </div>
             </div>
           </div>
         );
