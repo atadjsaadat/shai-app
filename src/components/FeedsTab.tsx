@@ -38,15 +38,15 @@ interface FeedRecord {
 }
 
 const REACTION_OPTIONS = [
-  'Rash or redness',
-  'Hives (raised bumps)',
-  'Swollen lips or mouth',
-  'Itchy skin',
-  'Vomiting',
-  'Loose or runny stool',
-  'Constipation',
-  'Excessive wind',
-  'Unusually unsettled',
+  { label: 'Rash or redness',      bg: '#F5D4DC', color: '#8A3050' },
+  { label: 'Hives (raised bumps)', bg: '#F5D4DC', color: '#8A3050' },
+  { label: 'Swollen lips or mouth',bg: '#F5D4DC', color: '#8A3050' },
+  { label: 'Itchy skin',           bg: '#F5D4DC', color: '#8A3050' },
+  { label: 'Vomiting',             bg: '#FDE8C8', color: '#7A5020' },
+  { label: 'Loose or runny stool', bg: '#FDE8C8', color: '#7A5020' },
+  { label: 'Constipation',         bg: '#FDE8C8', color: '#7A5020' },
+  { label: 'Excessive wind',       bg: '#FDE8C8', color: '#7A5020' },
+  { label: 'Unusually unsettled',  bg: '#EDE5F5', color: '#7A5B94' },
 ];
 
 function nowTimeStr(): string {
@@ -480,21 +480,15 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
             </button>
 
             {showReactions && (
-              <div
-                className={styles.chipGrid}
-                style={{
-                  '--chip-active-bg': `${FEED_COLOURS[feedType]}33`,
-                  '--chip-active-border': FEED_COLOURS[feedType],
-                  '--chip-active-color': FEED_COLOURS[feedType],
-                } as React.CSSProperties}
-              >
-                {REACTION_OPTIONS.map(r => (
+              <div className={styles.chipGrid}>
+                {REACTION_OPTIONS.map(({ label, bg, color }) => (
                   <button
-                    key={r}
-                    className={`${styles.chip}${reactions.includes(r) ? ` ${styles.chipActive}` : ''}`}
-                    onClick={() => toggleReaction(r)}
+                    key={label}
+                    className={`${styles.chip}${reactions.includes(label) ? ` ${styles.chipActive}` : ''}`}
+                    style={!reactions.includes(label) ? { background: bg, color } : undefined}
+                    onClick={() => toggleReaction(label)}
                   >
-                    {r}
+                    {label}
                   </button>
                 ))}
                 <button
@@ -717,21 +711,15 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
           </button>
 
           {showReactions && (
-            <div
-              className={styles.chipGrid}
-              style={{
-                '--chip-active-bg': `${FEED_COLOURS[feedType]}33`,
-                '--chip-active-border': FEED_COLOURS[feedType],
-                '--chip-active-color': FEED_COLOURS[feedType],
-              } as React.CSSProperties}
-            >
-              {REACTION_OPTIONS.map(r => (
+            <div className={styles.chipGrid}>
+              {REACTION_OPTIONS.map(({ label, bg, color }) => (
                 <button
-                  key={r}
-                  className={`${styles.chip}${reactions.includes(r) ? ` ${styles.chipActive}` : ''}`}
-                  onClick={() => toggleReaction(r)}
+                  key={label}
+                  className={`${styles.chip}${reactions.includes(label) ? ` ${styles.chipActive}` : ''}`}
+                  style={!reactions.includes(label) ? { background: bg, color } : undefined}
+                  onClick={() => toggleReaction(label)}
                 >
-                  {r}
+                  {label}
                 </button>
               ))}
               <button
