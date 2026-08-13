@@ -37,11 +37,33 @@ export async function PATCH(request: Request) {
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
   const body = await request.json()
+  const admin = createAdminClient()
+
+  if (typeof body.addAllergy === 'string' && body.addAllergy.trim()) {
+    const allergy = body.addAllergy.trim()
+    const { data: child } = await admin
+      .from('children')
+      .select('id, allergies')
+      .or(`user_id.eq.${user.id},linked_user_ids.cs.{${user.id}}`)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .single()
+    if (!child) return NextResponse.json({ error: 'Child not found' }, { status: 404 })
+    const current: string[] = child.allergies ?? []
+    if (!current.includes(allergy)) {
+      const { error } = await admin
+        .from('children')
+        .update({ allergies: [...current, allergy] })
+        .eq('id', child.id)
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+    return NextResponse.json({ success: true })
+  }
+
   if (!Array.isArray(body.allergies) || !Array.isArray(body.intolerances)) {
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
   }
 
-  const admin = createAdminClient()
   const { error } = await admin
     .from('children')
     .update({

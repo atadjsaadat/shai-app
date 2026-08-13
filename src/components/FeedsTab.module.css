@@ -343,6 +343,25 @@
   color: var(--sage-dark);
 }
 
+.reactionToggle {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 0;
+  text-align: center;
+  width: 100%;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.reactionToggleActive {
+  color: var(--terracotta);
+}
+
 .error {
   font-size: 13px;
   color: #c0392b;

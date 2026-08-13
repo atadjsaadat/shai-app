@@ -724,15 +724,28 @@
   gap: 8px;
 }
 
-.reactionLabel {
+.reactionToggle {
+  background: none;
+  border: none;
+  font-family: var(--font-nunito), sans-serif;
   font-size: 13px;
-  font-weight: 700;
-  color: var(--text-secondary);
-}
-
-.reactionOptional {
   font-weight: 500;
   color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 0;
+  text-align: center;
+  width: 100%;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.reactionToggle:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.reactionToggleActive {
+  color: var(--terracotta);
 }
 
 .reactionChips {
@@ -912,6 +925,117 @@
   font-weight: 700;
   cursor: pointer;
   box-shadow: var(--btn-shadow-primary);
+}
+
+/* ── Allergy prompt ── */
+.allergyPrompt {
+  background: var(--terra-light);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.allergyContextText {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--terra-dark);
+  opacity: 0.7;
+  margin: 0;
+}
+
+.allergyPromptText {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--terra-dark);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.allergyFoodChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.allergyChip {
+  padding: 7px 13px;
+  border: 1.5px solid var(--terracotta);
+  border-radius: 20px;
+  background: var(--cream);
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--terra-dark);
+  cursor: pointer;
+}
+
+.allergyChipActive {
+  background: var(--terracotta);
+  color: #fff;
+}
+
+.allergyBtns {
+  display: flex;
+  gap: 8px;
+}
+
+.allergyConfirmBtn {
+  flex: 2;
+  padding: 11px;
+  background: var(--terracotta);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.allergyConfirmBtn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.allergySkipBtn {
+  flex: 1;
+  padding: 11px;
+  background: none;
+  border: 1.5px solid var(--terracotta);
+  border-radius: 12px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--terra-dark);
+  cursor: pointer;
+}
+
+.allergyHintText {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--terra-dark);
+  opacity: 0.65;
+  margin: 0;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.allergyGuidanceText {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--terra-dark);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.allergyAddedText {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sage-dark);
+  text-align: center;
+  margin: 0;
 }
 
 /* ── Distress — Level 3 sticky 179 card ─────────────────────────────── */

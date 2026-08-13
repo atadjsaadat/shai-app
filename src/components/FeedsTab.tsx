@@ -149,6 +149,7 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
   const [logTime, setLogTime] = useState(nowTimeStr());
   const [reactions, setReactions] = useState<string[]>([]);
   const [noReaction, setNoReaction] = useState(false);
+  const [showReactions, setShowReactions] = useState(false);
 
   useEffect(() => {
     const id = setInterval(() => setTick(t => t + 1), 60_000);
@@ -221,6 +222,7 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
     setLogTime(nowTimeStr());
     setReactions([]);
     setNoReaction(false);
+    setShowReactions(false);
     setSaveError(null);
     setShowForm(true);
   }
@@ -438,6 +440,44 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
                 {saving ? 'Saving…' : 'Save feed'}
               </button>
             </div>
+
+            <button
+              className={`${styles.reactionToggle}${(reactions.length > 0 || noReaction) ? ` ${styles.reactionToggleActive}` : ''}`}
+              onClick={() => setShowReactions(v => !v)}
+            >
+              {reactions.length > 0
+                ? `${reactions.length} reaction${reactions.length !== 1 ? 's' : ''} noted`
+                : noReaction
+                ? 'No reaction noted'
+                : 'Any reaction?'}
+            </button>
+
+            {showReactions && (
+              <div
+                className={styles.chipGrid}
+                style={{
+                  '--chip-active-bg': `${FEED_COLOURS[feedType]}33`,
+                  '--chip-active-border': FEED_COLOURS[feedType],
+                  '--chip-active-color': FEED_COLOURS[feedType],
+                } as React.CSSProperties}
+              >
+                {REACTION_OPTIONS.map(r => (
+                  <button
+                    key={r}
+                    className={`${styles.chip}${reactions.includes(r) ? ` ${styles.chipActive}` : ''}`}
+                    onClick={() => toggleReaction(r)}
+                  >
+                    {r}
+                  </button>
+                ))}
+                <button
+                  className={`${styles.chip}${noReaction ? ` ${styles.chipNoReaction}` : ''}`}
+                  onClick={toggleNoReaction}
+                >
+                  No reaction
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -624,8 +664,32 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
             />
           </div>
 
-          <div className={styles.field}>
-            <p className={styles.fieldLabel}>Any reaction? (optional)</p>
+          {saveError && <p className={styles.error}>{saveError}</p>}
+
+          <div className={styles.formBtns}>
+            <button className={styles.cancelBtn} onClick={() => setShowForm(false)}>Cancel</button>
+            <button
+              className={styles.saveBtn}
+              style={{ background: FEED_COLOURS[feedType], boxShadow: `0 4px 14px ${FEED_COLOURS[feedType]}4D` }}
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? 'Saving…' : 'Save feed'}
+            </button>
+          </div>
+
+          <button
+            className={`${styles.reactionToggle}${(reactions.length > 0 || noReaction) ? ` ${styles.reactionToggleActive}` : ''}`}
+            onClick={() => setShowReactions(v => !v)}
+          >
+            {reactions.length > 0
+              ? `${reactions.length} reaction${reactions.length !== 1 ? 's' : ''} noted`
+              : noReaction
+              ? 'No reaction noted'
+              : 'Any reaction?'}
+          </button>
+
+          {showReactions && (
             <div
               className={styles.chipGrid}
               style={{
@@ -650,21 +714,7 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
                 No reaction
               </button>
             </div>
-          </div>
-
-          {saveError && <p className={styles.error}>{saveError}</p>}
-
-          <div className={styles.formBtns}>
-            <button className={styles.cancelBtn} onClick={() => setShowForm(false)}>Cancel</button>
-            <button
-              className={styles.saveBtn}
-              style={{ background: FEED_COLOURS[feedType], boxShadow: `0 4px 14px ${FEED_COLOURS[feedType]}4D` }}
-              onClick={handleSave}
-              disabled={saving}
-            >
-              {saving ? 'Saving…' : 'Save feed'}
-            </button>
-          </div>
+          )}
         </div>
       )}
 

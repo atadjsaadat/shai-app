@@ -11,6 +11,7 @@ import { saveFoodLog } from '@/lib/log/save';
 import type { LogMessage, ParseApiResponse, MealType, ParsedFoodItem } from '@/lib/log/types';
 import type { MealFavourite } from '@/app/api/log/meal-favourites/route';
 import { STORAGE } from '@/lib/storage/keys';
+import { ALL_ALLERGENS } from '@/lib/allergens';
 
 const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack', 'hydration'];
 
@@ -180,6 +181,13 @@ export default function LogPage() {
   const portionMultiplier = selectedPortion?.value ?? 1;
   const [reactions, setReactions] = useState<string[]>([]);
   const [noReaction, setNoReaction] = useState(false);
+  const [showReactions, setShowReactions] = useState(false);
+  const [allergyPromptActive, setAllergyPromptActive] = useState(false);
+  const [allergyDismissed, setAllergyDismissed] = useState(false);
+  const [allergyContextFoods, setAllergyContextFoods] = useState<string[]>([]);
+  const [selectedAllergyFood, setSelectedAllergyFood] = useState<string | null>(null);
+  const [allergyAdded, setAllergyAdded] = useState(false);
+  const [childName, setChildName] = useState<string | null>(null);
   const [distressLevel, setDistressLevel] = useState<1 | 2 | 3 | null>(null);
   const [isWin, setIsWin] = useState(false);
   const [winNote, setWinNote] = useState('');
@@ -306,7 +314,7 @@ export default function LogPage() {
           localStorage.setItem(STORAGE.ACTIVE_CHILD_ID, json.childId);
           if (json.childName) localStorage.setItem(STORAGE.CHILD_NAME, json.childName);
           const name = json.childName ?? localStorage.getItem(STORAGE.CHILD_NAME);
-          if (name) setMessages([{ id: '0', role: 'assistant', content: `What did ${name} have? The more detail the better — ingredients, type, and roughly how much.` }]);
+          if (name) { setChildName(name); setMessages([{ id: '0', role: 'assistant', content: `What did ${name} have? The more detail the better — ingredients, type, and roughly how much.` }]); }
           setChildValidated(true);
         } else {
           localStorage.removeItem(STORAGE.ACTIVE_CHILD_ID);
@@ -316,7 +324,7 @@ export default function LogPage() {
       })
       .catch(() => {
         const name = localStorage.getItem(STORAGE.CHILD_NAME);
-        if (name) setMessages([{ id: '0', role: 'assistant', content: `What did ${name} have? The more detail the better — ingredients, type, and roughly how much.` }]);
+        if (name) { setChildName(name); setMessages([{ id: '0', role: 'assistant', content: `What did ${name} have? The more detail the better — ingredients, type, and roughly how much.` }]); }
         if (storedId) setChildValidated(true);
         else router.replace('/onboarding');
       });
@@ -361,7 +369,10 @@ export default function LogPage() {
     setNoReaction(v => { if (!v) setReactions([]); return !v; });
   };
 
-  const resetReactions = () => { setReactions([]); setNoReaction(false); setIsWin(false); setWinNote(''); };
+  const resetReactions = () => {
+    setReactions([]); setNoReaction(false); setIsWin(false); setWinNote(''); setShowReactions(false);
+    setAllergyPromptActive(false); setAllergyDismissed(false); setAllergyContextFoods([]); setSelectedAllergyFood(null); setAllergyAdded(false);
+  };
 
   const handleBarcodeDetect = useCallback(async (barcode: string) => {
     setShowScanner(false);
@@ -496,6 +507,11 @@ export default function LogPage() {
     localStorage.removeItem(STORAGE.dailyFeedback(today));
     localStorage.removeItem(STORAGE.weeklySummary(monday));
 
+    if (reactions.includes('Allergic response') && parsedData) {
+      setAllergyPromptActive(true);
+      setAllergyContextFoods(parsedData.foodItems.map(f => f.food_name));
+    }
+
     setPhase('saved');
     loadQuickPicks(mealType);
   };
@@ -511,6 +527,16 @@ export default function LogPage() {
     setMessages([{ id: generateId(), role: 'assistant', content: "No problem — what would you like to change?" }]);
     setTimeout(() => textareaRef.current?.focus(), 80);
   };
+
+  async function handleAddAllergy() {
+    if (!selectedAllergyFood) return;
+    await fetch('/api/children', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ addAllergy: selectedAllergyFood }),
+    });
+    setAllergyAdded(true);
+  }
 
   const handleLogAnother = () => {
     setPortionSelection(null);
@@ -835,31 +861,43 @@ export default function LogPage() {
                 ))}
               </div>
               {parsedData.mealType !== 'hydration' && (
-                <div className={styles.reactionSection}>
-                  <p className={styles.reactionLabel}>
-                    Any reaction? <span className={styles.reactionOptional}>(optional)</span>
-                  </p>
-                  <div className={styles.reactionChips}>
-                    {REACTION_OPTIONS.map(({ label, bg, color }) => (
-                      <button
-                        key={label}
-                        className={`${styles.reactionChip}${reactions.includes(label) ? ` ${styles.reactionChipActive}` : ''}`}
-                        style={!reactions.includes(label) ? { background: bg, color } : undefined}
-                        onClick={() => toggleReaction(label)}
-                        disabled={phase === 'saving'}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                    <button
-                      className={`${styles.reactionChip}${noReaction ? ` ${styles.reactionChipNone}` : ''}`}
-                      onClick={toggleNoReaction}
-                      disabled={phase === 'saving'}
-                    >
-                      No reaction
-                    </button>
-                  </div>
-                </div>
+                <>
+                  <button
+                    className={`${styles.reactionToggle}${(reactions.length > 0 || noReaction) ? ` ${styles.reactionToggleActive}` : ''}`}
+                    onClick={() => setShowReactions(v => !v)}
+                    disabled={phase === 'saving'}
+                  >
+                    {reactions.length > 0
+                      ? `${reactions.length} reaction${reactions.length !== 1 ? 's' : ''} noted`
+                      : noReaction
+                      ? 'No reaction noted'
+                      : 'Any reaction?'}
+                  </button>
+                  {showReactions && (
+                    <div className={styles.reactionSection}>
+                      <div className={styles.reactionChips}>
+                        {REACTION_OPTIONS.map(({ label, bg, color }) => (
+                          <button
+                            key={label}
+                            className={`${styles.reactionChip}${reactions.includes(label) ? ` ${styles.reactionChipActive}` : ''}`}
+                            style={!reactions.includes(label) ? { background: bg, color } : undefined}
+                            onClick={() => toggleReaction(label)}
+                            disabled={phase === 'saving'}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                        <button
+                          className={`${styles.reactionChip}${noReaction ? ` ${styles.reactionChipNone}` : ''}`}
+                          onClick={toggleNoReaction}
+                          disabled={phase === 'saving'}
+                        >
+                          No reaction
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
@@ -915,6 +953,51 @@ export default function LogPage() {
                 : 'All logged!'}
             </p>
           </div>
+
+          {allergyPromptActive && !allergyAdded && (
+            <div className={styles.allergyPrompt}>
+              {!allergyDismissed && (
+                <>
+                  {allergyContextFoods.length > 0 && (
+                    <p className={styles.allergyContextText}>You logged: {allergyContextFoods.join(', ')}</p>
+                  )}
+                  <p className={styles.allergyPromptText}>Which ingredient caused the reaction?</p>
+                  <div className={styles.allergyFoodChips}>
+                    {ALL_ALLERGENS.map(allergen => (
+                      <button
+                        key={allergen}
+                        className={`${styles.allergyChip}${selectedAllergyFood === allergen.toLowerCase() ? ` ${styles.allergyChipActive}` : ''}`}
+                        onClick={() => setSelectedAllergyFood(allergen.toLowerCase())}
+                      >
+                        {allergen}
+                      </button>
+                    ))}
+                  </div>
+                  <div className={styles.allergyBtns}>
+                    <button
+                      className={styles.allergyConfirmBtn}
+                      onClick={handleAddAllergy}
+                      disabled={!selectedAllergyFood}
+                    >
+                      Add to allergy list
+                    </button>
+                    <button className={styles.allergySkipBtn} onClick={() => setAllergyDismissed(true)}>
+                      Not sure yet
+                    </button>
+                  </div>
+                </>
+              )}
+              <p className={styles.allergyHintText}>The reaction is already saved. You can update {childName ? `${childName}'s` : `your little one's`} allergy list in their profile anytime.</p>
+              <p className={styles.allergyGuidanceText}>According to NHS Start4Life guidance, it&apos;s worth avoiding the food until you&apos;ve had a chance to speak to your GP — especially if this is the first time you&apos;ve seen this reaction.</p>
+            </div>
+          )}
+
+          {allergyAdded && (
+            <p className={styles.allergyAddedText}>
+              {selectedAllergyFood} added to {childName ? `${childName}'s` : `your little one's`} allergy list.
+            </p>
+          )}
+
           <div className={styles.savedBtns}>
             <button className={styles.logAnotherBtn} onClick={handleLogAnother}>
               Log another
