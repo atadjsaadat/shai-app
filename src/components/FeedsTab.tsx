@@ -96,7 +96,7 @@ function feedLabel(f: FeedRecord): string {
   return type + detail;
 }
 
-export default function FeedsTab() {
+export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArchive: boolean) => void }) {
   const [feeds, setFeeds] = useState<FeedRecord[]>([]);
   const [childId, setChildId] = useState<string | null>(null);
   const [childName, setChildName] = useState<string | null>(null);
@@ -122,6 +122,12 @@ export default function FeedsTab() {
     const id = setInterval(() => setTick(t => t + 1), 60_000);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    const lastAt = feeds[0]?.logged_at ?? null;
+    const days = lastAt ? Math.floor((Date.now() - new Date(lastAt).getTime()) / 86_400_000) : null;
+    onArchiveChange?.(totalCount > 0 && days !== null && days >= 14);
+  }, [totalCount, feeds, onArchiveChange]);
 
   useEffect(() => {
     const cId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);

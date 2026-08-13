@@ -163,6 +163,7 @@ export default function LogPage() {
   const router = useRouter();
   const [mealType, setMealType] = useState<MealType>(detectMealType);
   const [activeTab, setActiveTab] = useState<MealType | 'feeds'>(detectMealType);
+  const [feedsIsArchive, setFeedsIsArchive] = useState(false);
   const [messages, setMessages] = useState<LogMessage[]>([
     { id: '0', role: 'assistant', content: "What did your little one have? The more detail the better — ingredients, type, and roughly how much." },
   ]);
@@ -562,7 +563,7 @@ export default function LogPage() {
           }
           onClick={() => setActiveTab('feeds')}
         >
-          Feeds
+          {feedsIsArchive ? 'Feeding chapter' : 'Feeds'}
         </button>
         {MEAL_TYPES.map((type) => (
           <button
@@ -592,7 +593,7 @@ export default function LogPage() {
         ))}
       </div>
 
-      {activeTab === 'feeds' ? <FeedsTab /> : (<>
+      {activeTab === 'feeds' ? <FeedsTab onArchiveChange={setFeedsIsArchive} /> : (<>
 
       {/* ── Meal favourites ── */}
       {phase === 'chatting' && mealFavourites.filter(f => !dismissedFavourites.has(f.name)).length > 0 && (
