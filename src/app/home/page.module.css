@@ -297,113 +297,90 @@
   flex-shrink: 0;
 }
 
-/* ── Developmental leap card ── */
-.leapCard {
-  background: var(--terra-light);
+/* ── Coming up card ── */
+.comingUpCard {
+  background: var(--oat);
   border-radius: 20px;
   padding: 18px 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
   box-shadow: var(--card-shadow);
 }
 
-.leapCardTop {
+.comingUpTitle {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 14px;
+}
+
+.comingUpRow {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.leapCardMeta {
-  display: flex;
-  align-items: center;
   gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--oat-dark);
+  text-decoration: none;
+  color: inherit;
 }
 
-.leapCardIcon {
-  font-size: 22px;
+.comingUpRow:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.comingUpIcon {
+  font-size: 20px;
   line-height: 1;
   flex-shrink: 0;
+  margin-top: 1px;
 }
 
-.leapCardTitle {
+.comingUpContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.comingUpRowName {
   font-size: 15px;
-  font-weight: 800;
-  color: var(--terra-dark);
+  font-weight: 700;
+  color: var(--text-primary);
   margin: 0;
-  line-height: 1.2;
 }
 
-.leapCardSub {
-  font-size: 11px;
+.comingUpRowSub {
+  font-size: 12px;
   font-weight: 600;
-  color: var(--terracotta);
+  color: var(--text-muted);
   margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-top: 2px;
 }
 
-.leapDismiss {
+.comingUpRowMessage {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 6px 0 0;
+}
+
+.comingUpChevron {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.comingUpDismiss {
   background: none;
   border: none;
   font-size: 20px;
-  color: var(--terra-dark);
-  opacity: 0.45;
+  color: var(--text-muted);
+  opacity: 0.5;
   cursor: pointer;
   padding: 0;
   line-height: 1;
   flex-shrink: 0;
-}
-
-.leapCardMessage {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--terra-dark);
-  line-height: 1.55;
-  margin: 0;
-}
-
-/* ── Newborn feed shortcut card ── */
-.newbornCard {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: var(--oat);
-  border-radius: 18px;
-  padding: 16px 18px;
-  text-decoration: none;
-  color: var(--text-primary);
-  transition: background 0.15s;
-  box-shadow: var(--card-shadow);
-}
-
-.newbornCard:active { background: var(--oat-dark); }
-
-.newbornCardIcon {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: var(--terra-light);
-  color: var(--terracotta);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.newbornCardText { flex: 1; }
-
-.newbornCardTitle {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.newbornCardSub {
-  font-size: 12px;
-  color: var(--text-muted);
-  font-weight: 500;
-  margin-top: 2px;
 }

@@ -104,6 +104,10 @@ function getMondayDate(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+function formatApptTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
 function formatValue(value: number, key: keyof Totals): string {
   if (key === 'calories_kcal') return String(Math.round(value));
   if (key === 'sodium_mg' || key === 'iron_mg') {
@@ -320,54 +324,51 @@ export default function HomePage() {
         <p className={styles.shaiMessage}>{shaiMessage}</p>
       </div>
 
-      {upcomingLeap && !leapDismissed && (
-        <div className={styles.leapCard}>
-          <div className={styles.leapCardTop}>
-            <div className={styles.leapCardMeta}>
-              <span className={styles.leapCardIcon}>
-                {upcomingLeap.type === 'nhs_milestone' ? '📋' : '✨'}
-              </span>
-              <div>
-                <p className={styles.leapCardTitle}>{upcomingLeap.name}</p>
-                <p className={styles.leapCardSub}>
-                  {upcomingLeap.daysUntil <= 14
-                    ? 'About 2 weeks away'
-                    : 'About 3 weeks away'}
+      {(todayAppointments.length > 0 || (upcomingLeap && !leapDismissed)) && (
+        <div className={styles.comingUpCard}>
+          <p className={styles.comingUpTitle}>Coming up</p>
+
+          {todayAppointments.length > 0 && (
+            <Link href="/appointments" className={styles.comingUpRow}>
+              <span className={styles.comingUpIcon}>📅</span>
+              <div className={styles.comingUpContent}>
+                <p className={styles.comingUpRowName}>
+                  {todayAppointments.length === 1 ? todayAppointments[0].title : `${todayAppointments.length} appointments today`}
+                </p>
+                <p className={styles.comingUpRowSub}>
+                  {todayAppointments.length === 1
+                    ? `Today · ${formatApptTime(todayAppointments[0].scheduled_at)}`
+                    : 'Tap to view details'}
                 </p>
               </div>
-            </div>
-            <button
-              className={styles.leapDismiss}
-              onClick={() => setLeapDismissed(true)}
-              aria-label="Dismiss"
-            >×</button>
-          </div>
-          <p className={styles.leapCardMessage}>
-            {upcomingLeap.shaiMessage.replace(/\[name\]/g, childName ?? 'your little one')}
-          </p>
-        </div>
-      )}
+              <svg className={styles.comingUpChevron} width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8 5l5 5-5 5"/>
+              </svg>
+            </Link>
+          )}
 
-      {todayAppointments.length > 0 && (
-        <Link href="/appointments" className={styles.newbornCard}>
-          <div className={styles.newbornCardIcon}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="3" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-            </svg>
-          </div>
-          <div className={styles.newbornCardText}>
-            <p className={styles.newbornCardTitle}>
-              {todayAppointments.length === 1 ? todayAppointments[0].title : `${todayAppointments.length} appointments today`}
-            </p>
-            <p className={styles.newbornCardSub}>Tap to view details</p>
-          </div>
-          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M8 5l5 5-5 5"/>
-          </svg>
-        </Link>
+          {upcomingLeap && !leapDismissed && (
+            <div className={styles.comingUpRow}>
+              <span className={styles.comingUpIcon}>
+                {upcomingLeap.type === 'nhs_milestone' ? '📋' : '✨'}
+              </span>
+              <div className={styles.comingUpContent}>
+                <p className={styles.comingUpRowName}>{upcomingLeap.name}</p>
+                <p className={styles.comingUpRowSub}>
+                  {upcomingLeap.daysUntil <= 14 ? 'About 2 weeks away' : 'About 3 weeks away'}
+                </p>
+                <p className={styles.comingUpRowMessage}>
+                  {upcomingLeap.shaiMessage.replace(/\[name\]/g, childName ?? 'your little one')}
+                </p>
+              </div>
+              <button
+                className={styles.comingUpDismiss}
+                onClick={() => setLeapDismissed(true)}
+                aria-label="Dismiss"
+              >×</button>
+            </div>
+          )}
+        </div>
       )}
 
       <section>
