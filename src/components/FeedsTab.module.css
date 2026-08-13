@@ -10,14 +10,14 @@
 .logBtn {
   width: 100%;
   padding: 16px;
-  background: var(--terracotta);
+  background: #7AA5C4;
   color: #fff;
   border: none;
   border-radius: 14px;
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: var(--btn-shadow-primary);
+  box-shadow: 0 4px 14px rgba(122, 165, 196, 0.4);
   font-family: inherit;
   transition: opacity 0.15s;
 }

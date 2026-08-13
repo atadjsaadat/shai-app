@@ -31,10 +31,19 @@ interface ScoredDayData extends DayData {
 interface FeedDayData {
   date: string;
   dayLabel: string;
+  breast: number;
+  formula: number;
+  expressed: number;
   count: number;
   totalMl: number;
   totalMinutes: number;
 }
+
+const FEED_TYPE_COLOURS = {
+  breast:   '#C4714A',
+  formula:  '#7AA5C4',
+  expressed:'#7A9E7E',
+} as const;
 
 interface WeekData {
   days: DayData[];
@@ -488,6 +497,9 @@ export default function TrendsPage() {
         const totalMinutes = data.feedDays.reduce((s, d) => s + d.totalMinutes, 0);
         const avgMl = totalMl > 0 ? Math.round(totalMl / withFeeds.length) : null;
         const avgMins = totalMinutes > 0 ? Math.round(totalMinutes / withFeeds.length) : null;
+        const hasBreast   = data.feedDays.some(d => d.breast > 0);
+        const hasFormula  = data.feedDays.some(d => d.formula > 0);
+        const hasExpressed = data.feedDays.some(d => d.expressed > 0);
         return (
           <section>
             <div className={styles.sectionHeader}>
@@ -498,18 +510,29 @@ export default function TrendsPage() {
               <div className={styles.feedsRow}>
                 {data.feedDays.map(d => (
                   <div key={d.date} className={styles.feedsDayCol}>
-                    <span className={`${styles.feedsCount}${d.count === 0 ? ` ${styles.feedsCountEmpty}` : ''}`}>
-                      {d.count > 0 ? d.count : '—'}
-                    </span>
+                    {d.count === 0 ? (
+                      <span className={styles.feedsCountEmpty}>—</span>
+                    ) : (
+                      <div className={styles.feedsTypeStack}>
+                        {d.breast   > 0 && <span className={styles.feedsTypeCount} style={{ color: FEED_TYPE_COLOURS.breast }}>{d.breast}</span>}
+                        {d.formula  > 0 && <span className={styles.feedsTypeCount} style={{ color: FEED_TYPE_COLOURS.formula }}>{d.formula}</span>}
+                        {d.expressed > 0 && <span className={styles.feedsTypeCount} style={{ color: FEED_TYPE_COLOURS.expressed }}>{d.expressed}</span>}
+                      </div>
+                    )}
                     <span className={styles.feedsDayLabel}>{d.dayLabel}</span>
                   </div>
                 ))}
               </div>
-              {(avgMl || avgMins) && (
-                <p className={styles.feedsSummary}>
-                  {avgMl ? `${avgMl}ml avg per feed day` : `${avgMins} min avg per feed day`}
-                </p>
-              )}
+              <div className={styles.feedsLegend}>
+                {hasBreast    && <span className={styles.feedsLegendItem} style={{ color: FEED_TYPE_COLOURS.breast }}>● Breast</span>}
+                {hasFormula   && <span className={styles.feedsLegendItem} style={{ color: FEED_TYPE_COLOURS.formula }}>● Formula</span>}
+                {hasExpressed && <span className={styles.feedsLegendItem} style={{ color: FEED_TYPE_COLOURS.expressed }}>● Expressed</span>}
+                {(avgMl || avgMins) && (
+                  <span className={styles.feedsLegendItem} style={{ color: 'var(--text-muted)', marginLeft: 'auto' }}>
+                    {avgMl ? `${avgMl}ml avg` : `${avgMins} min avg`}
+                  </span>
+                )}
+              </div>
             </div>
           </section>
         );

@@ -72,18 +72,23 @@ export async function GET(request: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const feedDayMap = new Map<string, { count: number; totalMl: number; totalMinutes: number }>()
+  const feedDayMap = new Map<string, { breast: number; formula: number; expressed: number; totalMl: number; totalMinutes: number }>()
   for (const f of (feedLogs ?? [])) {
     const d = toLocalDateStr(new Date(f.logged_at).getTime(), offsetMinutes)
-    if (!feedDayMap.has(d)) feedDayMap.set(d, { count: 0, totalMl: 0, totalMinutes: 0 })
+    if (!feedDayMap.has(d)) feedDayMap.set(d, { breast: 0, formula: 0, expressed: 0, totalMl: 0, totalMinutes: 0 })
     const agg = feedDayMap.get(d)!
-    agg.count++
+    if (f.feed_type === 'breast') agg.breast++
+    else if (f.feed_type === 'formula') agg.formula++
+    else if (f.feed_type === 'expressed') agg.expressed++
     if (f.amount_ml) agg.totalMl += f.amount_ml
     if (f.duration_minutes) agg.totalMinutes += f.duration_minutes
   }
   const feedDays = localDates.map(({ date, dayLabel }) => {
     const agg = feedDayMap.get(date)
-    return { date, dayLabel, count: agg?.count ?? 0, totalMl: agg?.totalMl ?? 0, totalMinutes: agg?.totalMinutes ?? 0 }
+    const breast = agg?.breast ?? 0
+    const formula = agg?.formula ?? 0
+    const expressed = agg?.expressed ?? 0
+    return { date, dayLabel, breast, formula, expressed, count: breast + formula + expressed, totalMl: agg?.totalMl ?? 0, totalMinutes: agg?.totalMinutes ?? 0 }
   })
 
   // Group by local date and sum nutrients

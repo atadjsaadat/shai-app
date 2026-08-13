@@ -671,10 +671,16 @@
   flex: 1;
 }
 
-.feedsCount {
-  font-size: 18px;
+.feedsTypeStack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.feedsTypeCount {
+  font-size: 17px;
   font-weight: 800;
-  color: var(--terracotta);
   line-height: 1;
 }
 
@@ -692,12 +698,15 @@
   letter-spacing: 0.04em;
 }
 
-.feedsSummary {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-align: center;
+.feedsLegend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   border-top: 1px solid var(--oat-dark);
   padding-top: 10px;
-  margin: 0;
+}
+
+.feedsLegendItem {
+  font-size: 11px;
+  font-weight: 700;
 }
