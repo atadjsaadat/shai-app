@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { STORAGE } from '@/lib/storage/keys';
+import { ALL_ALLERGENS, ALLERGY_TRIGGER_REACTIONS } from '@/lib/allergens';
 import SHAiPresence from '@/components/SHAiPresence';
 import styles from './FeedsTab.module.css';
 
@@ -151,6 +152,11 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
   const [reactions, setReactions] = useState<string[]>([]);
   const [noReaction, setNoReaction] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
+  const [allergyPromptActive, setAllergyPromptActive] = useState(false);
+  const [allergyDismissed, setAllergyDismissed] = useState(false);
+  const [allergyContextFeed, setAllergyContextFeed] = useState<string | null>(null);
+  const [selectedAllergyFood, setSelectedAllergyFood] = useState<string | null>(null);
+  const [allergyAdded, setAllergyAdded] = useState(false);
 
   useEffect(() => {
     const id = setInterval(() => setTick(t => t + 1), 60_000);
@@ -224,6 +230,10 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
     setReactions([]);
     setNoReaction(false);
     setShowReactions(false);
+    setAllergyPromptActive(false);
+    setAllergyDismissed(false);
+    setSelectedAllergyFood(null);
+    setAllergyAdded(false);
     setSaveError(null);
     setShowForm(true);
   }
@@ -275,8 +285,24 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
       setAlarm(null);
     }
 
+    if (ALLERGY_TRIGGER_REACTIONS.some(r => reactions.includes(r))) {
+      const label = feedType === 'breast' ? 'Breast feed' : feedType === 'formula' ? 'Formula feed' : 'Expressed milk feed';
+      setAllergyContextFeed(label);
+      setAllergyPromptActive(true);
+    }
+
     setShowForm(false);
     setSaving(false);
+  }
+
+  async function handleAddAllergy() {
+    if (!selectedAllergyFood) return;
+    await fetch('/api/children', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ addAllergy: selectedAllergyFood }),
+    });
+    setAllergyAdded(true);
   }
 
   const lastFeed = feeds[0] ?? null;
@@ -717,6 +743,49 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
             </div>
           )}
         </div>
+      )}
+
+      {allergyPromptActive && !allergyAdded && (
+        <div className={styles.allergyCard}>
+          {!allergyDismissed && (
+            <>
+              {allergyContextFeed && (
+                <p className={styles.allergyContextText}>You logged: {allergyContextFeed}</p>
+              )}
+              <p className={styles.allergyPromptText}>Which ingredient caused the reaction?</p>
+              <div className={styles.chipGrid}>
+                {ALL_ALLERGENS.map(allergen => (
+                  <button
+                    key={allergen}
+                    className={`${styles.chip}${selectedAllergyFood === allergen.toLowerCase() ? ` ${styles.chipActive}` : ''}`}
+                    onClick={() => setSelectedAllergyFood(allergen.toLowerCase())}
+                  >
+                    {allergen}
+                  </button>
+                ))}
+              </div>
+              <div className={styles.formBtns}>
+                <button
+                  className={styles.saveBtn}
+                  style={{ background: 'var(--terracotta)', boxShadow: '0 4px 14px rgba(196,113,74,0.3)' }}
+                  onClick={handleAddAllergy}
+                  disabled={!selectedAllergyFood}
+                >
+                  Add to allergy list
+                </button>
+                <button className={styles.cancelBtn} onClick={() => setAllergyDismissed(true)}>
+                  Not sure yet
+                </button>
+              </div>
+            </>
+          )}
+          <p className={styles.allergyHintText}>The reaction is already saved. You can update {childName ? `${childName}'s` : `your little one's`} allergy list in their profile anytime.</p>
+          <p className={styles.allergyGuidanceText}>According to NHS Start4Life guidance, it&apos;s worth avoiding the food until you&apos;ve had a chance to speak to your GP — especially if this is the first time you&apos;ve seen this reaction.</p>
+        </div>
+      )}
+
+      {allergyAdded && (
+        <p className={styles.allergyAddedText}>{selectedAllergyFood} added to {childName ? `${childName}'s` : `your little one's`} allergy list.</p>
       )}
 
       {todayFeeds.length > 0 && (

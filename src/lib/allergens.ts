@@ -14,3 +14,5 @@ export const ALLERGY_GROUPS = [
 export const COMMON_INTOLERANCES = ['Lactose', 'Gluten', 'Fructose', 'Histamine', 'Sulphites'];
 
 export const ALL_ALLERGENS = ALLERGY_GROUPS.flatMap(g => g.items);
+
+export const ALLERGY_TRIGGER_REACTIONS = ['Rash or redness', 'Hives (raised bumps)', 'Swollen lips or mouth'];

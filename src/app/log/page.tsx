@@ -11,7 +11,7 @@ import { saveFoodLog } from '@/lib/log/save';
 import type { LogMessage, ParseApiResponse, MealType, ParsedFoodItem } from '@/lib/log/types';
 import type { MealFavourite } from '@/app/api/log/meal-favourites/route';
 import { STORAGE } from '@/lib/storage/keys';
-import { ALL_ALLERGENS } from '@/lib/allergens';
+import { ALL_ALLERGENS, ALLERGY_TRIGGER_REACTIONS } from '@/lib/allergens';
 
 const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack', 'hydration'];
 
@@ -28,7 +28,6 @@ const REACTION_OPTIONS = [
   { label: 'Refused the food',       bg: '#EDE5F5', color: '#7A5B94' },
 ]
 
-const ALLERGY_TRIGGER_REACTIONS = ['Rash or redness', 'Hives (raised bumps)', 'Swollen lips or mouth']
 
 const PORTION_OPTIONS = [
   { id: '1tsp',     label: '1 tsp',        value: 0.04, bg: '#EDE5F5', color: '#7A5B94' },

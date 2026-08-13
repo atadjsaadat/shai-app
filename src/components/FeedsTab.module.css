@@ -343,6 +343,56 @@
   color: var(--sage-dark);
 }
 
+.allergyCard {
+  background: var(--terra-light);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--card-shadow);
+}
+
+.allergyContextText {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--terra-dark);
+  opacity: 0.7;
+  margin: 0;
+}
+
+.allergyPromptText {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--terra-dark);
+  margin: 0;
+}
+
+.allergyHintText {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--terra-dark);
+  opacity: 0.65;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.allergyGuidanceText {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--terra-dark);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.allergyAddedText {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sage-dark);
+  text-align: center;
+  margin: 0;
+}
+
 .reactionToggle {
   background: none;
   border: none;
