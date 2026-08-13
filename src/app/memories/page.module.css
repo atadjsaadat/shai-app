@@ -722,7 +722,7 @@
 }
 
 .detailBody {
-  padding: 20px 20px 40px;
+  padding: 20px 20px 56px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -969,6 +969,7 @@
   color: var(--text-muted);
   cursor: pointer;
   text-align: left;
+  box-shadow: var(--card-shadow);
 }
 
 .previewWrap {
@@ -1014,6 +1015,7 @@
   outline: none;
   width: 100%;
   box-sizing: border-box;
+  box-shadow: var(--card-shadow);
 }
 
 .winInput::placeholder { color: var(--text-muted); }
@@ -1032,6 +1034,7 @@
   box-sizing: border-box;
   resize: none;
   line-height: 1.5;
+  box-shadow: var(--card-shadow);
 }
 
 .winTextarea::placeholder { color: var(--text-muted); }
@@ -1068,7 +1071,7 @@
   font-weight: 700;
   cursor: pointer;
   transition: opacity 0.2s;
-  box-shadow: var(--card-shadow);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
 }
 
 .winSaveBtn:disabled {
