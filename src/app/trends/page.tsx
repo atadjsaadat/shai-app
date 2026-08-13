@@ -202,6 +202,20 @@ const WIN_TYPE_LABELS: Record<string, string> = {
   other:       'Something else',
 };
 
+const WIN_EMOJIS: Record<string, string> = {
+  new_food:    '🌟',
+  ate_well:    '😊',
+  new_texture: '✨',
+  self_fed:    '🙌',
+  family_meal: '🍽️',
+  other:       '🎉',
+};
+
+function formatWinDate(iso: string): string {
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
 const WIN_CHIP_COLOURS: Record<string, { bg: string; text: string }> = {
   new_food:    { bg: '#D4E8D6', text: '#4A7050' },
   ate_well:    { bg: '#F0D5C8', text: '#9E5035' },
@@ -730,13 +744,15 @@ export default function TrendsPage() {
               return (
                 <div key={w.id} className={styles.winChip} style={{ background: c.bg, color: c.text }}>
                   <div className={styles.winChipHeader}>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none" style={{ opacity: 0.6, flexShrink: 0 }}>
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                    </svg>
+                    <span className={styles.winChipEmoji}>{WIN_EMOJIS[w.win_type] ?? '🎉'}</span>
                     <span className={styles.winChipLabel}>{WIN_TYPE_LABELS[w.win_type] ?? w.win_type}</span>
+                    {w.logged_at && <span className={styles.winChipDate}>{formatWinDate(w.logged_at)}</span>}
                   </div>
                   {w.food_involved && (
-                    <span className={styles.winChipFood}>{w.food_involved}</span>
+                    <p className={styles.winChipFood}>{w.food_involved}</p>
+                  )}
+                  {w.parent_note && (
+                    <p className={styles.winChipNote}>&ldquo;{w.parent_note}&rdquo;</p>
                   )}
                 </div>
               );
