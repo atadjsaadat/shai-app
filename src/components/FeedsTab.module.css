@@ -107,10 +107,41 @@
   border-top: 1px solid var(--oat-dark);
 }
 
+.reminderLabelRow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
 .reminderLabel {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
+}
+
+.bellIcon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transform-origin: top center;
+}
+
+@keyframes bellRing {
+  0%   { transform: rotate(0deg); }
+  10%  { transform: rotate(14deg); }
+  20%  { transform: rotate(-12deg); }
+  30%  { transform: rotate(10deg); }
+  40%  { transform: rotate(-8deg); }
+  50%  { transform: rotate(6deg); }
+  60%  { transform: rotate(-4deg); }
+  70%  { transform: rotate(2deg); }
+  80%  { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.bellRing {
+  color: var(--terracotta);
+  animation: bellRing 1.4s ease-in-out infinite;
+  animation-delay: 1s;
 }
 
 .toggle {
