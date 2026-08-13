@@ -7,6 +7,12 @@ import styles from './FeedsTab.module.css';
 type FeedType = 'breast' | 'formula' | 'expressed';
 type BreastSide = 'left' | 'right' | 'both';
 
+const FEED_COLOURS: Record<FeedType, string> = {
+  breast:   '#C4714A',
+  formula:  '#7AA5C4',
+  expressed:'#7A9E7E',
+};
+
 interface FeedRecord {
   id: string;
   logged_at: string;
@@ -149,6 +155,7 @@ export default function FeedsTab() {
               <button
                 key={t}
                 className={`${styles.typeBtn}${feedType === t ? ` ${styles.typeBtnActive}` : ''}`}
+                style={feedType === t ? { background: FEED_COLOURS[t], borderColor: FEED_COLOURS[t], boxShadow: `0 3px 10px ${FEED_COLOURS[t]}4D` } : undefined}
                 onClick={() => setFeedType(t)}
               >
                 {t[0].toUpperCase() + t.slice(1)}
@@ -239,7 +246,12 @@ export default function FeedsTab() {
 
           <div className={styles.formBtns}>
             <button className={styles.cancelBtn} onClick={() => setShowForm(false)}>Cancel</button>
-            <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
+            <button
+              className={styles.saveBtn}
+              style={{ background: FEED_COLOURS[feedType], boxShadow: `0 4px 14px ${FEED_COLOURS[feedType]}4D` }}
+              onClick={handleSave}
+              disabled={saving}
+            >
               {saving ? 'Saving…' : 'Save feed'}
             </button>
           </div>

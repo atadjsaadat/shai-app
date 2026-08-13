@@ -52,10 +52,7 @@
 }
 
 .typeBtnActive {
-  background: var(--terracotta);
-  border-color: var(--terracotta);
   color: #fff;
-  box-shadow: 0 3px 10px rgba(196, 113, 74, 0.3);
 }
 
 .field {
