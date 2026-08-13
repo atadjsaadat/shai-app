@@ -172,6 +172,7 @@ export default function FeedsTab() {
                     <button
                       key={s}
                       className={`${styles.sideBtn}${breastSide === s ? ` ${styles.sideBtnActive}` : ''}`}
+                      style={breastSide === s ? { background: FEED_COLOURS.breast, borderColor: FEED_COLOURS.breast, color: '#fff' } : undefined}
                       onClick={() => setBreastSide(s)}
                     >
                       {s[0].toUpperCase() + s.slice(1)}

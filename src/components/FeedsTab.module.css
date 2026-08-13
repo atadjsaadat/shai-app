@@ -90,9 +90,7 @@
 }
 
 .sideBtnActive {
-  background: var(--oat-dark);
-  border-color: var(--text-muted);
-  color: var(--text-primary);
+  color: #fff;
 }
 
 .input {
