@@ -914,8 +914,8 @@ export default function JourneyPage() {
                     value={editNote}
                     onChange={(e) => setEditNote(e.target.value)}
                   />
-                  <div className={styles.formBtns}>
-                    <button className={styles.cancelBtn} onClick={closeWinEdit}>Cancel</button>
+                  <div className={styles.winFormBtns}>
+                    <button className={styles.winCancelBtn} onClick={closeWinEdit}>Cancel</button>
                     <button className={styles.winSaveBtn} onClick={handleWinEditSave} disabled={savingWinEdit}>
                       {savingWinEdit ? 'Saving…' : 'Save'}
                     </button>
