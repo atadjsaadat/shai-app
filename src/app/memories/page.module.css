@@ -66,31 +66,22 @@
 /* ── Segmented control ────────────────────────────────── */
 .segControl {
   display: flex;
-  background: var(--oat);
-  border-radius: 12px;
-  padding: 3px;
-  gap: 3px;
+  gap: 10px;
 }
 
 .seg {
   flex: 1;
-  padding: 8px 0;
+  padding: 12px 0;
   border: none;
-  border-radius: 10px;
-  background: transparent;
+  border-radius: 14px;
+  background: var(--oat);
   font-family: var(--font-nunito), sans-serif;
   font-size: 14px;
   font-weight: 700;
   color: var(--text-muted);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-  box-shadow: var(--btn-shadow);
-}
-
-.segActive {
-  background: var(--cream);
-  color: var(--text-primary);
-  box-shadow: var(--btn-shadow);
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  box-shadow: var(--card-shadow);
 }
 
 .segActiveJournal {
