@@ -191,6 +191,7 @@ export default function FeedsTab() {
                   min="1"
                   max="60"
                   className={styles.input}
+                  style={{ '--input-focus-color': FEED_COLOURS[feedType] } as React.CSSProperties}
                   placeholder="e.g. 15"
                   value={duration}
                   onChange={e => setDuration(e.target.value)}
@@ -208,6 +209,7 @@ export default function FeedsTab() {
                 min="0"
                 step="5"
                 className={styles.input}
+                style={{ '--input-focus-color': FEED_COLOURS[feedType] } as React.CSSProperties}
                 placeholder="e.g. 90"
                 value={amount}
                 onChange={e => setAmount(e.target.value)}
@@ -220,6 +222,7 @@ export default function FeedsTab() {
             <input
               type="time"
               className={styles.input}
+              style={{ '--input-focus-color': FEED_COLOURS[feedType] } as React.CSSProperties}
               value={logTime}
               onChange={e => setLogTime(e.target.value)}
             />
@@ -227,7 +230,14 @@ export default function FeedsTab() {
 
           <div className={styles.field}>
             <p className={styles.fieldLabel}>Any reaction? (optional)</p>
-            <div className={styles.chipGrid}>
+            <div
+              className={styles.chipGrid}
+              style={{
+                '--chip-active-bg': `${FEED_COLOURS[feedType]}33`,
+                '--chip-active-border': FEED_COLOURS[feedType],
+                '--chip-active-color': FEED_COLOURS[feedType],
+              } as React.CSSProperties}
+            >
               {REACTION_OPTIONS.map(r => (
                 <button
                   key={r}
