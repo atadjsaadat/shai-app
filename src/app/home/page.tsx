@@ -6,6 +6,7 @@ import SHAiPresence from '@/components/SHAiPresence';
 import BottomNav from '@/components/BottomNav';
 import styles from './page.module.css';
 import type { NutrientLine } from '@/lib/log/types';
+import { STORAGE } from '@/lib/storage/keys';
 
 interface Totals {
   calories_kcal: number;
@@ -55,6 +56,24 @@ const MEAL_LABELS: Record<string, string> = {
   lunch: 'Lunch',
   dinner: 'Dinner',
   snack: 'Snack',
+};
+
+const WIN_LABELS: Record<string, string> = {
+  new_food:    'New food tried',
+  ate_well:    'Ate really well',
+  new_texture: 'New texture',
+  self_fed:    'Ate independently',
+  family_meal: 'Family meal',
+  other:       'Something else',
+};
+
+const WIN_COLOURS: Record<string, { bg: string; text: string }> = {
+  new_food:    { bg: '#D4E8D6', text: '#4A7050' },
+  ate_well:    { bg: '#F0D5C8', text: '#9E5035' },
+  new_texture: { bg: '#D0E4F0', text: '#2E5C7A' },
+  self_fed:    { bg: '#F5E8C0', text: '#7A5810' },
+  family_meal: { bg: '#E4D8F0', text: '#5A3F80' },
+  other:       { bg: '#F0D8E4', text: '#803050' },
 };
 
 function getGreeting(): string {
@@ -154,10 +173,13 @@ export default function HomePage() {
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [showFeedbackSection, setShowFeedbackSection] = useState(false);
 
+  const [todayAppointments, setTodayAppointments] = useState<{ title: string; scheduled_at: string }[]>([]);
+  const [weeklyWins, setWeeklyWins] = useState<Array<{ id: string; win_type: string; food_involved: string | null }>>([]);
+
   useEffect(() => {
     async function init() {
-      let childId = localStorage.getItem('shai_active_child_id');
-      let name = localStorage.getItem('shai_child_name');
+      let childId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
+      let name = localStorage.getItem(STORAGE.CHILD_NAME);
 
       if (!childId) {
         try {
@@ -165,8 +187,8 @@ export default function HomePage() {
           if (json.childId) {
             childId = json.childId;
             name = json.childName ?? null;
-            localStorage.setItem('shai_active_child_id', childId!);
-            if (name) localStorage.setItem('shai_child_name', name);
+            localStorage.setItem(STORAGE.ACTIVE_CHILD_ID, childId!);
+            if (name) localStorage.setItem(STORAGE.CHILD_NAME, name);
           }
         } catch { /* silently fall through — childId stays null */ }
       }
@@ -188,7 +210,7 @@ export default function HomePage() {
         .catch(() => {})
         .finally(() => setLoading(false));
 
-      const weeklyCacheKey = `shai_weekly_summary_${getMondayDate()}`;
+      const weeklyCacheKey = STORAGE.weeklySummary(getMondayDate());
       const cachedWeekly = localStorage.getItem(weeklyCacheKey);
       if (cachedWeekly) {
         setWeeklySummary(cachedWeekly);
@@ -206,10 +228,24 @@ export default function HomePage() {
           .finally(() => setWeeklyLoading(false));
       }
 
+      fetch('/api/appointments')
+        .then((r) => r.json())
+        .then((data) => {
+          setTodayAppointments(
+            (data.appointments ?? []).filter((a: { scheduled_at: string }) => a.scheduled_at.startsWith(localDate()))
+          );
+        })
+        .catch(() => {});
+
+      fetch(`/api/wins?since=${getMondayDate()}T00:00:00`)
+        .then((r) => r.json())
+        .then((data) => { if (data.wins) setWeeklyWins(data.wins); })
+        .catch(() => {});
+
       const hour = new Date().getHours();
       if (hour >= 18 && hour < 22) {
         setShowFeedbackSection(true);
-        const cachedFeedback = localStorage.getItem(`shai_daily_feedback_${today}`);
+        const cachedFeedback = localStorage.getItem(STORAGE.dailyFeedback(today));
         if (cachedFeedback) setDailyFeedback(cachedFeedback);
       }
     }
@@ -229,7 +265,7 @@ export default function HomePage() {
       const data = await res.json();
       if (data.feedback) {
         setDailyFeedback(data.feedback);
-        localStorage.setItem(`shai_daily_feedback_${localDate()}`, data.feedback);
+        localStorage.setItem(STORAGE.dailyFeedback(localDate()), data.feedback);
       }
     } catch {
       // silently fail
@@ -295,23 +331,27 @@ export default function HomePage() {
         </Link>
       )}
 
-      <Link href="/appointments" className={styles.newbornCard}>
-        <div className={styles.newbornCardIcon}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="4" width="18" height="18" rx="3" />
-            <line x1="16" y1="2" x2="16" y2="6" />
-            <line x1="8" y1="2" x2="8" y2="6" />
-            <line x1="3" y1="10" x2="21" y2="10" />
+      {todayAppointments.length > 0 && (
+        <Link href="/appointments" className={styles.newbornCard}>
+          <div className={styles.newbornCardIcon}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="3" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+          </div>
+          <div className={styles.newbornCardText}>
+            <p className={styles.newbornCardTitle}>
+              {todayAppointments.length === 1 ? todayAppointments[0].title : `${todayAppointments.length} appointments today`}
+            </p>
+            <p className={styles.newbornCardSub}>Tap to view details</p>
+          </div>
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M8 5l5 5-5 5"/>
           </svg>
-        </div>
-        <div className={styles.newbornCardText}>
-          <p className={styles.newbornCardTitle}>Appointments</p>
-          <p className={styles.newbornCardSub}>GP, health visitor, dentist &amp; more</p>
-        </div>
-        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M8 5l5 5-5 5"/>
-        </svg>
-      </Link>
+        </Link>
+      )}
 
       <section>
         <div className={styles.sectionHeader}>
@@ -346,6 +386,28 @@ export default function HomePage() {
                 ))}
               </div>
             ))}
+          </div>
+        </section>
+      )}
+
+      {weeklyWins.length > 0 && (
+        <section>
+          <p className={styles.sectionLabel}>This week&apos;s wins</p>
+          <div className={styles.winsRow}>
+            {weeklyWins.map((w) => {
+              const c = WIN_COLOURS[w.win_type] ?? WIN_COLOURS['other'];
+              return (
+                <div key={w.id} className={styles.winChip} style={{ background: c.bg, color: c.text }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none" style={{ opacity: 0.6, flexShrink: 0 }}>
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                  </svg>
+                  <span className={styles.winChipLabel}>{WIN_LABELS[w.win_type] ?? w.win_type}</span>
+                  {w.food_involved && (
+                    <span className={styles.winChipFood}>{w.food_involved}</span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
