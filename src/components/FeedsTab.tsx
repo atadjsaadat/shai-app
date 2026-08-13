@@ -155,7 +155,7 @@ export default function FeedsTab() {
               <button
                 key={t}
                 className={`${styles.typeBtn}${feedType === t ? ` ${styles.typeBtnActive}` : ''}`}
-                style={feedType === t ? { background: FEED_COLOURS[t], borderColor: FEED_COLOURS[t], boxShadow: `0 3px 10px ${FEED_COLOURS[t]}4D` } : undefined}
+                style={feedType === t ? { borderColor: FEED_COLOURS[t], color: FEED_COLOURS[t] } : undefined}
                 onClick={() => setFeedType(t)}
               >
                 {t[0].toUpperCase() + t.slice(1)}
@@ -172,7 +172,7 @@ export default function FeedsTab() {
                     <button
                       key={s}
                       className={`${styles.sideBtn}${breastSide === s ? ` ${styles.sideBtnActive}` : ''}`}
-                      style={breastSide === s ? { background: FEED_COLOURS.breast, borderColor: FEED_COLOURS.breast, color: '#fff' } : undefined}
+                      style={breastSide === s ? { borderColor: FEED_COLOURS.breast, color: FEED_COLOURS.breast } : undefined}
                       onClick={() => setBreastSide(s)}
                     >
                       {s[0].toUpperCase() + s.slice(1)}

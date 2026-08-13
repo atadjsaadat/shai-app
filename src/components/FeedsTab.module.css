@@ -52,7 +52,8 @@
 }
 
 .typeBtnActive {
-  color: #fff;
+  border-width: 2px;
+  font-weight: 800;
 }
 
 .field {
@@ -90,7 +91,8 @@
 }
 
 .sideBtnActive {
-  color: #fff;
+  border-width: 2px;
+  font-weight: 800;
 }
 
 .input {
