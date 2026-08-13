@@ -297,6 +297,74 @@
   flex-shrink: 0;
 }
 
+/* ── Developmental leap card ── */
+.leapCard {
+  background: var(--terra-light);
+  border-radius: 20px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--card-shadow);
+}
+
+.leapCardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.leapCardMeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.leapCardIcon {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.leapCardTitle {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--terra-dark);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.leapCardSub {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--terracotta);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+.leapDismiss {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--terra-dark);
+  opacity: 0.45;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.leapCardMessage {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--terra-dark);
+  line-height: 1.55;
+  margin: 0;
+}
+
 /* ── Newborn feed shortcut card ── */
 .newbornCard {
   display: flex;

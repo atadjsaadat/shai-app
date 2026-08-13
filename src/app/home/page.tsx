@@ -175,6 +175,8 @@ export default function HomePage() {
 
   const [todayAppointments, setTodayAppointments] = useState<{ title: string; scheduled_at: string }[]>([]);
   const [weeklyWins, setWeeklyWins] = useState<Array<{ id: string; win_type: string; food_involved: string | null }>>([]);
+  const [upcomingLeap, setUpcomingLeap] = useState<{ id: number; name: string; type: string; shaiMessage: string; daysUntil: number } | null>(null);
+  const [leapDismissed, setLeapDismissed] = useState(false);
 
   useEffect(() => {
     async function init() {
@@ -240,6 +242,11 @@ export default function HomePage() {
       fetch(`/api/wins?since=${getMondayDate()}T00:00:00`)
         .then((r) => r.json())
         .then((data) => { if (data.wins) setWeeklyWins(data.wins); })
+        .catch(() => {});
+
+      fetch(`/api/home/leaps?childId=${childId}`)
+        .then((r) => r.json())
+        .then((data) => { if (data.event) setUpcomingLeap(data.event); })
         .catch(() => {});
 
       const hour = new Date().getHours();
@@ -312,6 +319,34 @@ export default function HomePage() {
         <SHAiPresence expression={hasMeals ? 'celebrating' : 'default'} size={44} />
         <p className={styles.shaiMessage}>{shaiMessage}</p>
       </div>
+
+      {upcomingLeap && !leapDismissed && (
+        <div className={styles.leapCard}>
+          <div className={styles.leapCardTop}>
+            <div className={styles.leapCardMeta}>
+              <span className={styles.leapCardIcon}>
+                {upcomingLeap.type === 'nhs_milestone' ? '📋' : '✨'}
+              </span>
+              <div>
+                <p className={styles.leapCardTitle}>{upcomingLeap.name}</p>
+                <p className={styles.leapCardSub}>
+                  {upcomingLeap.daysUntil <= 14
+                    ? 'About 2 weeks away'
+                    : 'About 3 weeks away'}
+                </p>
+              </div>
+            </div>
+            <button
+              className={styles.leapDismiss}
+              onClick={() => setLeapDismissed(true)}
+              aria-label="Dismiss"
+            >×</button>
+          </div>
+          <p className={styles.leapCardMessage}>
+            {upcomingLeap.shaiMessage.replace(/\[name\]/g, childName ?? 'your little one')}
+          </p>
+        </div>
+      )}
 
       {todayAppointments.length > 0 && (
         <Link href="/appointments" className={styles.newbornCard}>
