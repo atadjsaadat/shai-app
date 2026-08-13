@@ -155,7 +155,7 @@ export default function FeedsTab() {
               <button
                 key={t}
                 className={`${styles.typeBtn}${feedType === t ? ` ${styles.typeBtnActive}` : ''}`}
-                style={feedType === t ? { borderColor: FEED_COLOURS[t], color: FEED_COLOURS[t] } : undefined}
+                style={feedType === t ? { background: FEED_COLOURS[t], borderColor: FEED_COLOURS[t], color: '#fff', boxShadow: `0 3px 10px ${FEED_COLOURS[t]}4D` } : undefined}
                 onClick={() => setFeedType(t)}
               >
                 {t[0].toUpperCase() + t.slice(1)}

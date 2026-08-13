@@ -52,8 +52,7 @@
 }
 
 .typeBtnActive {
-  border-width: 2px;
-  font-weight: 800;
+  color: #fff;
 }
 
 .field {
