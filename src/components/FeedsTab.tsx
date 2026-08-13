@@ -37,13 +37,14 @@ interface FeedRecord {
 }
 
 const REACTION_OPTIONS = [
-  'Rash / redness',
-  'Allergic response',
-  'Constipation',
-  'Soft stool',
+  'Rash or redness',
+  'Hives (raised bumps)',
+  'Swollen lips or mouth',
+  'Itchy skin',
   'Vomiting',
+  'Loose or runny stool',
+  'Constipation',
   'Excessive wind',
-  'Hives / swelling',
   'Unusually unsettled',
 ];
 

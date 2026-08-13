@@ -16,15 +16,19 @@ import { ALL_ALLERGENS } from '@/lib/allergens';
 const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack', 'hydration'];
 
 const REACTION_OPTIONS = [
-  { label: 'Rash / redness',      bg: '#F5D4DC', color: '#8A3050' },
-  { label: 'Allergic response',   bg: '#F5D4DC', color: '#8A3050' },
-  { label: 'Hives / swelling',    bg: '#F5D4DC', color: '#8A3050' },
-  { label: 'Constipation',        bg: '#FDE8C8', color: '#7A5020' },
-  { label: 'Soft stool',          bg: '#FDE8C8', color: '#7A5020' },
-  { label: 'Vomiting',            bg: '#FDE8C8', color: '#7A5020' },
-  { label: 'Excessive wind',      bg: '#FDE8C8', color: '#7A5020' },
-  { label: 'Unusually unsettled', bg: '#EDE5F5', color: '#7A5B94' },
+  { label: 'Rash or redness',       bg: '#F5D4DC', color: '#8A3050' },
+  { label: 'Hives (raised bumps)',   bg: '#F5D4DC', color: '#8A3050' },
+  { label: 'Swollen lips or mouth',  bg: '#F5D4DC', color: '#8A3050' },
+  { label: 'Itchy skin',             bg: '#F5D4DC', color: '#8A3050' },
+  { label: 'Vomiting',               bg: '#FDE8C8', color: '#7A5020' },
+  { label: 'Loose or runny stool',   bg: '#FDE8C8', color: '#7A5020' },
+  { label: 'Constipation',           bg: '#FDE8C8', color: '#7A5020' },
+  { label: 'Excessive wind',         bg: '#FDE8C8', color: '#7A5020' },
+  { label: 'Unusually unsettled',    bg: '#EDE5F5', color: '#7A5B94' },
+  { label: 'Refused the food',       bg: '#EDE5F5', color: '#7A5B94' },
 ]
+
+const ALLERGY_TRIGGER_REACTIONS = ['Rash or redness', 'Hives (raised bumps)', 'Swollen lips or mouth']
 
 const PORTION_OPTIONS = [
   { id: '1tsp',     label: '1 tsp',        value: 0.04, bg: '#EDE5F5', color: '#7A5B94' },
@@ -507,7 +511,7 @@ export default function LogPage() {
     localStorage.removeItem(STORAGE.dailyFeedback(today));
     localStorage.removeItem(STORAGE.weeklySummary(monday));
 
-    if (reactions.includes('Allergic response') && parsedData) {
+    if (ALLERGY_TRIGGER_REACTIONS.some(r => reactions.includes(r)) && parsedData) {
       setAllergyPromptActive(true);
       setAllergyContextFoods(parsedData.foodItems.map(f => f.food_name));
     }
