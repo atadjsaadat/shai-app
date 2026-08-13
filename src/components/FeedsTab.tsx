@@ -43,6 +43,7 @@ const REACTION_OPTIONS = [
   { label: 'Swollen lips or mouth',bg: '#F5D4DC', color: '#8A3050' },
   { label: 'Itchy skin',           bg: '#F5D4DC', color: '#8A3050' },
   { label: 'Vomiting',             bg: '#FDE8C8', color: '#7A5020' },
+  { label: 'Reflux',               bg: '#FDE8C8', color: '#7A5020' },
   { label: 'Loose or runny stool', bg: '#FDE8C8', color: '#7A5020' },
   { label: 'Constipation',         bg: '#FDE8C8', color: '#7A5020' },
   { label: 'Excessive wind',       bg: '#FDE8C8', color: '#7A5020' },
