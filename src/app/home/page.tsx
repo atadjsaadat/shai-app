@@ -316,7 +316,9 @@ export default function HomePage() {
           </p>
           <p className={styles.date}>{date}</p>
         </div>
-        <Link href="/profile" className={styles.avatar} aria-label="Profile" />
+        <Link href="/profile" className={styles.avatar} aria-label="Profile">
+          {childName?.charAt(0).toUpperCase()}
+        </Link>
       </header>
 
       <div className={styles.shaiCard}>
@@ -374,15 +376,18 @@ export default function HomePage() {
       <section>
         <div className={styles.sectionHeader}>
           <p className={styles.sectionLabel}>Today&apos;s nutrition</p>
-          <p className={styles.rdaHint}>bar fills to RDA</p>
+          <p className={styles.rdaHint}>bar fills to daily target</p>
         </div>
         <div className={styles.nutrientCard}>
-          <NutrientCol nutrients={LEFT_NUTRIENTS}  totals={totals} targets={targets} loading={loading} />
-          <NutrientCol nutrients={RIGHT_NUTRIENTS} totals={totals} targets={targets} loading={loading} />
+          {!loading && !hasMeals ? (
+            <p className={styles.nutrientEmpty}>Add a meal below to see today&apos;s nutrition fill up.</p>
+          ) : (
+            <>
+              <NutrientCol nutrients={LEFT_NUTRIENTS}  totals={totals} targets={targets} loading={loading} />
+              <NutrientCol nutrients={RIGHT_NUTRIENTS} totals={totals} targets={targets} loading={loading} />
+            </>
+          )}
         </div>
-        {!hasMeals && !loading && (
-          <p className={styles.emptyHint}>Log a meal to start tracking</p>
-        )}
       </section>
 
       {hasMeals && (
