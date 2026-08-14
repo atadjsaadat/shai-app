@@ -529,8 +529,8 @@
 }
 
 .winChipEmoji {
-  font-size: 20px;
-  line-height: 1;
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
 }
 
