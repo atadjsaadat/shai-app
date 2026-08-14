@@ -410,9 +410,14 @@ export default function HomePage() {
 
       {weeklyWins.length > 0 && (
         <section>
-          <p className={styles.sectionLabel}>This week&apos;s wins</p>
+          <div className={styles.sectionHeader}>
+            <p className={styles.sectionLabel}>This week&apos;s wins</p>
+            {weeklyWins.length > 3 && (
+              <Link href="/wins" className={styles.seeAllLink}>See all {weeklyWins.length} →</Link>
+            )}
+          </div>
           <div className={styles.winsRow}>
-            {weeklyWins.map((w) => {
+            {weeklyWins.slice(0, 3).map((w) => {
               const c = WIN_COLOURS[w.win_type] ?? WIN_COLOURS['other'];
               return (
                 <div key={w.id} className={styles.winChip} style={{ background: c.bg, color: c.text }}>
@@ -437,7 +442,11 @@ export default function HomePage() {
             {weeklyLoading ? (
               <p className={styles.insightLoading}>Getting your week summary…</p>
             ) : (
-              <p className={styles.insightText}>{weeklySummary}</p>
+              <ul className={styles.insightList}>
+                {weeklySummary!.split('\n').filter(l => l.trim()).map((line, i) => (
+                  <li key={i} className={styles.insightListItem}>{line.replace(/^-\s*/, '')}</li>
+                ))}
+              </ul>
             )}
           </div>
         </section>

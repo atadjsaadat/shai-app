@@ -240,6 +240,27 @@
   line-height: 1.65;
 }
 
+.insightList {
+  margin: 0;
+  padding: 0 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.insightListItem {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.seeAllLink {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--terracotta);
+  text-decoration: none;
+}
+
 .insightLoading {
   font-size: 13px;
   color: var(--text-muted);

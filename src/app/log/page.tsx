@@ -601,7 +601,7 @@ export default function LogPage() {
             className={`${styles.tab} ${activeTab === type ? styles.tabActive : ''}`}
             style={activeTab === type
               ? { background: MEAL_COLOURS[type], borderColor: MEAL_COLOURS[type] }
-              : { borderColor: MEAL_COLOURS[type], color: MEAL_COLOURS[type] }
+              : { borderColor: MEAL_COLOURS[type] }
             }
             onClick={() => {
               if (phase === 'saving' || activeTab === type) return;
