@@ -13,6 +13,7 @@ interface Props {
   type: 'weight' | 'height' | 'head'
   points: DataPoint[]
   lineColor: string
+  xMax?: number  // defaults to 60
 }
 
 const PAD = { top: 16, right: 36, bottom: 32, left: 40 }
@@ -33,17 +34,17 @@ function yRange(type: 'weight' | 'height' | 'head'): [number, number] {
   return [28, 58]
 }
 
-function xPx(months: number): number {
-  return PAD.left + (months / 60) * PW
+function xPx(months: number, xMax: number): number {
+  return PAD.left + (months / xMax) * PW
 }
 
 function yPx(value: number, yMin: number, yMax: number): number {
   return PAD.top + PH - ((value - yMin) / (yMax - yMin)) * PH
 }
 
-function toPath(curve: Array<{ age: number; value: number }>, yMin: number, yMax: number): string {
+function toPath(curve: Array<{ age: number; value: number }>, yMin: number, yMax: number, xMax: number): string {
   if (curve.length === 0) return ''
-  const pts = curve.map(p => [xPx(p.age), yPx(p.value, yMin, yMax)] as [number, number])
+  const pts = curve.map(p => [xPx(p.age, xMax), yPx(p.value, yMin, yMax)] as [number, number])
   let d = `M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`
   for (let i = 1; i < pts.length; i++) {
     const [x0, y0] = pts[i - 1]
@@ -54,16 +55,16 @@ function toPath(curve: Array<{ age: number; value: number }>, yMin: number, yMax
   return d
 }
 
-// Builds a closed band path: top curve left→right, bottom curve right→left
 function toBandPath(
   top: Array<{ age: number; value: number }>,
   bottom: Array<{ age: number; value: number }>,
   yMin: number,
   yMax: number,
+  xMax: number,
 ): string {
   if (top.length === 0 || bottom.length === 0) return ''
-  const topPts  = top.map(p => [xPx(p.age), yPx(p.value, yMin, yMax)] as [number, number])
-  const botPts  = [...bottom].reverse().map(p => [xPx(p.age), yPx(p.value, yMin, yMax)] as [number, number])
+  const topPts = top.map(p => [xPx(p.age, xMax), yPx(p.value, yMin, yMax)] as [number, number])
+  const botPts = [...bottom].reverse().map(p => [xPx(p.age, xMax), yPx(p.value, yMin, yMax)] as [number, number])
 
   let d = `M ${topPts[0][0].toFixed(1)} ${topPts[0][1].toFixed(1)}`
   for (let i = 1; i < topPts.length; i++) {
@@ -83,22 +84,23 @@ function toBandPath(
   return d
 }
 
-export default function GrowthChart({ sex, type, points, lineColor }: Props) {
+export default function GrowthChart({ sex, type, points, lineColor, xMax = 60 }: Props) {
   const [yMin, yMax] = yRange(type)
   const unit   = type === 'weight' ? 'kg' : 'cm'
   const yTicks = type === 'weight' ? [0, 5, 10, 15, 20, 25] : type === 'height' ? [40, 60, 80, 100, 120] : [30, 35, 40, 45, 50, 55]
-  const xTicks = [0, 12, 24, 36, 48, 60]
+  const xTicks = Array.from({ length: xMax / 12 + 1 }, (_, i) => i * 12)
   const { fill: bandFill, median: medianStroke } = getBandColor(type)
 
-  const p3   = getRefCurve(sex, type, 'p3')
-  const p97  = getRefCurve(sex, type, 'p97')
-  const p50  = getRefCurve(sex, type, 'p50')
+  const p3  = getRefCurve(sex, type, 'p3').filter(p => p.age <= xMax)
+  const p97 = getRefCurve(sex, type, 'p97').filter(p => p.age <= xMax)
+  const p50 = getRefCurve(sex, type, 'p50').filter(p => p.age <= xMax)
+
   const last97 = p97[p97.length - 1]
   const last3  = p3[p3.length - 1]
   const last50 = p50[p50.length - 1]
 
-  const bandPath  = toBandPath(p97, p3, yMin, yMax)
-  const childPath = points.length > 1 ? toPath(points, yMin, yMax) : null
+  const bandPath  = toBandPath(p97, p3, yMin, yMax, xMax)
+  const childPath = points.length > 1 ? toPath(points, yMin, yMax, xMax) : null
   const lastPoint = points.length > 0 ? points[points.length - 1] : null
 
   return (
@@ -127,7 +129,7 @@ export default function GrowthChart({ sex, type, points, lineColor }: Props) {
 
         {/* 50th percentile — single soft reference line */}
         <path
-          d={toPath(p50, yMin, yMax)}
+          d={toPath(p50, yMin, yMax, xMax)}
           fill="none"
           stroke={medianStroke}
           strokeWidth="1.2"
@@ -137,13 +139,13 @@ export default function GrowthChart({ sex, type, points, lineColor }: Props) {
 
         {/* End labels */}
         {last97 && (
-          <text x={xPx(last97.age) + 4} y={yPx(last97.value, yMin, yMax) + 3} fontSize="7" fill={bandFill} fillOpacity="0.6" fontWeight="600">97th</text>
+          <text x={xPx(last97.age, xMax) + 4} y={yPx(last97.value, yMin, yMax) + 3} fontSize="7" fill={bandFill} fillOpacity="0.6" fontWeight="600">97th</text>
         )}
         {last50 && (
-          <text x={xPx(last50.age) + 4} y={yPx(last50.value, yMin, yMax) + 3} fontSize="7" fill={medianStroke} fillOpacity="0.5" fontWeight="600">50th</text>
+          <text x={xPx(last50.age, xMax) + 4} y={yPx(last50.value, yMin, yMax) + 3} fontSize="7" fill={medianStroke} fillOpacity="0.5" fontWeight="600">50th</text>
         )}
         {last3 && (
-          <text x={xPx(last3.age) + 4} y={yPx(last3.value, yMin, yMax) + 3} fontSize="7" fill={bandFill} fillOpacity="0.6" fontWeight="600">3rd</text>
+          <text x={xPx(last3.age, xMax) + 4} y={yPx(last3.value, yMin, yMax) + 3} fontSize="7" fill={bandFill} fillOpacity="0.6" fontWeight="600">3rd</text>
         )}
 
         {/* Child's connecting line */}
@@ -162,7 +164,7 @@ export default function GrowthChart({ sex, type, points, lineColor }: Props) {
         {points.map((p, i) => (
           <circle
             key={i}
-            cx={xPx(p.age)}
+            cx={xPx(p.age, xMax)}
             cy={yPx(p.value, yMin, yMax)}
             r="4"
             style={{ fill: lineColor }}
@@ -175,14 +177,14 @@ export default function GrowthChart({ sex, type, points, lineColor }: Props) {
         {lastPoint && (
           <>
             <circle
-              cx={xPx(lastPoint.age)}
+              cx={xPx(lastPoint.age, xMax)}
               cy={yPx(lastPoint.value, yMin, yMax)}
               r="9"
               style={{ fill: lineColor }}
               opacity="0.12"
             />
             <circle
-              cx={xPx(lastPoint.age)}
+              cx={xPx(lastPoint.age, xMax)}
               cy={yPx(lastPoint.value, yMin, yMax)}
               r="5"
               style={{ fill: lineColor }}
@@ -210,7 +212,7 @@ export default function GrowthChart({ sex, type, points, lineColor }: Props) {
         {xTicks.map(v => (
           <text
             key={v}
-            x={xPx(v)}
+            x={xPx(v, xMax)}
             y={H - 8}
             textAnchor="middle"
             fontSize="8.5"

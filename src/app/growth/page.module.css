@@ -111,6 +111,26 @@
   margin-top: -4px;
 }
 
+/* ── SHAi message ── */
+.shaiCard {
+  background: var(--oat);
+  border-radius: 18px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  box-shadow: var(--card-shadow);
+}
+
+.shaiMessage {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  flex: 1;
+  padding-top: 2px;
+}
+
 /* ── Tabs ── */
 .tabs {
   display: flex;

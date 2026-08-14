@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import BottomNav from '@/components/BottomNav'
 import GrowthChart from '@/components/GrowthChart'
+import SHAiPresence from '@/components/SHAiPresence'
 import { STORAGE } from '@/lib/storage/keys'
 import styles from './page.module.css'
 
@@ -75,6 +76,30 @@ function ageInMonths(dob: string, at: string): number {
   return (measured.getFullYear() - birth.getFullYear()) * 12
     + (measured.getMonth() - birth.getMonth())
     + (measured.getDate() < birth.getDate() ? -1 : 0)
+}
+
+function getShaiMessage(
+  childName: string,
+  sex: string,
+  weightPct: number | null,
+  heightPct: number | null,
+  bmiPct: number | null,
+): string | null {
+  const his = sex === 'female' ? 'her' : 'his'
+  const they = sex === 'female' ? 'she' : 'he'
+  const parts: string[] = []
+
+  if (heightPct !== null && heightPct <= 5) {
+    parts.push(`${childName}'s height is following ${his} own steady path — some children are naturally more compact, and consistency over time is what matters most.`)
+  }
+
+  if (bmiPct !== null && bmiPct >= 85) {
+    parts.push(`It might be worth a quick chat with your GP about ${childName}'s weight at the next check-up, just to put your mind at rest.`)
+  } else if (weightPct !== null && weightPct <= 5) {
+    parts.push(`${childName}'s weight is following ${his} own pace — if ${they}'s full of energy and the curve is steady, that's what matters most.`)
+  }
+
+  return parts.length > 0 ? parts.join(' ') : null
 }
 
 export default function GrowthPage() {
@@ -182,6 +207,19 @@ export default function GrowthPage() {
 
   const tabAccent = tab === 'weight' ? WEIGHT_COLOR : tab === 'height' ? HEIGHT_COLOR : HEAD_COLOR
 
+  const currentAgeMonths = dob ? ageInMonths(dob, new Date().toISOString()) : null
+  const chartXMax = currentAgeMonths != null
+    ? Math.min(60, Math.max(24, Math.ceil((currentAgeMonths + 6) / 12) * 12))
+    : 60
+
+  const shaiMessage = latest ? getShaiMessage(
+    childName ?? 'your little one',
+    sex,
+    latest.who_weight_percentile,
+    latest.who_height_percentile,
+    latest.who_bmi_percentile,
+  ) : null
+
   const tabActiveStyle = (t: Tab): React.CSSProperties | undefined => {
     const c = t === 'weight' ? WEIGHT_COLOR : t === 'height' ? HEIGHT_COLOR : HEAD_COLOR
     return tab === t ? { background: hexToRgba(c, 0.12), color: c, borderColor: c } : undefined
@@ -258,6 +296,13 @@ export default function GrowthPage() {
         <p className={styles.lastMeasured}>Last recorded {timeAgo(latest.recorded_at)}</p>
       )}
 
+      {!loading && shaiMessage && (
+        <div className={styles.shaiCard}>
+          <SHAiPresence expression="default" size={36} />
+          <p className={styles.shaiMessage}>{shaiMessage}</p>
+        </div>
+      )}
+
       {/* Tab selector */}
       <div className={styles.tabs}>
         <button
@@ -291,7 +336,7 @@ export default function GrowthPage() {
         {loading ? (
           <div className={styles.chartPlaceholder}>Loading…</div>
         ) : (
-          <GrowthChart sex={sex} type={tab} points={chartPoints} lineColor={tabAccent} />
+          <GrowthChart sex={sex} type={tab} points={chartPoints} lineColor={tabAccent} xMax={chartXMax} />
         )}
       </div>
 
