@@ -376,7 +376,7 @@ export default function HomePage() {
       <section>
         <div className={styles.sectionHeader}>
           <p className={styles.sectionLabel}>Today&apos;s nutrition</p>
-          <p className={styles.rdaHint}>bar fills to daily target</p>
+          {hasMeals && <p className={styles.rdaHint}>bar fills to daily target</p>}
         </div>
         <div className={styles.nutrientCard}>
           {!loading && !hasMeals ? (
@@ -441,7 +441,7 @@ export default function HomePage() {
       )}
 
       {(weeklyLoading || weeklySummary) && (
-        <section>
+        <section style={{ marginTop: 8 }}>
           <p className={styles.sectionLabel}>This week at a glance</p>
           <div className={styles.insightCard}>
             {weeklyLoading ? (
