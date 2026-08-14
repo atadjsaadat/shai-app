@@ -531,7 +531,6 @@
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
   white-space: nowrap;
-  box-shadow: var(--btn-shadow);
 }
 
 /* ── Wins tab: empty + grid ───────────────────────────── */

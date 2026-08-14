@@ -298,13 +298,14 @@
 
 .exampleChip {
   align-self: flex-start;
-  background: transparent;
-  border: 1.5px solid;
+  background: var(--oat);
+  border: 1.5px solid var(--oat-dark);
   border-radius: 20px;
-  padding: 6px 14px;
+  padding: 6px 13px;
   font-family: var(--font-nunito), sans-serif;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
@@ -755,17 +756,16 @@
 }
 
 .reactionChip {
-  padding: 7px 13px;
+  padding: 6px 13px;
   border: 1.5px solid var(--oat-dark);
   border-radius: 20px;
-  background: var(--cream);
+  background: var(--oat);
   font-family: var(--font-nunito), sans-serif;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-secondary);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
-  box-shadow: var(--btn-shadow);
 }
 
 .reactionChip:disabled {
