@@ -324,7 +324,7 @@ export default function HomePage() {
       </header>
 
       <div className={styles.shaiCard}>
-        <SHAiBrand expression={hasMeals ? 'celebrating' : 'default'} width={60} />
+        <SHAiBrand expression={hasMeals ? 'celebrating' : 'default'} width={88} />
         <p className={styles.shaiMessage}>{shaiMessage}</p>
       </div>
 

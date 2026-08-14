@@ -3,25 +3,14 @@ import SHAiPresence from './SHAiPresence';
 
 type Expression = 'default' | 'thinking' | 'celebrating';
 
-// i-dot proportions from SVG path data (viewBox 744×423)
+// Derived from SVG path data — i-dot centre as fraction of tight 744×423 viewBox
 const DOT_X = 703.134 / 744;
 const DOT_Y = 110.739 / 423;
 const ASPECT = 423 / 744;
-// orbSize = width * (45.671875/744). At width < 98px, orbSize < 6px — too small for SHAiPresence rings to render.
-// Below that threshold, use the full static SVG (which has the correctly-proportioned dot already in it).
-const ANIMATED_MIN_WIDTH = 98;
 
 export default function SHAiBrand({ expression = 'default', width = 200 }: { expression?: Expression; width?: number }) {
   const height = Math.round(width * ASPECT);
-
-  if (width < ANIMATED_MIN_WIDTH) {
-    // Static: full SVG asset already has the i-dot at correct proportions
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src="/SHAi Word SVG.svg" alt="SHAi" width={width} height={height} style={{ display: 'block' }} />
-    );
-  }
-
+  // i-dot exact dimensions from SVG path data: right(62.015625) − left(16.34375) = 45.671875 of 744
   const orbSize = width * (45.671875 / 744);
   const dotX = width * DOT_X;
   const dotY = height * DOT_Y;

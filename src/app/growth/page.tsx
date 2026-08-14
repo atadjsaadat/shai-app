@@ -300,7 +300,7 @@ export default function GrowthPage() {
 
       {!loading && shaiMessage && (
         <div className={styles.shaiCard}>
-          <SHAiBrand expression="default" width={60} />
+          <SHAiBrand expression="default" width={88} />
           <p className={styles.shaiMessage}>{shaiMessage}</p>
         </div>
       )}
