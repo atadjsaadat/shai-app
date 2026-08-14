@@ -423,6 +423,7 @@ export default function WinsPage() {
         </div>
       )}
 
+      <p className={styles.aiDisclosure}>SHAi is an AI assistant.</p>
       <BottomNav />
     </div>
   );

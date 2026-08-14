@@ -655,7 +655,7 @@ export default function LogPage() {
         </div>
       )}
 
-      <p className={styles.aiDisclosure}>SHAI is an AI assistant.</p>
+      <p className={styles.aiDisclosure}>SHAi is an AI assistant.</p>
 
       {/* ── Messages ── */}
       <div className={`${styles.messages} ${messages.length <= 1 && phase === 'chatting' ? styles.messagesStart : ''} ${phase === 'chatting' ? styles.messagesChat : ''} ${distressLevel === 3 ? styles.messagesWithCard : ''}`}>

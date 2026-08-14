@@ -476,6 +476,7 @@ export default function HomePage() {
         </section>
       )}
 
+      <p className={styles.aiDisclosure}>SHAi is an AI assistant.</p>
       <BottomNav />
     </div>
   );

@@ -471,6 +471,7 @@ export default function GrowthPage() {
         </section>
       )}
 
+      <p className={styles.aiDisclosure}>SHAi is an AI assistant.</p>
       <BottomNav />
     </div>
   )

@@ -166,7 +166,7 @@ export default function OnboardingPage() {
     <div className={styles.screen}>
       <div className={styles.header}>
         <SHAiPresence expression={isThinking ? 'thinking' : 'default'} size={52} />
-        <span className={styles.aiDisclosure}>SHAI is an AI assistant.</span>
+        <span className={styles.aiDisclosure}>SHAi is an AI assistant.</span>
       </div>
 
       <div className={styles.messages}>
