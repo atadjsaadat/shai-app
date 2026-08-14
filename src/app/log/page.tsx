@@ -528,6 +528,8 @@ export default function LogPage() {
     setAddSideInput('');
     setFromFavourite(false);
     setPhase('chatting');
+    const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
+    if (lastUserMsg) setInput(lastUserMsg.content);
     setMessages([{ id: generateId(), role: 'assistant', content: "No problem — what would you like to change?" }]);
     setTimeout(() => textareaRef.current?.focus(), 80);
   };
