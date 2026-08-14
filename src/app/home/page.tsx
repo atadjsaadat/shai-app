@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import SHAiPresence from '@/components/SHAiPresence';
+import SHAiBrand from '@/components/SHAiBrand';
 import BottomNav from '@/components/BottomNav';
 import styles from './page.module.css';
 import type { NutrientLine } from '@/lib/log/types';
@@ -322,7 +323,7 @@ export default function HomePage() {
       </header>
 
       <div className={styles.shaiCard}>
-        <SHAiPresence expression={hasMeals ? 'celebrating' : 'default'} size={44} />
+        <SHAiBrand expression={hasMeals ? 'celebrating' : 'default'} width={88} />
         <p className={styles.shaiMessage}>{shaiMessage}</p>
       </div>
 
@@ -426,8 +427,8 @@ export default function HomePage() {
               const c = WIN_COLOURS[w.win_type] ?? WIN_COLOURS['other'];
               return (
                 <div key={w.id} className={styles.winChip} style={{ background: c.bg, color: c.text }}>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none" style={{ opacity: 0.6, flexShrink: 0 }}>
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" className={styles.winStar} style={{ flexShrink: 0 }}>
+                    <polygon points="12,2 15.82,6.74 21.51,8.91 18.18,14.01 17.88,20.09 12,18.5 6.12,20.09 5.82,14.01 2.49,8.91 8.18,6.74"/>
                   </svg>
                   <span className={styles.winChipLabel}>{WIN_LABELS[w.win_type] ?? w.win_type}</span>
                   {w.food_involved && (

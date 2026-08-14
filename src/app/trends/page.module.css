@@ -528,6 +528,15 @@
   gap: 10px;
 }
 
+@keyframes starPulse {
+  0%, 100% { transform: scale(1); opacity: 0.75; }
+  50% { transform: scale(1.25); opacity: 1; }
+}
+
+.winStar {
+  animation: starPulse 2.4s ease-in-out infinite;
+}
+
 .winChipEmoji {
   display: flex;
   align-items: center;

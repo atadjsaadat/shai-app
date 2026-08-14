@@ -55,8 +55,9 @@
   border-radius: 20px;
   padding: 16px 18px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   box-shadow: var(--card-shadow);
 }
 
@@ -64,7 +65,7 @@
   font-size: 14px;
   color: var(--text-secondary);
   line-height: 1.6;
-  flex: 1;
+  text-align: center;
 }
 
 /* ── Section header ──────────────────────────────────── */
@@ -310,6 +311,15 @@
   flex-direction: column;
   gap: 8px;
   margin-top: 10px;
+}
+
+@keyframes starPulse {
+  0%, 100% { transform: scale(1); opacity: 0.75; }
+  50% { transform: scale(1.25); opacity: 1; }
+}
+
+.winStar {
+  animation: starPulse 2.4s ease-in-out infinite;
 }
 
 .winChip {

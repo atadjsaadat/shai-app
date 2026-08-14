@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import BottomNav from '@/components/BottomNav';
 import SHAiPresence from '@/components/SHAiPresence';
+import SHAiBrand from '@/components/SHAiBrand';
 import Confetti from '@/components/Confetti';
 import { compressPhoto } from '@/lib/storage/upload';
 import { formatAge, formatDateLong, formatDateMedium } from '@/lib/format/dates';
@@ -205,7 +206,7 @@ export default function WinsPage() {
       <div className={styles.content}>
         {loading ? null : filteredWins.length === 0 ? (
           <div className={styles.empty}>
-            <SHAiPresence expression="default" size={48} />
+            <SHAiBrand expression="default" width={120} />
             <p className={styles.emptyText}>
               {wins.length === 0
                 ? 'Every little win belongs here — first tastes, brave bites, happy meals. Tap + to add your first one.'

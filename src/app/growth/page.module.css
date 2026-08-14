@@ -117,8 +117,9 @@
   border-radius: 18px;
   padding: 14px 16px;
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   box-shadow: var(--card-shadow);
 }
 
@@ -127,8 +128,7 @@
   font-weight: 500;
   color: var(--text-secondary);
   line-height: 1.5;
-  flex: 1;
-  padding-top: 2px;
+  text-align: center;
 }
 
 /* ── Tabs ── */

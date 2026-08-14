@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import BottomNav from '@/components/BottomNav'
 import GrowthChart from '@/components/GrowthChart'
 import SHAiPresence from '@/components/SHAiPresence'
+import SHAiBrand from '@/components/SHAiBrand'
 import { STORAGE } from '@/lib/storage/keys'
 import styles from './page.module.css'
 
@@ -298,7 +299,7 @@ export default function GrowthPage() {
 
       {!loading && shaiMessage && (
         <div className={styles.shaiCard}>
-          <SHAiPresence expression="default" size={36} />
+          <SHAiBrand expression="default" width={88} />
           <p className={styles.shaiMessage}>{shaiMessage}</p>
         </div>
       )}
