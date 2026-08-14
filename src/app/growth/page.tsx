@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import BottomNav from '@/components/BottomNav'
 import GrowthChart from '@/components/GrowthChart'
-import HeadCircumferenceView from '@/components/HeadCircumferenceView'
 import { STORAGE } from '@/lib/storage/keys'
 import styles from './page.module.css'
 
@@ -291,17 +290,6 @@ export default function GrowthPage() {
       >
         {loading ? (
           <div className={styles.chartPlaceholder}>Loading…</div>
-        ) : tab === 'head' ? (
-          <HeadCircumferenceView
-            headCm={latest?.head_cm ?? null}
-            percentile={latest?.who_head_percentile ?? null}
-            gain={headGain}
-            prevDateLabel={prev ? formatShortDate(prev.recorded_at) : null}
-            headPoints={dob ? records
-              .filter(r => r.head_cm != null)
-              .map(r => ({ age: Math.max(0, ageInMonths(dob, r.recorded_at)), value: r.head_cm as number }))
-              : []}
-          />
         ) : (
           <GrowthChart sex={sex} type={tab} points={chartPoints} lineColor={tabAccent} />
         )}
