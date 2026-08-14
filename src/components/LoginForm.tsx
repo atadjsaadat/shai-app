@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from './SignupForm.module.css'
+import AIDisclosure from './AIDisclosure'
 
 export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
   const router = useRouter()
@@ -95,7 +96,7 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
         {loading ? 'Signing in…' : 'Sign in'}
       </button>
 
-      <p className={styles.disclosure}>SHAi is an AI assistant.</p>
+      <AIDisclosure />
     </div>
   )
 }

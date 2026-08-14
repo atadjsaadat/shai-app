@@ -13,6 +13,7 @@ import type { LogMessage, ParseApiResponse, MealType, ParsedFoodItem } from '@/l
 import type { MealFavourite } from '@/app/api/log/meal-favourites/route';
 import { STORAGE } from '@/lib/storage/keys';
 import { ALL_ALLERGENS, ALLERGY_TRIGGER_REACTIONS } from '@/lib/allergens';
+import AIDisclosure from '@/components/AIDisclosure';
 
 const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack', 'hydration'];
 
@@ -660,7 +661,7 @@ export default function LogPage() {
         </div>
       )}
 
-      <p className={styles.aiDisclosure}>SHAi is an AI assistant.</p>
+      <AIDisclosure />
 
       {/* ── Messages ── */}
       <div className={`${styles.messages} ${messages.length <= 1 && phase === 'chatting' ? styles.messagesStart : ''} ${phase === 'chatting' ? styles.messagesChat : ''} ${distressLevel === 3 ? styles.messagesWithCard : ''}`}>

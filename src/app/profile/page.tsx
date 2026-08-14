@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import BottomNav from '@/components/BottomNav';
 import { ALLERGY_GROUPS, COMMON_INTOLERANCES } from '@/lib/allergens';
 import styles from './page.module.css';
+import AIDisclosure from '@/components/AIDisclosure';
 
 interface ProfileData {
   tier: 'free' | 'premium' | 'clinical';
@@ -744,7 +745,7 @@ export default function ProfilePage() {
           </div>
           </section>
 
-          <p className={styles.disclosure}>SHAi is an AI assistant.</p>
+          <AIDisclosure />
         </>
       )}
 

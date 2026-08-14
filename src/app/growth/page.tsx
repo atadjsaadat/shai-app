@@ -7,6 +7,7 @@ import GrowthChart from '@/components/GrowthChart'
 import SHAiPresence from '@/components/SHAiPresence'
 import SHAiBrand from '@/components/SHAiBrand'
 import { STORAGE } from '@/lib/storage/keys'
+import AIDisclosure from '@/components/AIDisclosure'
 import styles from './page.module.css'
 
 interface GrowthRecord {
@@ -299,7 +300,7 @@ export default function GrowthPage() {
 
       {!loading && shaiMessage && (
         <div className={styles.shaiCard}>
-          <SHAiBrand expression="default" width={88} />
+          <SHAiBrand expression="default" width={60} />
           <p className={styles.shaiMessage}>{shaiMessage}</p>
         </div>
       )}
@@ -472,7 +473,7 @@ export default function GrowthPage() {
         </section>
       )}
 
-      <p className={styles.aiDisclosure}>SHAi is an AI assistant.</p>
+      <AIDisclosure />
       <BottomNav />
     </div>
   )

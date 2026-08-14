@@ -7,6 +7,7 @@ import styles from './page.module.css';
 import type { Message, OnboardingData, ChatApiResponse } from '@/lib/onboarding/types';
 import { createChildProfile, updateResearchConsent } from '@/lib/children/create';
 import { STORAGE } from '@/lib/storage/keys';
+import AIDisclosure from '@/components/AIDisclosure';
 
 const OPENING_MESSAGE =
   "Hi! I'm SHAI — so lovely to meet you. I'm here to help you get everything set up for your little one. First things first — what's your baby's name?";
@@ -166,7 +167,7 @@ export default function OnboardingPage() {
     <div className={styles.screen}>
       <div className={styles.header}>
         <SHAiPresence expression={isThinking ? 'thinking' : 'default'} size={52} />
-        <span className={styles.aiDisclosure}>SHAi is an AI assistant.</span>
+        <AIDisclosure />
       </div>
 
       <div className={styles.messages}>

@@ -8,6 +8,7 @@ import BottomNav from '@/components/BottomNav';
 import styles from './page.module.css';
 import type { NutrientLine } from '@/lib/log/types';
 import { STORAGE } from '@/lib/storage/keys';
+import AIDisclosure from '@/components/AIDisclosure';
 
 interface Totals {
   calories_kcal: number;
@@ -323,7 +324,7 @@ export default function HomePage() {
       </header>
 
       <div className={styles.shaiCard}>
-        <SHAiBrand expression={hasMeals ? 'celebrating' : 'default'} width={88} />
+        <SHAiBrand expression={hasMeals ? 'celebrating' : 'default'} width={60} />
         <p className={styles.shaiMessage}>{shaiMessage}</p>
       </div>
 
@@ -477,7 +478,7 @@ export default function HomePage() {
         </section>
       )}
 
-      <p className={styles.aiDisclosure}>SHAi is an AI assistant.</p>
+      <AIDisclosure />
       <BottomNav />
     </div>
   );

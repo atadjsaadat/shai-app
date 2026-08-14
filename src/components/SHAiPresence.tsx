@@ -52,7 +52,7 @@ export default function SHAiPresence({ expression = 'default', size = 80 }: SHAi
       width={size}
       height={size}
       viewBox={`0 0 ${size} ${size}`}
-      style={{ background: 'transparent', overflow: 'visible' }}
+      style={{ display: 'block', background: 'transparent', overflow: 'visible' }}
     >
       <style>{`
         @keyframes pulse-default-${uid} {

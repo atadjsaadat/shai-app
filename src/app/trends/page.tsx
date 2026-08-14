@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import BottomNav from '@/components/BottomNav';
 import { STORAGE } from '@/lib/storage/keys';
+import AIDisclosure from '@/components/AIDisclosure';
 import styles from './page.module.css';
 
 interface Totals {
@@ -769,7 +770,7 @@ export default function TrendsPage() {
               </ul>
             )}
           </div>
-          <p className={styles.aiDisclosure}>SHAi is an AI assistant.</p>
+          <AIDisclosure />
         </section>
       )}
 

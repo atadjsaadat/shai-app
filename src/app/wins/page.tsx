@@ -7,6 +7,7 @@ import SHAiPresence from '@/components/SHAiPresence';
 import SHAiBrand from '@/components/SHAiBrand';
 import Confetti from '@/components/Confetti';
 import { compressPhoto } from '@/lib/storage/upload';
+import AIDisclosure from '@/components/AIDisclosure';
 import { formatAge, formatDateLong, formatDateMedium } from '@/lib/format/dates';
 import styles from './page.module.css';
 
@@ -428,7 +429,7 @@ export default function WinsPage() {
         </div>
       )}
 
-      <p className={styles.aiDisclosure}>SHAi is an AI assistant.</p>
+      <AIDisclosure />
       <BottomNav />
     </div>
   );
