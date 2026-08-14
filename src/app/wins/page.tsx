@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import BottomNav from '@/components/BottomNav';
 import SHAiPresence from '@/components/SHAiPresence';
+import Confetti from '@/components/Confetti';
 import { compressPhoto } from '@/lib/storage/upload';
 import { formatAge, formatDateLong, formatDateMedium } from '@/lib/format/dates';
 import styles from './page.module.css';
@@ -55,6 +56,7 @@ export default function WinsPage() {
   const [foodInvolved, setFoodInvolved] = useState('');
   const [parentNote, setParentNote] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -133,6 +135,7 @@ export default function WinsPage() {
     const json = await res.json();
     if (json.win) {
       setWins((prev) => [json.win, ...prev]);
+      setShowConfetti(true);
       setShowForm(false);
       setWinType('new_food');
       setFoodInvolved('');
@@ -145,6 +148,7 @@ export default function WinsPage() {
 
   return (
     <div className={styles.screen}>
+      {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
       <div className={styles.header}>
         <h1 className={styles.title}>Win Jar</h1>
         <button className={styles.addBtn} onClick={() => setShowForm(true)} aria-label="Add win">

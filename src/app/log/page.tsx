@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { createSpeechRecognition } from '@/lib/speech/recognition';
 import { useRouter } from 'next/navigation';
 import SHAiPresence from '@/components/SHAiPresence';
+import Confetti from '@/components/Confetti';
 import BarcodeScanner from '@/components/BarcodeScanner';
 import FeedsTab from '@/components/FeedsTab';
 import styles from './page.module.css';
@@ -196,6 +197,7 @@ export default function LogPage() {
   const [isWin, setIsWin] = useState(false);
   const [winNote, setWinNote] = useState('');
   const [showWinToast, setShowWinToast] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -566,6 +568,7 @@ export default function LogPage() {
 
   return (
     <div className={styles.screen}>
+      {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
       {showScanner && (
         <BarcodeScanner onDetect={handleBarcodeDetect} onClose={() => setShowScanner(false)} />
       )}
@@ -819,6 +822,7 @@ export default function LogPage() {
                       setIsWin(w => {
                         if (!w) {
                           setShowWinToast(true);
+                          setShowConfetti(true);
                           setTimeout(() => setShowWinToast(false), 2200);
                         }
                         return !w;
