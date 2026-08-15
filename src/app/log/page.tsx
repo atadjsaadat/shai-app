@@ -196,6 +196,8 @@ export default function LogPage() {
   const [allergyAdded, setAllergyAdded] = useState(false);
   const [childName, setChildName] = useState<string | null>(null);
   const [distressLevel, setDistressLevel] = useState<1 | 2 | 3 | null>(null);
+  const [distressFlagId, setDistressFlagId] = useState<string | null>(null);
+  const [consentStep, setConsentStep] = useState<'coparent' | 'support_person' | 'done' | null>(null);
   const [isWin, setIsWin] = useState(false);
   const [winNote, setWinNote] = useState('');
   const [showWinToast, setShowWinToast] = useState(false);
@@ -378,6 +380,17 @@ export default function LogPage() {
     setPhase('confirming');
   };
 
+  const handleDistressConsent = async (type: 'coparent' | 'support_person', given: boolean) => {
+    if (distressFlagId) {
+      fetch('/api/distress/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flagId: distressFlagId, type, consentGiven: given }),
+      }).catch(() => {});
+    }
+    setConsentStep(type === 'coparent' ? 'support_person' : 'done');
+  };
+
   const toggleReaction = (r: string) => {
     setNoReaction(false);
     setReactions(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r]);
@@ -454,6 +467,10 @@ export default function LogPage() {
 
       if (data.distressLevel) {
         setDistressLevel(data.distressLevel);
+        if (data.distressLevel === 3 && data.distressFlagId) {
+          setDistressFlagId(data.distressFlagId);
+          setConsentStep('coparent');
+        }
       }
 
       if (data.complete && !data.distressLevel) {
@@ -603,16 +620,18 @@ export default function LogPage() {
 
       {/* ── Meal type tabs ── */}
       <div className={styles.tabsRow}>
-        <button
-          className={`${styles.tab} ${activeTab === 'feeds' ? styles.tabActive : ''}`}
-          style={activeTab === 'feeds'
-            ? { background: '#7AA5C4', borderColor: '#7AA5C4' }
-            : { borderColor: '#7AA5C4', color: '#7AA5C4' }
-          }
-          onClick={() => setActiveTab('feeds')}
-        >
-          {(childAgeMonths !== null && childAgeMonths > 6) || feedsIsArchive ? 'Feeding chapter' : 'Feeds'}
-        </button>
+        {(childAgeMonths === null || childAgeMonths <= 12 || feedsIsArchive) && (
+          <button
+            className={`${styles.tab} ${activeTab === 'feeds' ? styles.tabActive : ''}`}
+            style={activeTab === 'feeds'
+              ? { background: '#7AA5C4', borderColor: '#7AA5C4' }
+              : { borderColor: '#7AA5C4', color: '#7AA5C4' }
+            }
+            onClick={() => setActiveTab('feeds')}
+          >
+            {(childAgeMonths !== null && childAgeMonths > 6) || feedsIsArchive ? 'Feeding chapter' : 'Feeds'}
+          </button>
+        )}
         {MEAL_TYPES.map((type) => (
           <button
             key={type}
@@ -741,6 +760,25 @@ export default function LogPage() {
           <a href="tel:179" className={styles.call179Btn}>
             Call 179
           </a>
+        </div>
+      )}
+
+      {/* ── Level 3 — in-moment consent ── */}
+      {distressLevel === 3 && consentStep && consentStep !== 'done' && (
+        <div className={styles.consentCard}>
+          <p className={styles.consentText}>
+            {consentStep === 'coparent'
+              ? 'We can quietly let your partner know you might need some support right now. Is that OK?'
+              : 'We can also reach out to your named support person. Would that be OK?'}
+          </p>
+          <div className={styles.consentBtns}>
+            <button className={styles.consentYes} onClick={() => handleDistressConsent(consentStep, true)}>
+              Yes, reach out
+            </button>
+            <button className={styles.consentNo} onClick={() => handleDistressConsent(consentStep, false)}>
+              Not now
+            </button>
+          </div>
         </div>
       )}
 

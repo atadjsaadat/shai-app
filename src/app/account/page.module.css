@@ -1,10 +1,10 @@
 .page {
   min-height: 100dvh;
   background: var(--cream);
-  padding: 60px 20px 40px;
+  padding: 60px 20px 48px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
   max-width: 480px;
   margin: 0 auto;
 }
@@ -40,47 +40,50 @@
   margin-top: 40px;
 }
 
-.card {
-  background: var(--oat);
+/* ── Hero ── */
+.heroCard {
+  background: var(--terra-light);
   border-radius: 20px;
-  padding: 18px 20px;
+  padding: 28px 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  align-items: center;
+  gap: 10px;
   box-shadow: var(--card-shadow);
+  margin-bottom: 6px;
 }
 
-.row {
+.avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--terracotta);
+  color: white;
+  font-size: 26px;
+  font-weight: 800;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: center;
 }
 
-.label {
+.heroEmail {
   font-size: 14px;
   font-weight: 600;
   color: var(--text-secondary);
-  flex-shrink: 0;
-}
-
-.value {
-  font-size: 14px;
-  color: var(--text-muted);
-  font-weight: 500;
-  text-align: right;
+  margin: 0;
   word-break: break-all;
+  text-align: center;
 }
 
 .tierBadge {
   font-size: 12px;
   font-weight: 700;
-  padding: 4px 12px;
+  padding: 4px 14px;
   border-radius: 20px;
 }
 
 .tierFree {
-  background: var(--oat-dark);
+  background: rgba(0,0,0,0.08);
   color: var(--text-secondary);
 }
 
@@ -94,20 +97,162 @@
   color: #fff;
 }
 
-.signOutBtn {
-  background: transparent;
-  border: 1.5px solid var(--oat-dark);
-  border-radius: 12px;
-  padding: 13px 20px;
-  font-size: 14px;
+/* ── Section label ── */
+.sectionLabel {
+  font-size: 11px;
   font-weight: 700;
-  font-family: inherit;
-  color: var(--text-secondary);
-  cursor: pointer;
-  width: 100%;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  padding: 0 4px;
+  margin-top: 6px;
+  margin-bottom: 0;
 }
 
-.signOutBtn:disabled {
+/* ── Card ── */
+.card {
+  background: var(--oat);
+  border-radius: 16px;
+  padding: 4px 0;
+  box-shadow: var(--card-shadow);
+}
+
+.rowBtn {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  color: var(--text-primary);
+  border-radius: 16px;
+}
+
+.rowBtn:disabled {
   opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rowBtnLabel {
+  font-size: 15px;
+  font-weight: 700;
+  flex: 1;
+}
+
+.rowBtnHint {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* ── Delete zone ── */
+.deleteBtn {
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: center;
+  padding: 8px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  margin-top: 8px;
+}
+
+.deleteCard {
+  background: var(--oat);
+  border: 1.5px solid #e0b0a0;
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--card-shadow);
+  margin-top: 8px;
+}
+
+.deleteWarning {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.deleteLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.deleteInput {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 10px;
+  background: var(--cream);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.05em;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.deleteInput:focus {
+  border-color: #c07060;
+}
+
+.deleteError {
+  font-size: 13px;
+  color: #c0392b;
+  margin: 0;
+}
+
+.deleteBtns {
+  display: flex;
+  gap: 10px;
+}
+
+.deleteCancelBtn {
+  flex: 1;
+  padding: 11px;
+  background: transparent;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.deleteCancelBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.deleteConfirmBtn {
+  flex: 1;
+  padding: 11px;
+  background: #c07060;
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+}
+
+.deleteConfirmBtn:disabled {
+  opacity: 0.4;
   cursor: not-allowed;
 }

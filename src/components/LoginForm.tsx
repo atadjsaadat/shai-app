@@ -96,6 +96,10 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
         {loading ? 'Signing in…' : 'Sign in'}
       </button>
 
+      <p style={{ textAlign: 'center', fontSize: '0.875rem' }}>
+        <a href="/forgot-password" className={styles.link}>Forgot your password?</a>
+      </p>
+
       <AIDisclosure />
     </div>
   )

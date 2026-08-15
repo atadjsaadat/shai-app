@@ -26,15 +26,13 @@ export async function POST(req: NextRequest) {
   if (distressActive) {
     const shaiResponse = await generateDistressResponse(3, messages);
 
-    if (userId) {
-      await logDistressFlag({
-        userId,
-        level: 3,
-        languageDetected: null,
-        shaiResponseGiven: shaiResponse,
-        resourceSurfaced: true,
-      }).catch(() => {});
-    }
+    const flagId = userId ? await logDistressFlag({
+      userId,
+      level: 3,
+      languageDetected: null,
+      shaiResponseGiven: shaiResponse,
+      resourceSurfaced: true,
+    }).catch(() => null) : null;
 
     return NextResponse.json({
       message: shaiResponse,
@@ -44,6 +42,7 @@ export async function POST(req: NextRequest) {
       isHardFoodDay: false,
       complete: false,
       distressLevel: 3,
+      ...(flagId && { distressFlagId: flagId }),
     } satisfies ParseApiResponse);
   }
 
@@ -54,14 +53,15 @@ export async function POST(req: NextRequest) {
     const shaiResponse = await generateDistressResponse(level as 1 | 2 | 3, messages);
     const resourceSurfaced = level >= 2;
 
+    let flagId: string | null = null;
     if (userId) {
-      await logDistressFlag({
+      flagId = await logDistressFlag({
         userId,
         level: level as 1 | 2 | 3,
         languageDetected,
         shaiResponseGiven: shaiResponse,
         resourceSurfaced,
-      }).catch(() => {});
+      }).catch(() => null);
     }
 
     return NextResponse.json({
@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
       isHardFoodDay: false,
       complete: false,
       distressLevel: level as 1 | 2 | 3,
+      ...(flagId && level === 3 && { distressFlagId: flagId }),
     } satisfies ParseApiResponse);
   }
 

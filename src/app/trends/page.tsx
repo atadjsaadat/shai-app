@@ -734,9 +734,9 @@ export default function TrendsPage() {
             {displayWins.map((w) => {
               const c = WIN_CHIP_COLOURS[w.win_type] ?? WIN_CHIP_COLOURS['other'];
               return (
-                <div key={w.id} className={styles.winChip} style={{ background: c.bg, color: c.text }}>
+                <div key={w.id} className={styles.winChip} style={{ borderLeftColor: c.text }}>
                   <div className={styles.winChipHeader}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" className={styles.winStar} style={{ flexShrink: 0 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill={c.text} stroke={c.text} strokeWidth="1" strokeLinejoin="round" className={styles.winStar} style={{ flexShrink: 0 }}>
                       <polygon points="12,2 15.82,6.74 21.51,8.91 18.18,14.01 17.88,20.09 12,18.5 6.12,20.09 5.82,14.01 2.49,8.91 8.18,6.74"/>
                     </svg>
                     <span className={styles.winChipLabel}>{WIN_TYPE_LABELS[w.win_type] ?? w.win_type}</span>

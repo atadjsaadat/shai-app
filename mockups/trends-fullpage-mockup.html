@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=375, initial-scale=1.0">
+<title>Trends Page Mockup</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
+
+  :root {
+    --cream: #FDFAF5;
+    --oat: #F5F0E8;
+    --oat-dark: #EDE5D4;
+    --terra: #C4714A;
+    --terra-light: #F0D5C8;
+    --terra-dark: #9E5035;
+    --sage: #7A9E7E;
+    --sage-light: #D4E8D6;
+    --sage-dark: #4A7050;
+    --text: #3D2B1F;
+    --text-2: #7A6255;
+    --muted: #B09585;
+    --shadow: 0 2px 8px rgba(61,43,31,0.07);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: #d8d5d0;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px 60px;
+  }
+
+  /* Phone shell */
+  .phone {
+    width: 375px;
+    min-height: 812px;
+    background: var(--cream);
+    border-radius: 44px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.25), 0 6px 20px rgba(0,0,0,0.12);
+    border: 8px solid #1c1c1e;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Status bar */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 24px 6px;
+    background: var(--cream);
+    flex-shrink: 0;
+  }
+  .status-time { font-size: 15px; font-weight: 800; color: var(--text); }
+  .status-icons { display: flex; gap: 5px; align-items: center; }
+  .status-icon { width: 16px; height: 10px; background: var(--text); border-radius: 2px; opacity: 0.7; }
+
+  /* Page header */
+  .page-header {
+    padding: 8px 20px 16px;
+    background: var(--cream);
+    flex-shrink: 0;
+  }
+  .page-title { font-size: 24px; font-weight: 900; color: var(--text); }
+  .page-sub { font-size: 13px; color: var(--muted); font-weight: 500; margin-top: 1px; }
+
+  /* Scroll area */
+  .scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 16px 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* Section label */
+  .section-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  /* Card base */
+  .card {
+    background: var(--oat);
+    border-radius: 18px;
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+  }
+
+  /* ── Day dots ── */
+  .dots-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+  }
+  .day-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-filled { background: var(--terra); }
+  .dot-empty { background: var(--oat-dark); border: 1.5px solid var(--muted); }
+  .dot-today { background: var(--terra); box-shadow: 0 0 0 3px var(--terra-light); }
+  .day-lbl { font-size: 10px; font-weight: 700; color: var(--muted); }
+  .day-lbl-today { color: var(--terra); font-weight: 800; }
+
+  /* ── Nutrient bars ── */
+  .nutrient-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 16px;
+  }
+  .nutrient-row { display: flex; flex-direction: column; gap: 3px; }
+  .nutrient-top { display: flex; justify-content: space-between; align-items: baseline; }
+  .nutrient-name { font-size: 11px; font-weight: 700; color: var(--text-2); }
+  .nutrient-val { font-size: 11px; font-weight: 800; color: var(--text); }
+  .bar-track { height: 5px; background: var(--oat-dark); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; }
+
+  /* ── Highlight chips ── */
+  .highlight-row { display: flex; gap: 8px; }
+  .highlight-chip {
+    flex: 1; display: flex; align-items: center; gap: 7px;
+    border-radius: 12px; padding: 9px 12px;
+  }
+  .chip-green { background: var(--sage-light); }
+  .chip-amber { background: var(--terra-light); }
+  .h-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .chip-green .h-dot { background: var(--sage); }
+  .chip-amber .h-dot { background: var(--terra); }
+  .h-text { font-size: 12px; font-weight: 700; line-height: 1.3; }
+  .chip-green .h-text { color: var(--sage-dark); }
+  .chip-amber .h-text { color: var(--terra-dark); }
+
+  /* ── Macro strip ── */
+  .macro-strip { display: flex; height: 8px; border-radius: 6px; overflow: hidden; gap: 2px; margin-bottom: 10px; }
+  .macro-seg { height: 100%; border-radius: 6px; }
+  .macro-legend { display: flex; gap: 12px; }
+  .macro-item { display: flex; align-items: center; gap: 5px; }
+  .macro-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .macro-label { font-size: 11px; font-weight: 700; color: var(--text-2); }
+  .macro-chip { font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 8px; margin-left: 3px; }
+  .chip-good { background: var(--sage-light); color: var(--sage-dark); }
+  .chip-off  { background: var(--terra-light); color: var(--terra-dark); }
+  .macro-attr { font-size: 9px; color: var(--muted); font-weight: 500; margin-top: 8px; line-height: 1.4; }
+
+  /* ── Best day ── */
+  .best-day-card {
+    background: var(--oat);
+    border-radius: 18px;
+    padding: 13px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: var(--shadow);
+  }
+  .best-star { color: var(--terra); font-size: 14px; }
+  .best-text { flex: 1; font-size: 13px; font-weight: 600; color: var(--text); }
+  .best-text strong { font-weight: 800; }
+  .chevron { color: var(--muted); font-size: 14px; }
+
+  /* ── SHAi's take ── */
+  .insight-list { display: flex; flex-direction: column; gap: 8px; padding-left: 18px; }
+  .insight-item { font-size: 14px; color: var(--text-2); line-height: 1.6; }
+  .ai-disclosure { font-size: 11px; color: var(--muted); text-align: center; margin-top: 8px; }
+
+  /* ── Top foods — PILL CHIPS (Option B) ── */
+  .top-foods-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 2px;
+  }
+  .top-food-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--cream);
+    border: 1.5px solid var(--oat-dark);
+    border-radius: 20px;
+    padding: 5px 10px 5px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .pill-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--terra); flex-shrink: 0; }
+  .pill-count { font-size: 10px; font-weight: 800; color: var(--muted); }
+
+  /* ── Wins ── */
+  .wins-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .win-chip {
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 8px 12px; border-radius: 12px;
+  }
+  .win-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
+  .win-food { font-size: 12px; font-weight: 500; }
+
+  /* ── Bottom nav ── */
+  .bottom-nav {
+    position: sticky;
+    bottom: 0;
+    background: var(--cream);
+    border-top: 1px solid var(--oat-dark);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px 0 24px;
+    flex-shrink: 0;
+  }
+  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .nav-icon { font-size: 20px; opacity: 0.4; }
+  .nav-icon.active { opacity: 1; }
+  .nav-label { font-size: 10px; font-weight: 700; color: var(--muted); }
+  .nav-label.active { color: var(--terra); }
+  .nav-log-btn {
+    width: 50px; height: 50px; border-radius: 50%;
+    background: var(--terra); display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 14px rgba(196,113,74,0.4);
+    font-size: 22px; color: white; font-weight: 900; margin-top: -12px;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- Status bar -->
+  <div class="status-bar">
+    <span class="status-time">20:42</span>
+    <div class="status-icons">
+      <div class="status-icon" style="width:12px;height:8px;border-radius:1px;"></div>
+      <div class="status-icon" style="width:10px;height:8px;border-radius:50%;"></div>
+      <div class="status-icon" style="width:22px;height:10px;border-radius:3px;position:relative;">
+        <div style="position:absolute;right:2px;top:2px;width:6px;height:6px;background:var(--cream);border-radius:1px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="page-title">Trends</div>
+    <div class="page-sub">Tony · week of 4 Aug</div>
+  </div>
+
+  <!-- Scrollable content -->
+  <div class="scroll">
+
+    <!-- Day dots -->
+    <section>
+      <div class="section-label">This week</div>
+      <div class="card" style="padding: 12px 16px;">
+        <div class="dots-row">
+          <div class="day-col"><div class="dot dot-filled"></div><span class="day-lbl">Mon</span></div>
+          <div class="day-col"><div class="dot dot-filled"></div><span class="day-lbl">Tue</span></div>
+          <div class="day-col"><div class="dot dot-empty"></div><span class="day-lbl">Wed</span></div>
+          <div class="day-col"><div class="dot dot-filled"></div><span class="day-lbl">Thu</span></div>
+          <div class="day-col"><div class="dot dot-empty"></div><span class="day-lbl">Fri</span></div>
+          <div class="day-col"><div class="dot dot-filled"></div><span class="day-lbl">Sat</span></div>
+          <div class="day-col"><div class="dot dot-today"></div><span class="day-lbl day-lbl-today">Sun</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Nutrient bars -->
+    <section>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
+        <div class="section-label" style="margin-bottom:0;">7-day average</div>
+        <span style="font-size:10px;font-weight:600;color:var(--muted);">vs daily target</span>
+      </div>
+      <div class="card">
+        <div class="nutrient-grid">
+          <div class="nutrient-row">
+            <div class="nutrient-top"><span class="nutrient-name">Cals</span><span class="nutrient-val">1,320 kcal</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width:88%;background:#C4714A;"></div></div>
+          </div>
+          <div class="nutrient-row">
+            <div class="nutrient-top"><span class="nutrient-name">Fibre</span><span class="nutrient-val">14g</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width:70%;background:#7A9E7E;"></div></div>
+          </div>
+          <div class="nutrient-row">
+            <div class="nutrient-top"><span class="nutrient-name">Pro</span><span class="nutrient-val">38g</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width:100%;background:#D4A72C;"></div></div>
+          </div>
+          <div class="nutrient-row">
+            <div class="nutrient-top"><span class="nutrient-name">Sugar</span><span class="nutrient-val">32g</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width:100%;background:#E8874A;"></div></div>
+          </div>
+          <div class="nutrient-row">
+            <div class="nutrient-top"><span class="nutrient-name">Carbs</span><span class="nutrient-val">185g</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width:88%;background:#B09585;"></div></div>
+          </div>
+          <div class="nutrient-row">
+            <div class="nutrient-top"><span class="nutrient-name">Salt</span><span class="nutrient-val">940mg</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width:78%;background:#7AA5C4;"></div></div>
+          </div>
+          <div class="nutrient-row">
+            <div class="nutrient-top"><span class="nutrient-name">Fat</span><span class="nutrient-val">48g</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width:87%;background:#A67BC4;"></div></div>
+          </div>
+          <div class="nutrient-row">
+            <div class="nutrient-top"><span class="nutrient-name">Iron</span><span class="nutrient-val">5.2mg</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width:52%;background:#B87333;"></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Highlight chips -->
+    <div class="highlight-row">
+      <div class="highlight-chip chip-green">
+        <div class="h-dot"></div>
+        <span class="h-text">Protein on track</span>
+      </div>
+      <div class="highlight-chip chip-amber">
+        <div class="h-dot"></div>
+        <span class="h-text">Sugar a bit high this week</span>
+      </div>
+    </div>
+
+    <!-- Macro split -->
+    <section>
+      <div class="section-label">Energy from food</div>
+      <div class="card">
+        <div class="macro-strip">
+          <div class="macro-seg" style="width:50%;background:#B09585;"></div>
+          <div class="macro-seg" style="width:15%;background:#D4A72C;"></div>
+          <div class="macro-seg" style="width:35%;background:#A67BC4;"></div>
+        </div>
+        <div class="macro-legend">
+          <div class="macro-item">
+            <div class="macro-dot" style="background:#B09585;"></div>
+            <span class="macro-label">Carbs 50%</span>
+            <span class="macro-chip chip-good">✓</span>
+          </div>
+          <div class="macro-item">
+            <div class="macro-dot" style="background:#D4A72C;"></div>
+            <span class="macro-label">Protein 15%</span>
+            <span class="macro-chip chip-good">✓</span>
+          </div>
+          <div class="macro-item">
+            <div class="macro-dot" style="background:#A67BC4;"></div>
+            <span class="macro-label">Fat 35%</span>
+            <span class="macro-chip chip-good">✓</span>
+          </div>
+        </div>
+        <div class="macro-attr">Based on ESPGHAN guidelines for children 12–36 months</div>
+      </div>
+    </section>
+
+    <!-- Best day -->
+    <section>
+      <div class="best-day-card">
+        <span class="best-star">★</span>
+        <span class="best-text"><strong>Best day:</strong> Thursday · 5 of 6 targets hit</span>
+        <span class="chevron">›</span>
+      </div>
+    </section>
+
+    <!-- Most eaten this week — PILL CHIPS -->
+    <section>
+      <div class="section-label">Most eaten this week</div>
+      <div class="card">
+        <div class="top-foods-pills">
+          <div class="top-food-pill" style="border-color:#B0958555;"><div class="pill-dot" style="background:#B09585;"></div>Pasta <span class="pill-count">×5</span></div>
+          <div class="top-food-pill" style="border-color:#E8734A55;"><div class="pill-dot" style="background:#E8734A;"></div>Banana <span class="pill-count">×4</span></div>
+          <div class="top-food-pill" style="border-color:#D4A72C55;"><div class="pill-dot" style="background:#D4A72C;"></div>Scrambled eggs <span class="pill-count">×3</span></div>
+          <div class="top-food-pill" style="border-color:#B0958555;"><div class="pill-dot" style="background:#B09585;"></div>Bread <span class="pill-count">×2</span></div>
+          <div class="top-food-pill" style="border-color:#7AA5C455;"><div class="pill-dot" style="background:#7AA5C4;"></div>Yoghurt <span class="pill-count">×1</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Wins -->
+    <section>
+      <div class="section-label">This week's wins <span style="color:var(--terra);font-weight:700;">· 3</span></div>
+      <div class="wins-row">
+        <div class="win-chip" style="background:var(--sage-light);">
+          <span class="win-label" style="color:var(--sage-dark);">🌟 New food</span>
+          <span class="win-food" style="color:var(--sage-dark);">Broccoli</span>
+        </div>
+        <div class="win-chip" style="background:var(--terra-light);">
+          <span class="win-label" style="color:var(--terra-dark);">💪 Big appetite</span>
+          <span class="win-food" style="color:var(--terra-dark);">Thursday lunch</span>
+        </div>
+        <div class="win-chip" style="background:var(--sage-light);">
+          <span class="win-label" style="color:var(--sage-dark);">🥦 Ate veg</span>
+          <span class="win-food" style="color:var(--sage-dark);">Peas & carrots</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SHAi's take -->
+    <section>
+      <div class="section-label">SHAi's take</div>
+      <div class="card">
+        <ul class="insight-list">
+          <li class="insight-item">Protein is looking really solid — averaging 38g vs a 20g target.</li>
+          <li class="insight-item">Sugar has been a bit high, averaging 32g vs the 18g ESPGHAN recommends.</li>
+          <li class="insight-item">Iron could do with a nudge — worth adding lentils or leafy greens.</li>
+          <li class="insight-item">Overall a strong week — Tony is clearly eating well.</li>
+        </ul>
+      </div>
+      <div class="ai-disclosure">SHAi is an AI assistant.</div>
+    </section>
+
+  </div>
+
+  <!-- Bottom nav -->
+  <div class="bottom-nav">
+    <div class="nav-item">
+      <span class="nav-icon">⌂</span>
+      <span class="nav-label">Home</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon active" style="color:var(--terra);">📊</span>
+      <span class="nav-label active">Trends</span>
+    </div>
+    <div class="nav-log-btn">+</div>
+    <div class="nav-item">
+      <span class="nav-icon">📖</span>
+      <span class="nav-label">Journey</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">📕</span>
+      <span class="nav-label">Baby Book</span>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

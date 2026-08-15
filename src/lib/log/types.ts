@@ -64,4 +64,5 @@ export interface ParseApiResponse {
   isHardFoodDay: boolean;
   complete: boolean;
   distressLevel?: 1 | 2 | 3;
+  distressFlagId?: string;
 }

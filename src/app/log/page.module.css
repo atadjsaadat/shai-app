@@ -1117,3 +1117,56 @@
 .messagesWithCard {
   padding-bottom: 140px;
 }
+
+/* ── Level 3 — in-moment consent card ─────────────────── */
+.consentCard {
+  position: fixed;
+  bottom: 128px;
+  left: 16px;
+  right: 16px;
+  background: var(--oat);
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: var(--card-shadow);
+  z-index: 11;
+}
+
+.consentText {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.consentBtns {
+  display: flex;
+  gap: 8px;
+}
+
+.consentYes {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  border: none;
+  background: var(--sage);
+  color: #fff;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.consentNo {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1.5px solid var(--oat-dark);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
