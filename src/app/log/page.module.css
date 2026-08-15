@@ -235,7 +235,7 @@
   background: var(--oat);
   font-family: var(--font-nunito), sans-serif;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
   cursor: pointer;
   box-shadow: var(--btn-shadow);
@@ -307,6 +307,7 @@
   font-weight: 700;
   color: var(--text-secondary);
   cursor: pointer;
+  box-shadow: var(--btn-shadow);
   transition: background 0.15s, color 0.15s;
 }
 
@@ -765,6 +766,7 @@
   font-weight: 700;
   color: var(--text-secondary);
   cursor: pointer;
+  box-shadow: var(--btn-shadow);
   transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
@@ -774,9 +776,9 @@
 }
 
 .reactionChipActive {
-  background: var(--terra-light);
+  background: var(--terracotta);
   border-color: var(--terracotta);
-  color: var(--terra-dark);
+  color: #fff;
 }
 
 .reactionChipNone {
@@ -804,7 +806,7 @@
   padding: 6px 13px;
   border-radius: 20px;
   border: 1.5px solid var(--oat-dark);
-  background: var(--cream);
+  background: var(--oat);
   font-family: var(--font-nunito), sans-serif;
   font-size: 13px;
   font-weight: 700;
@@ -963,12 +965,14 @@
   padding: 7px 13px;
   border: 1.5px solid var(--terracotta);
   border-radius: 20px;
-  background: var(--cream);
+  background: var(--oat);
   font-family: var(--font-nunito), sans-serif;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--terra-dark);
   cursor: pointer;
+  box-shadow: var(--btn-shadow);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .allergyChipActive {

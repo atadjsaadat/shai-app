@@ -171,6 +171,7 @@ export default function LogPage() {
   const [mealType, setMealType] = useState<MealType>(detectMealType);
   const [activeTab, setActiveTab] = useState<MealType | 'feeds'>(detectMealType);
   const [feedsIsArchive, setFeedsIsArchive] = useState(false);
+  const [childAgeMonths, setChildAgeMonths] = useState<number | null>(null);
   const [messages, setMessages] = useState<LogMessage[]>([
     { id: '0', role: 'assistant', content: "What did your little one have? The more detail the better — ingredients, type, and roughly how much." },
   ]);
@@ -322,6 +323,16 @@ export default function LogPage() {
           if (json.childName) localStorage.setItem(STORAGE.CHILD_NAME, json.childName);
           const name = json.childName ?? localStorage.getItem(STORAGE.CHILD_NAME);
           if (name) { setChildName(name); setMessages([{ id: '0', role: 'assistant', content: `What did ${name} have? The more detail the better — ingredients, type, and roughly how much.` }]); }
+          if (json.childDob) {
+            const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+            const parts = json.childDob.split(' ');
+            const dobMonth = MONTHS.indexOf(parts[0]) + 1;
+            const dobYear = parseInt(parts[1]);
+            if (dobMonth > 0 && dobYear > 0) {
+              const now = new Date();
+              setChildAgeMonths((now.getFullYear() - dobYear) * 12 + (now.getMonth() + 1 - dobMonth));
+            }
+          }
           setChildValidated(true);
         } else {
           localStorage.removeItem(STORAGE.ACTIVE_CHILD_ID);
@@ -600,7 +611,7 @@ export default function LogPage() {
           }
           onClick={() => setActiveTab('feeds')}
         >
-          {feedsIsArchive ? 'Feeding chapter' : 'Feeds'}
+          {(childAgeMonths !== null && childAgeMonths > 6) || feedsIsArchive ? 'Feeding chapter' : 'Feeds'}
         </button>
         {MEAL_TYPES.map((type) => (
           <button

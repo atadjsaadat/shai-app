@@ -529,6 +529,7 @@
   font-weight: 700;
   color: var(--text-secondary);
   cursor: pointer;
+  box-shadow: var(--btn-shadow);
   transition: background 0.15s, color 0.15s, border-color 0.15s;
   white-space: nowrap;
 }

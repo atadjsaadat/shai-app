@@ -221,22 +221,22 @@
 }
 
 .allergyPickerChip {
-  background: var(--cream);
+  background: var(--oat);
   border: 1.5px solid var(--oat-dark);
   border-radius: 20px;
   padding: 6px 14px;
   font-family: inherit;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-secondary);
   cursor: pointer;
   box-shadow: var(--btn-shadow);
 }
 
 .allergyPickerChipSelected {
-  background: var(--terra-light);
+  background: var(--terracotta);
   border-color: var(--terracotta);
-  color: var(--terra-dark);
+  color: #fff;
 }
 
 .allergyPickerActions {

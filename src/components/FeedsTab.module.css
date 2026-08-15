@@ -322,19 +322,20 @@
   padding: 8px 14px;
   border: 1.5px solid var(--oat-dark);
   border-radius: 20px;
-  background: var(--cream);
+  background: var(--oat);
   font-size: 13px;
   font-weight: 700;
   color: var(--text-secondary);
   cursor: pointer;
+  box-shadow: var(--btn-shadow);
   transition: all 0.15s;
   font-family: inherit;
 }
 
 .chipActive {
-  background: var(--chip-active-bg, var(--terra-light));
+  background: var(--chip-active-bg, var(--terracotta));
   border-color: var(--chip-active-border, var(--terracotta));
-  color: var(--chip-active-color, var(--terra-dark));
+  color: var(--chip-active-color, #fff);
 }
 
 .chipNoReaction {

@@ -367,7 +367,7 @@ export default function WinsPage() {
                   <button
                     key={t.value}
                     className={`${styles.typeBtn} ${isActive ? styles.typeBtnActive : ''}`}
-                    style={isActive ? { background: c.bg, borderColor: c.badge, color: c.text } : {}}
+                    style={isActive ? { background: c.badge, borderColor: c.badge, color: '#fff' } : {}}
                     onClick={() => setWinType(t.value)}
                   >
                     {t.label}

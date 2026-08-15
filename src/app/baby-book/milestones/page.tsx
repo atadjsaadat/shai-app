@@ -400,7 +400,7 @@ export default function BabyBookPage() {
                 <button
                   key={d}
                   className={`${styles.filterChip}${isActive ? ` ${styles.filterChipActive}` : ''}`}
-                  style={{ background: color.bg, color: color.text, borderColor: isActive ? color.text : color.bg }}
+                  style={{ background: isActive ? color.text : undefined, color: isActive ? '#fff' : color.text, borderColor: color.text }}
                   onClick={() => setActiveFilter(isActive ? null : d)}
                 >
                   <span className={styles.filterChipIcon}>{DOMAIN_ICONS[d]}</span>
@@ -460,7 +460,7 @@ export default function BabyBookPage() {
                   <button
                     key={d}
                     className={`${styles.domainChip}${isActive ? ` ${styles.domainChipActive}` : ''}`}
-                    style={{ background: color.bg, color: color.text, borderColor: isActive ? color.text : color.bg }}
+                    style={{ background: isActive ? color.text : undefined, color: isActive ? '#fff' : color.text, borderColor: color.text }}
                     onClick={() => selectDomain(d)}
                   >
                     {DOMAIN_LABELS[d]}
@@ -481,7 +481,7 @@ export default function BabyBookPage() {
                     <button
                       key={t}
                       className={`${styles.typeChip}${isActive ? ` ${styles.typeChipActive}` : ''}`}
-                      style={isActive ? { background: color.bg, color: color.text, borderColor: color.text } : undefined}
+                      style={isActive ? { background: color.text, color: '#fff', borderColor: color.text } : undefined}
                       onClick={() => setForm(f => ({ ...f, milestone_type: t }))}
                     >
                       {MILESTONE_TYPE_PATHS[t] && <span className={styles.typeChipIcon}>{I(MILESTONE_TYPE_PATHS[t])}</span>}
