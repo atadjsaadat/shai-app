@@ -75,20 +75,28 @@ interface DayEntry {
   logged_at: string;
 }
 
-type NutrientDef = { key: keyof Totals; name: string; color: string }
+type NutrientDef = {
+  key: keyof Totals;
+  name: string;
+  color: string;
+  fullName: string;
+  unit: string;
+  description: string;
+  lowerIsBetter?: boolean;
+}
 
 const LEFT_NUTRIENTS: NutrientDef[] = [
-  { key: 'calories_kcal', name: 'Cals',  color: '#C4714A' },
-  { key: 'protein_g',     name: 'Pro',   color: '#D4A72C' },
-  { key: 'carbs_g',       name: 'Carbs', color: '#B09585' },
-  { key: 'fat_g',         name: 'Fat',   color: '#A67BC4' },
+  { key: 'calories_kcal', name: 'Cals',  color: '#C4714A', fullName: 'Calories',       unit: 'kcal', description: 'Energy from food — fuels growth, movement and brain development.' },
+  { key: 'protein_g',     name: 'Pro',   color: '#D4A72C', fullName: 'Protein',         unit: 'g',    description: 'Builds and repairs muscles, organs and cells. Essential for healthy growth.' },
+  { key: 'carbs_g',       name: 'Carbs', color: '#B09585', fullName: 'Carbohydrates',   unit: 'g',    description: "The body's main energy source. Whole grains and vegetables are the best sources." },
+  { key: 'fat_g',         name: 'Fat',   color: '#A67BC4', fullName: 'Fat',             unit: 'g',    description: 'Essential for brain development and absorbing vitamins A, D, E and K.' },
 ];
 
 const RIGHT_NUTRIENTS: NutrientDef[] = [
-  { key: 'fibre_g',   name: 'Fibre', color: '#7A9E7E' },
-  { key: 'sugar_g',   name: 'Sugar', color: '#E8874A' },
-  { key: 'sodium_mg', name: 'Salt',  color: '#7AA5C4' },
-  { key: 'iron_mg',   name: 'Iron',  color: '#B87333' },
+  { key: 'fibre_g',   name: 'Fibre', color: '#7A9E7E', fullName: 'Fibre',          unit: 'g',  description: 'Supports healthy digestion and gut bacteria. Found in fruit, veg and wholegrains.' },
+  { key: 'sugar_g',   name: 'Sugar', color: '#E8874A', fullName: 'Sugar',          unit: 'g',  description: 'Natural and added sugars combined. Lower is better for teeth and blood sugar.', lowerIsBetter: true },
+  { key: 'sodium_mg', name: 'Salt',  color: '#7AA5C4', fullName: 'Salt (Sodium)',  unit: 'mg', description: "Too much salt puts strain on developing kidneys. Lower is better.", lowerIsBetter: true },
+  { key: 'iron_mg',   name: 'Iron',  color: '#B87333', fullName: 'Iron',           unit: 'mg', description: 'Carries oxygen in the blood and is critical for brain development. Red meat, lentils and fortified cereals are good sources.' },
 ];
 
 // Only score nutrients where more = better (exclude sugar and sodium)
@@ -262,10 +270,11 @@ function getMondayDate(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function NutrientCol({ nutrients, averages, targets }: {
+function NutrientCol({ nutrients, averages, targets, onSelect }: {
   nutrients: NutrientDef[];
   averages: Totals;
   targets: Totals;
+  onSelect: (n: NutrientDef) => void;
 }) {
   return (
     <div className={styles.nutrientCol}>
@@ -274,17 +283,21 @@ function NutrientCol({ nutrients, averages, targets }: {
         const target = targets[n.key] ?? 1;
         const pct = Math.min(100, (value / (target * 2)) * 100);
         return (
-          <div key={n.key} className={styles.nutrientRow}>
+          <button key={n.key} className={styles.nutrientRow} onClick={() => onSelect(n)}>
             <span className={styles.nutrientName}>{n.name}</span>
             <div className={styles.barWrap}>
               <div className={styles.barTrack}>
                 <div className={styles.barFill} style={{ width: `${pct}%`, background: n.color }} />
               </div>
+              <div className={styles.barTarget} />
             </div>
             <span className={styles.nutrientValue}>
               {value > 0 ? formatValue(value, n.key) : '—'}
             </span>
-          </div>
+            <svg className={styles.nutrientInfo} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={n.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+          </button>
         );
       })}
     </div>
@@ -304,6 +317,7 @@ export default function TrendsPage() {
   const [snapshotDate, setSnapshotDate] = useState<string | null>(null);
   const [snapshotEntries, setSnapshotEntries] = useState<DayEntry[]>([]);
   const [snapshotLoading, setSnapshotLoading] = useState(false);
+  const [selectedNutrient, setSelectedNutrient] = useState<NutrientDef | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -477,7 +491,11 @@ export default function TrendsPage() {
                     {day.locked ? (
                       <div className={styles.dotLocked} />
                     ) : day.hasLogs ? (
-                      <div className={`${styles.dotFilled}${isToday ? ` ${styles.dotToday}` : ''}`} />
+                      <div className={`${styles.dotFilled}${isToday ? ` ${styles.dotToday}` : ''}`}>
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="2 6 5 9 10 3" />
+                        </svg>
+                      </div>
                     ) : (
                       <div className={`${styles.dotEmpty}${isToday ? ` ${styles.dotTodayEmpty}` : ''}`} />
                     )}
@@ -558,8 +576,8 @@ export default function TrendsPage() {
             <p className={styles.emptyHint}>Loading…</p>
           ) : data?.averages ? (
             <>
-              <NutrientCol nutrients={LEFT_NUTRIENTS}  averages={data.averages} targets={data.targets} />
-              <NutrientCol nutrients={RIGHT_NUTRIENTS} averages={data.averages} targets={data.targets} />
+              <NutrientCol nutrients={LEFT_NUTRIENTS}  averages={data.averages} targets={data.targets} onSelect={setSelectedNutrient} />
+              <NutrientCol nutrients={RIGHT_NUTRIENTS} averages={data.averages} targets={data.targets} onSelect={setSelectedNutrient} />
             </>
           ) : (
             <p className={styles.emptyHint}>
@@ -775,6 +793,65 @@ export default function TrendsPage() {
       )}
 
       <BottomNav />
+
+      {selectedNutrient && data?.averages && (() => {
+        const n = selectedNutrient;
+        const value = data.averages![n.key] ?? 0;
+        const target = data.targets[n.key] ?? 1;
+        const pct = target > 0 ? Math.round((value / target) * 100) : 0;
+        const diff = pct - 100;
+        let status: string;
+        if (n.lowerIsBetter) {
+          if (pct <= 80)      status = 'well under — great';
+          else if (pct <= 100) status = 'on target';
+          else if (pct <= 130) status = 'a little over';
+          else                 status = 'quite a bit over';
+        } else {
+          if (pct >= 90 && pct <= 115) status = 'on target';
+          else if (diff < -40)          status = 'quite a bit under';
+          else if (diff < -10)          status = 'a little under';
+          else if (diff <= 20)          status = 'a little over';
+          else                          status = 'quite a bit over';
+        }
+        const attribution = getMacroConfig(data.ageMonths ?? 48).attribution;
+        return (
+          <>
+            <div className={styles.modalBackdrop} onClick={() => setSelectedNutrient(null)} />
+            <div className={styles.modal}>
+              <div className={styles.modalHandle} />
+              <div className={styles.modalHeader}>
+                <span className={styles.modalDot} style={{ background: n.color }} />
+                <p className={styles.modalTitle}>{n.fullName}</p>
+                <button className={styles.modalClose} onClick={() => setSelectedNutrient(null)} aria-label="Close">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+              <p className={styles.modalDesc}>{n.description}</p>
+              <div className={styles.modalRows}>
+                <div className={styles.modalRow}>
+                  <span className={styles.modalRowLabel}>3-day average</span>
+                  <span className={styles.modalRowValue} style={{ color: n.color }}>{value > 0 ? `${Math.round(value)} ${n.unit}` : '—'}</span>
+                </div>
+                <div className={styles.modalRow}>
+                  <span className={styles.modalRowLabel}>Daily target</span>
+                  <span className={styles.modalRowValue}>{Math.round(target)} {n.unit}</span>
+                </div>
+                <div className={styles.modalRow}>
+                  <span className={styles.modalRowLabel}>vs target</span>
+                  <span className={styles.modalRowValue}>{pct}% — {status}</span>
+                </div>
+                <div className={styles.modalRow}>
+                  <span className={styles.modalRowLabel}>Logged across</span>
+                  <span className={styles.modalRowValue}>{data.mealCount} meal{data.mealCount !== 1 ? 's' : ''} · {data.loggedCount} day{data.loggedCount !== 1 ? 's' : ''}</span>
+                </div>
+              </div>
+              <p className={styles.modalAttribution}>{attribution}</p>
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 }

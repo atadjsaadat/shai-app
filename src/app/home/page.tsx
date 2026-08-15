@@ -9,6 +9,7 @@ import styles from './page.module.css';
 import type { NutrientLine } from '@/lib/log/types';
 import { STORAGE } from '@/lib/storage/keys';
 import AIDisclosure from '@/components/AIDisclosure';
+import InstallBanner from '@/components/InstallBanner';
 
 interface Totals {
   calories_kcal: number;
@@ -327,6 +328,8 @@ export default function HomePage() {
         <SHAiBrand expression={hasMeals ? 'celebrating' : 'default'} width={88} />
         <p className={styles.shaiMessage}>{shaiMessage}</p>
       </div>
+
+      <InstallBanner />
 
       {(todayAppointments.length > 0 || (upcomingLeap && !leapDismissed)) && (
         <div className={styles.comingUpCard}>

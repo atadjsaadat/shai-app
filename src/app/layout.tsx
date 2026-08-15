@@ -21,8 +21,16 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'SHAI — Small Happy Appetites, Incorporated!',
+  title: 'SHAi — Small Happy Appetites',
   description: 'The companion for every feed, meal, and milestone — from newborn to first day of school.',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'SHAi',
+  },
+  icons: {
+    apple: '/icons/apple-touch-icon.png',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

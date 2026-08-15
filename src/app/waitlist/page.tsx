@@ -18,7 +18,6 @@ export default function WaitlistPage() {
         </p>
 
         <div className={styles.card}>
-          <p className={styles.cardLabel}>Be among the first families to try SHAi.</p>
           <WaitlistForm />
         </div>
 
