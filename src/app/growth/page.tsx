@@ -91,14 +91,17 @@ function getShaiMessage(
   const they = sex === 'female' ? 'she' : 'he'
   const parts: string[] = []
 
-  if (heightPct !== null && heightPct <= 5) {
-    parts.push(`${childName}'s height is following ${his} own steady path — some children are naturally more compact, and consistency over time is what matters most.`)
-  }
+  const genuineWeightConcern = bmiPct !== null && bmiPct >= 85 && weightPct !== null && weightPct >= 75
 
-  if (bmiPct !== null && bmiPct >= 85) {
-    parts.push(`It might be worth a quick chat with your GP about ${childName}'s weight at the next check-up, just to put your mind at rest.`)
-  } else if (weightPct !== null && weightPct <= 5) {
-    parts.push(`${childName}'s weight is following ${his} own pace — if ${they}'s full of energy and the curve is steady, that's what matters most.`)
+  if (genuineWeightConcern) {
+    parts.push(`${childName} is growing steadily overall. With ${his} weight sitting a little higher on the chart, it's worth a quick mention to your GP at the next check-up — just as a routine check-in.`)
+  } else {
+    if (heightPct !== null && heightPct <= 5) {
+      parts.push(`${childName}'s height is following ${his} own steady path — some children are naturally more compact, and consistency over time is what matters most.`)
+    }
+    if (weightPct !== null && weightPct <= 5) {
+      parts.push(`${childName}'s weight is following ${his} own pace — if ${they}'s full of energy and the curve is steady, that's what matters most.`)
+    }
   }
 
   return parts.length > 0 ? parts.join(' ') : null
