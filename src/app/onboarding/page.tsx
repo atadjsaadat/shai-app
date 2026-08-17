@@ -147,7 +147,7 @@ export default function OnboardingPage() {
             setSaveError(null);
             const { childId, error } = await createChildProfile(collected);
             if (error || !childId) {
-              setSaveError("Something went wrong saving your profile — please try again.");
+              setSaveError(error ?? "Something went wrong saving your profile — please try again.");
               setSaving(false);
               return;
             }
