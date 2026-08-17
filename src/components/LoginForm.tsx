@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from './SignupForm.module.css'
 import AIDisclosure from './AIDisclosure'
+import { createClient } from '@/lib/supabase/client'
 
 export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
   const router = useRouter()
@@ -23,14 +24,10 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailVal, password: passwordVal }),
-      })
-      const json = await res.json()
-      if (!res.ok) {
-        setError(json.error ?? 'Something went wrong. Please try again.')
+      const supabase = createClient()
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email: emailVal, password: passwordVal })
+      if (signInError) {
+        setError(signInError.message)
         return
       }
       router.push(redirectTo ?? '/home')

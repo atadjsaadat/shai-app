@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from './SignupForm.module.css'
 import AIDisclosure from './AIDisclosure'
+import { createClient } from '@/lib/supabase/client'
 
 export default function SignupForm({ redirectTo }: { redirectTo?: string }) {
   const router = useRouter()
@@ -26,16 +27,17 @@ export default function SignupForm({ redirectTo }: { redirectTo?: string }) {
     setError(null)
 
     try {
-      const res = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, consentDataResearch: productConsent, consentMarketing: commercialConsent }),
-      })
-      const json = await res.json()
-      if (!res.ok) {
-        const msg = json.error
-        setError(msg && msg !== '{}' && !msg.startsWith('{') && !msg.startsWith('[') ? msg : 'Something went wrong. Please try again.')
+      const supabase = createClient()
+      const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
+      if (signUpError) {
+        setError(signUpError.message)
         return
+      }
+      if (data.user) {
+        await supabase.from('profiles').update({
+          consent_data_research: productConsent,
+          consent_marketing: commercialConsent,
+        }).eq('id', data.user.id)
       }
       router.push(redirectTo ?? '/onboarding')
     } catch {
