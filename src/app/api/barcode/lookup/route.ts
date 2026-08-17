@@ -10,8 +10,8 @@ export async function GET(req: NextRequest) {
   const barcode = req.nextUrl.searchParams.get('barcode')
   if (!barcode) return NextResponse.json({ error: 'barcode required' }, { status: 400 })
 
-  const item = await lookupBarcode(barcode)
-  if (!item) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+  const result = await lookupBarcode(barcode)
+  if (!result) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
 
-  return NextResponse.json({ item })
+  return NextResponse.json({ item: result.item, novaClass: result.novaClass, additivesN: result.additivesN })
 }

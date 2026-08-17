@@ -10,6 +10,7 @@ import FeedsTab from '@/components/FeedsTab';
 import styles from './page.module.css';
 import { saveFoodLog } from '@/lib/log/save';
 import type { LogMessage, ParseApiResponse, MealType, ParsedFoodItem } from '@/lib/log/types';
+import { calculateChildProductScore, type ScoreBand } from '@/lib/nutrition/childProductScore';
 import type { MealFavourite } from '@/app/api/log/meal-favourites/route';
 import { STORAGE } from '@/lib/storage/keys';
 import { ALL_ALLERGENS, ALLERGY_TRIGGER_REACTIONS } from '@/lib/allergens';
@@ -119,6 +120,50 @@ type Phase = 'chatting' | 'confirming' | 'saving' | 'saved';
 const HARD_DAY_ACK =
   "That's okay — some days are just like that. You showed up, and that's what matters.";
 
+const BAND_COLOURS: Record<ScoreBand, string> = {
+  good: '#7A9E7E',
+  ok:   '#D4A72C',
+  poor: '#C85A5A',
+};
+
+const BAND_BG: Record<ScoreBand, string> = {
+  good: '#EDF4EE',
+  ok:   '#FBF4E0',
+  poor: '#FAECEC',
+};
+
+function ProductScoreCard({ item, novaClass, additivesN, childAgeMonths, childName }: {
+  item: ParsedFoodItem;
+  novaClass: number | null;
+  additivesN: number | null;
+  childAgeMonths: number | null;
+  childName: string | null;
+}) {
+  if (childAgeMonths == null) return null;
+  const result = calculateChildProductScore({
+    sugar_g: item.sugar_g,
+    sodium_mg: item.sodium_mg,
+    saturated_fat_g: item.saturated_fat_g,
+    fibre_g: item.fibre_g,
+    iron_mg: item.iron_mg,
+    calcium_mg: item.calcium_mg,
+    nova_classification: novaClass,
+    additives_n: additivesN,
+    child_age_days: Math.round(childAgeMonths * 30.44),
+  });
+  const colour = BAND_COLOURS[result.band];
+  const bg = BAND_BG[result.band];
+  return (
+    <div className={styles.scoreCard} style={{ borderColor: colour, background: bg }}>
+      <p className={styles.scoreCardLabel}>
+        SHAi score{childName ? ` for ${childName}` : ''}'s age
+      </p>
+      <p className={styles.scoreCardNumber} style={{ color: colour }}>{result.score}</p>
+      <p className={styles.scoreCardText}>{result.label}</p>
+    </div>
+  );
+}
+
 function FoodItemCard({ item, multiplier = 1, portionLabel, isWin, onWinToggle }: {
   item: ParsedFoodItem;
   multiplier?: number;
@@ -183,6 +228,8 @@ export default function LogPage() {
   const [childValidated, setChildValidated] = useState(false);
   const [mealFavourites, setMealFavourites] = useState<MealFavourite[]>([]);
   const [showScanner, setShowScanner] = useState(false);
+  const [fromBarcode, setFromBarcode] = useState(false);
+  const [barcodeScoreData, setBarcodeScoreData] = useState<{ novaClass: number | null; additivesN: number | null } | null>(null);
   const [portionSelection, setPortionSelection] = useState<string | null>(null);
   const selectedPortion = PORTION_OPTIONS.find(o => o.id === portionSelection) ?? null;
   const portionMultiplier = selectedPortion?.value ?? 1;
@@ -419,9 +466,11 @@ export default function LogPage() {
         return;
       }
       if (!res.ok) throw new Error('lookup failed');
-      const { item } = await res.json();
+      const { item, novaClass, additivesN } = await res.json();
       setPortionSelection(null);
       resetReactions();
+      setFromBarcode(true);
+      setBarcodeScoreData({ novaClass: novaClass ?? null, additivesN: additivesN ?? null });
       setParsedData({ message: '', foodItems: [item], clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: true });
       setPhase('confirming');
     } catch {
@@ -560,6 +609,8 @@ export default function LogPage() {
     setAddSideOpen(false);
     setAddSideInput('');
     setFromFavourite(false);
+    setFromBarcode(false);
+    setBarcodeScoreData(null);
     setPhase('chatting');
     setInput(lastUserMsg?.content ?? fallback);
     setMessages([{ id: generateId(), role: 'assistant', content: "No problem — what would you like to change?" }]);
@@ -582,6 +633,8 @@ export default function LogPage() {
     setAddSideOpen(false);
     setAddSideInput('');
     setFromFavourite(false);
+    setFromBarcode(false);
+    setBarcodeScoreData(null);
     const name = localStorage.getItem(STORAGE.CHILD_NAME);
     setMessages([
       { id: generateId(), role: 'assistant', content: name ? `What else did ${name} have?` : "What else did they have?" },
@@ -650,6 +703,8 @@ export default function LogPage() {
               setAddSideOpen(false);
               setAddSideInput('');
               setFromFavourite(false);
+              setFromBarcode(false);
+              setBarcodeScoreData(null);
               setPhase('chatting');
               setMessages([{ id: generateId(), role: 'assistant', content: "What did your little one have? The more detail the better — ingredients, type, and roughly how much." }]);
             }}
@@ -859,6 +914,16 @@ export default function LogPage() {
                   </svg>
                   Win added to your jar!
                 </div>
+              )}
+
+              {fromBarcode && barcodeScoreData && parsedData.foodItems[0] && (
+                <ProductScoreCard
+                  item={parsedData.foodItems[0]}
+                  novaClass={barcodeScoreData.novaClass}
+                  additivesN={barcodeScoreData.additivesN}
+                  childAgeMonths={childAgeMonths}
+                  childName={childName}
+                />
               )}
 
               <div className={styles.foodList}>

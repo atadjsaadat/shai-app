@@ -111,7 +111,13 @@ function cacheRowToFoodItem(row: Record<string, any>): ParsedFoodItem {
   }
 }
 
-export async function lookupBarcode(barcode: string): Promise<ParsedFoodItem | null> {
+export interface BarcodeResult {
+  item: ParsedFoodItem
+  novaClass: number | null
+  additivesN: number | null
+}
+
+export async function lookupBarcode(barcode: string): Promise<BarcodeResult | null> {
   const admin = createAdminClient()
 
   const { data: cached } = await admin
@@ -125,7 +131,11 @@ export async function lookupBarcode(barcode: string): Promise<ParsedFoodItem | n
       .from('barcode_cache')
       .update({ last_scanned_at: new Date().toISOString(), scan_count: (cached.scan_count ?? 1) + 1 })
       .eq('barcode', barcode)
-    return cacheRowToFoodItem(cached)
+    return {
+      item: cacheRowToFoodItem(cached),
+      novaClass: (cached.nova_classification as number | null) ?? null,
+      additivesN: (cached.additives_n as number | null) ?? null,
+    }
   }
 
   const res = await fetch(`${OFF_BASE}/${barcode}.json`, {
@@ -141,11 +151,15 @@ export async function lookupBarcode(barcode: string): Promise<ParsedFoodItem | n
   const servingG = parseServingGrams(product.serving_size as string | null)
   const item = mapOFFToFoodItem(product, servingG)
   const brand = (product.brands as string | undefined)?.split(',')[0]?.trim() ?? null
+  const novaClass = (product.nova_group as number | undefined) ?? null
+  const additivesN = (product.additives_n as number | undefined) ?? null
 
   await admin.from('barcode_cache').insert({
     barcode,
     product_name: item.food_name,
     brand,
+    nova_classification: novaClass,
+    additives_n: additivesN,
     calories_kcal: item.calories_kcal,
     protein_g: item.protein_g,
     carbs_g: item.carbs_g,
@@ -166,5 +180,5 @@ export async function lookupBarcode(barcode: string): Promise<ParsedFoodItem | n
     scan_count: 1,
   })
 
-  return item
+  return { item, novaClass, additivesN }
 }
