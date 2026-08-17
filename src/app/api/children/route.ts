@@ -9,6 +9,9 @@ export async function POST(request: Request) {
 
   const data: OnboardingData = await request.json()
 
+  const bw = parseFloat(data.birthWeight ?? '')
+  const birthWeightKg = isNaN(bw) ? null : bw
+
   const admin = createAdminClient()
   const { data: child, error } = await admin
     .from('children')
@@ -20,7 +23,7 @@ export async function POST(request: Request) {
       allergies: (data.allergies ?? []).map((a: string) => a.trim()).filter(Boolean),
       is_selective_eater: data.isSelectiveEater ?? false,
       selective_eater_details: data.selectiveEaterDetails ?? null,
-      birth_weight_kg: data.birthWeight ? parseFloat(data.birthWeight) : null,
+      birth_weight_kg: birthWeightKg,
       relationship_to_child: data.relationshipToChild ?? null,
       dietary_preference: data.dietaryPreference ?? null,
     })
