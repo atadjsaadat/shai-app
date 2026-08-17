@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       allergies: (data.allergies ?? []).map((a: string) => a.trim()).filter(Boolean),
       is_selective_eater: data.isSelectiveEater ?? false,
       selective_eater_details: data.selectiveEaterDetails ?? null,
-      birth_weight_kg: data.birthWeight ?? null,
+      birth_weight_kg: data.birthWeight ? parseFloat(data.birthWeight) : null,
       relationship_to_child: data.relationshipToChild ?? null,
       dietary_preference: data.dietaryPreference ?? null,
     })
