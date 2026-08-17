@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/distress-escalate",
-      "schedule": "* * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
