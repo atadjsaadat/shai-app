@@ -7,6 +7,7 @@ import BottomNav from '@/components/BottomNav';
 import { VACCINE_SCHEDULE } from '@/lib/health-record/types';
 import type { VaccinationRecord } from '@/lib/health-record/types';
 import type { Appointment } from '@/lib/appointments/types';
+import { parseDob } from '@/lib/format/dates';
 import styles from './page.module.css';
 
 interface ChildProfile {
@@ -16,7 +17,9 @@ interface ChildProfile {
 }
 
 function expectedDate(dob: string, months: number): string {
-  const d = new Date(dob);
+  const birth = parseDob(dob);
+  if (!birth) return '';
+  const d = new Date(birth);
   d.setMonth(d.getMonth() + months);
   return d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 }
