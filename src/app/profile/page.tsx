@@ -361,9 +361,9 @@ export default function ProfilePage() {
       </header>
 
       {loading ? (
-        <p className={styles.loadingHint}>Loading…</p>
+        <div className="pageSpinner" />
       ) : (
-        <>
+        <div className="pageReady">
           {/* Child hero */}
           {child && (
             <div className={styles.heroCard}>
@@ -737,7 +737,7 @@ export default function ProfilePage() {
           </section>
 
           <AIDisclosure />
-        </>
+        </div>
       )}
 
       <BottomNav />

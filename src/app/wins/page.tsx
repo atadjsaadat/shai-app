@@ -161,6 +161,10 @@ export default function WinsPage() {
         </button>
       </div>
 
+      {loading ? (
+        <div className="pageSpinner" />
+      ) : (
+        <div className="pageReady">
       <div className={styles.controls}>
         <div className={styles.searchWrap}>
           <svg className={styles.searchIcon} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -205,7 +209,7 @@ export default function WinsPage() {
       </div>
 
       <div className={styles.content}>
-        {loading ? null : filteredWins.length === 0 ? (
+        {filteredWins.length === 0 ? (
           <div className={styles.empty}>
             <SHAiBrand expression="default" width={120} />
             <p className={styles.emptyText}>
@@ -251,6 +255,8 @@ export default function WinsPage() {
           </div>
         )}
       </div>
+      </div>
+      )}
 
       {/* ── Win detail sheet ── */}
       {selectedWin && (() => {

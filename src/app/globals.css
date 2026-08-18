@@ -43,3 +43,34 @@ a {
   text-decoration: none;
 }
 
+/* ── Page loading / fade-in ── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.pageSpinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 0;
+}
+
+.pageSpinner::after {
+  content: '';
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--oat-dark);
+  border-top-color: var(--terracotta);
+  border-radius: 50%;
+  animation: spin 600ms linear infinite;
+}
+
+.pageReady {
+  animation: fadeIn 200ms ease;
+}
+

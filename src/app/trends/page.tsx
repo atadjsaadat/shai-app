@@ -438,21 +438,9 @@ export default function TrendsPage() {
   const snapshotGroupKeys = MEAL_ORDER.filter(k => snapshotGroups[k]);
   const snapshotTotalKcal = snapshotEntries.reduce((s, e) => s + (e.calories_kcal ?? 0), 0);
 
-  // PREVIEW MOCK — remove before first real user
-  const displayMacroSplit: [number, number, number] = macroSplit ?? [52, 18, 30];
-  const displayBestDay: ScoredDayData | null = bestDay ?? (data ? {
-    date: data.days.find(d => d.dayLabel === 'Thu')?.date ?? data.days[data.days.length - 1]?.date ?? '',
-    dayLabel: 'Thu',
-    score: 5,
-    hasLogs: true,
-    locked: false,
-    totals: { calories_kcal: 1240, protein_g: 20, carbs_g: 80, fat_g: 30, fibre_g: 5, sugar_g: 10, sodium_mg: 300, iron_mg: 5 } as Totals,
-  } : null);
-  const displayWins: WinEntry[] = weekWins.length > 0 ? weekWins : (data ? [
-    { id: 'm1', logged_at: '', win_type: 'new_food', food_involved: 'mango', parent_note: null },
-    { id: 'm2', logged_at: '', win_type: 'ate_well', food_involved: null, parent_note: null },
-    { id: 'm3', logged_at: '', win_type: 'self_fed', food_involved: 'pasta', parent_note: null },
-  ] : []);
+  const displayMacroSplit = macroSplit;
+  const displayBestDay = bestDay;
+  const displayWins = weekWins;
 
   return (
     <div className={styles.page}>
@@ -461,26 +449,21 @@ export default function TrendsPage() {
         {childName && <p className={styles.subtitle}>{childName}&apos;s week</p>}
       </header>
 
+      {loading ? (
+        <div className="pageSpinner" />
+      ) : (
+        <div className="pageReady">
       {/* ── Week dot strip ── */}
       <section>
         <div className={styles.sectionHeader}>
           <p className={styles.sectionLabel}>This week</p>
-          {!loading && logCountText && (
+          {logCountText && (
             <p className={styles.loggedCount}>{logCountText}</p>
           )}
         </div>
 
         <div className={styles.daysCard}>
-          {loading ? (
-            <div className={styles.dotsRow}>
-              {Array.from({ length: 7 }, (_, i) => (
-                <div key={i} className={styles.dayCol}>
-                  <div className={styles.dotEmpty} />
-                  <span className={styles.dayLabel}>···</span>
-                </div>
-              ))}
-            </div>
-          ) : noChild ? (
+          {noChild ? (
             <p className={styles.emptyHint}>No child profile found</p>
           ) : data ? (
             <div className={styles.dotsRow}>
@@ -572,9 +555,7 @@ export default function TrendsPage() {
         </div>
 
         <div className={styles.nutrientCard}>
-          {loading ? (
-            <p className={styles.emptyHint}>Loading…</p>
-          ) : data?.averages ? (
+          {data?.averages ? (
             <>
               <NutrientCol nutrients={LEFT_NUTRIENTS}  averages={data.averages} targets={data.targets} onSelect={setSelectedNutrient} />
               <NutrientCol nutrients={RIGHT_NUTRIENTS} averages={data.averages} targets={data.targets} onSelect={setSelectedNutrient} />
@@ -790,6 +771,9 @@ export default function TrendsPage() {
           </div>
           <AIDisclosure />
         </section>
+      )}
+
+        </div>
       )}
 
       <BottomNav />
