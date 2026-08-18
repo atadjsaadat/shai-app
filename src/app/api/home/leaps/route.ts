@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { getUpcomingEvent } from '@/lib/developmental/leaps'
+import { parseDob } from '@/lib/format/dates'
 
 export async function GET(request: Request) {
   const supabase = await createClient()
@@ -23,7 +24,9 @@ export async function GET(request: Request) {
   // Adjusted age for premature babies: subtract weeks born early × 7
   const gestWeeks = child.gestational_age_at_birth ?? 40
   const premAdjustDays = Math.max(0, (40 - gestWeeks) * 7)
-  const ageInDays = Math.floor((Date.now() - new Date(child.date_of_birth).getTime()) / 86_400_000) - premAdjustDays
+  const birth = parseDob(child.date_of_birth)
+  if (!birth) return NextResponse.json({ event: null })
+  const ageInDays = Math.floor((Date.now() - birth.getTime()) / 86_400_000) - premAdjustDays
 
   const surfaced: number[] = child.leaps_surfaced ?? []
   const result = getUpcomingEvent(ageInDays, surfaced)

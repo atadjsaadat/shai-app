@@ -7,6 +7,7 @@ import BottomNav from '@/components/BottomNav';
 import { ALLERGY_GROUPS, COMMON_INTOLERANCES } from '@/lib/allergens';
 import styles from './page.module.css';
 import AIDisclosure from '@/components/AIDisclosure';
+import { parseDob } from '@/lib/format/dates';
 
 interface ProfileData {
   tier: 'free' | 'premium' | 'clinical';
@@ -34,27 +35,17 @@ interface PendingInvite {
   expires_at: string;
 }
 
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-
-
 function formatAge(dob: string | null | undefined): string {
-  if (!dob) return '';
-  const parts = dob.trim().split(' ');
-  if (parts.length === 2) {
-    const mIdx = MONTHS.indexOf(parts[0]);
-    const year = parseInt(parts[1], 10);
-    if (mIdx !== -1 && !isNaN(year)) {
-      const now = new Date();
-      const total = (now.getFullYear() - year) * 12 + (now.getMonth() - mIdx);
-      if (total <= 0) return '';
-      const yrs = Math.floor(total / 12);
-      const mos = total % 12;
-      if (yrs === 0) return `${mos} month${mos !== 1 ? 's' : ''} old`;
-      if (mos === 0) return `${yrs} year${yrs !== 1 ? 's' : ''} old`;
-      return `${yrs} year${yrs !== 1 ? 's' : ''} ${mos} month${mos !== 1 ? 's' : ''} old`;
-    }
-  }
-  return '';
+  const birth = parseDob(dob);
+  if (!birth) return '';
+  const now = new Date();
+  const total = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
+  if (total <= 0) return '';
+  const yrs = Math.floor(total / 12);
+  const mos = total % 12;
+  if (yrs === 0) return `${mos} month${mos !== 1 ? 's' : ''} old`;
+  if (mos === 0) return `${yrs} year${yrs !== 1 ? 's' : ''} old`;
+  return `${yrs} year${yrs !== 1 ? 's' : ''} ${mos} month${mos !== 1 ? 's' : ''} old`;
 }
 
 function capitalize(s: string | null | undefined): string {

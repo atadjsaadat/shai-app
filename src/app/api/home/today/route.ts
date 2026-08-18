@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { getTargets } from '@/lib/nutrition/targets'
 import type { Targets } from '@/lib/nutrition/targets'
+import { parseDob } from '@/lib/format/dates'
 
 export async function GET(request: Request) {
   const supabase = await createClient()
@@ -39,9 +40,9 @@ export async function GET(request: Request) {
   if (logsResult.error) return NextResponse.json({ error: logsResult.error.message }, { status: 500 })
 
   // Calculate age in months for age-appropriate targets
-  let ageMonths = 24 // default: 1–3 year band
-  if (childResult.data?.date_of_birth) {
-    const dob = new Date(childResult.data.date_of_birth)
+  let ageMonths = 24
+  const dob = parseDob(childResult.data?.date_of_birth)
+  if (dob) {
     const now = new Date()
     ageMonths = (now.getFullYear() - dob.getFullYear()) * 12 + (now.getMonth() - dob.getMonth())
   }

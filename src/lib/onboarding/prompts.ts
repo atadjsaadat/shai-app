@@ -97,7 +97,7 @@ The parent sees only the "message" field — if you write anything outside the J
   "message": "your warm conversational response — plain text, no markdown, no emojis unless natural",
   "collected": {
     "childName": "only if confirmed this turn",
-    "birthMonthYear": "only if confirmed this turn",
+    "birthMonthYear": "YYYY-MM format only — e.g. 2023-04 — only if confirmed this turn",
     "sex": "male|female|not_specified — only if confirmed this turn",
     "allergies": ["array", "of", "strings", "or", "empty array if none"],
     "isSelectiveEater": true,

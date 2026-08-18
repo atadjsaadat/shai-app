@@ -1,3 +1,29 @@
+const MONTH_NAMES = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+const MONTH_SHORT  = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+
+// Parses date_of_birth stored as "YYYY-MM", "MM/YYYY", "August 2022", or "Aug 2022"
+export function parseDob(dob: string | null | undefined): Date | null {
+  if (!dob) return null;
+  const s = dob.trim();
+  if (/^\d{4}-\d{2}$/.test(s)) {
+    const d = new Date(s + '-01');
+    return isNaN(d.getTime()) ? null : d;
+  }
+  if (/^\d{1,2}\/\d{4}$/.test(s)) {
+    const [m, y] = s.split('/').map(Number);
+    return (m >= 1 && m <= 12) ? new Date(y, m - 1, 1) : null;
+  }
+  const parts = s.split(/\s+/);
+  if (parts.length === 2) {
+    const monthStr = parts[0].toLowerCase();
+    const year = parseInt(parts[1], 10);
+    let idx = MONTH_NAMES.indexOf(monthStr);
+    if (idx === -1) idx = MONTH_SHORT.indexOf(monthStr);
+    if (idx !== -1 && !isNaN(year)) return new Date(year, idx, 1);
+  }
+  return null;
+}
+
 export function formatAge(days: number | null): string {
   if (days == null || days < 0) return '';
   if (days < 7) return `${days} day${days === 1 ? '' : 's'} old`;

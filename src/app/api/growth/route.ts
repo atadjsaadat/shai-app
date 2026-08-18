@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { calcPercentile, calcBMI } from '@/lib/growth/calculations'
+import { parseDob } from '@/lib/format/dates'
 
 function ageInMonths(dob: string, at: string): number {
-  const birth = new Date(dob)
+  const birth = parseDob(dob)
   const measured = new Date(at)
+  if (!birth) return 0
   return (measured.getFullYear() - birth.getFullYear()) * 12
     + (measured.getMonth() - birth.getMonth())
     + (measured.getDate() < birth.getDate() ? -1 : 0)

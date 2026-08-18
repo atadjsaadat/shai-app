@@ -3,6 +3,7 @@ import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { createClient as createAnthropicClient } from '@/lib/anthropic/client'
 import { buildWeeklySummaryPrompt } from '@/lib/log/prompts'
 import { getJournalContext } from '@/lib/journal/context'
+import { parseDob } from '@/lib/format/dates'
 
 function subtractDays(dateStr: string, days: number): string {
   const [y, m, d] = dateStr.split('-').map(Number)
@@ -63,10 +64,10 @@ export async function GET(request: Request) {
   if (logsResult.error) return NextResponse.json({ error: logsResult.error.message }, { status: 500 })
 
   let ageMonths = 24
-  if (childResult.data?.date_of_birth) {
-    const dob = new Date(childResult.data.date_of_birth)
+  const _dob = parseDob(childResult.data?.date_of_birth)
+  if (_dob) {
     const now = new Date()
-    ageMonths = (now.getFullYear() - dob.getFullYear()) * 12 + (now.getMonth() - dob.getMonth())
+    ageMonths = (now.getFullYear() - _dob.getFullYear()) * 12 + (now.getMonth() - _dob.getMonth())
   }
   const targets = getTargets(ageMonths)
 

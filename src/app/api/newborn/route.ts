@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { parseDob } from '@/lib/format/dates'
 
 function timeOfDay(date: Date): string {
   const h = date.getHours()
@@ -28,9 +29,8 @@ export async function GET(req: NextRequest) {
 
   if (!child) return NextResponse.json({ error: 'Child not found' }, { status: 404 })
 
-  const ageDays = child.date_of_birth
-    ? Math.floor((Date.now() - new Date(child.date_of_birth).getTime()) / 86_400_000)
-    : null
+  const birth = parseDob(child.date_of_birth)
+  const ageDays = birth ? Math.floor((Date.now() - birth.getTime()) / 86_400_000) : null
 
   const { data: feeds, error } = await admin
     .from('newborn_feed_logs')
@@ -105,9 +105,8 @@ export async function POST(req: NextRequest) {
   if (!child) return NextResponse.json({ error: 'Child not found' }, { status: 404 })
 
   const logDate = new Date(loggedAt)
-  const childAgeDays = child.date_of_birth
-    ? Math.floor((logDate.getTime() - new Date(child.date_of_birth).getTime()) / 86_400_000)
-    : null
+  const dob = parseDob(child.date_of_birth)
+  const childAgeDays = dob ? Math.floor((logDate.getTime() - dob.getTime()) / 86_400_000) : null
 
   const h = logDate.getHours()
 

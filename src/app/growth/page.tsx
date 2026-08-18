@@ -7,6 +7,7 @@ import GrowthChart from '@/components/GrowthChart'
 import SHAiPresence from '@/components/SHAiPresence'
 import SHAiBrand from '@/components/SHAiBrand'
 import { STORAGE } from '@/lib/storage/keys'
+import { parseDob } from '@/lib/format/dates'
 import AIDisclosure from '@/components/AIDisclosure'
 import styles from './page.module.css'
 
@@ -73,8 +74,9 @@ function timeAgo(iso: string): string {
 }
 
 function ageInMonths(dob: string, at: string): number {
-  const birth = new Date(dob)
+  const birth = parseDob(dob)
   const measured = new Date(at)
+  if (!birth) return 0
   return (measured.getFullYear() - birth.getFullYear()) * 12
     + (measured.getMonth() - birth.getMonth())
     + (measured.getDate() < birth.getDate() ? -1 : 0)

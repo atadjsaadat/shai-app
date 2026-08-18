@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import type { ParsedFoodItem, MealType } from '@/lib/log/types'
+import { parseDob } from '@/lib/format/dates'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -100,9 +101,8 @@ export async function POST(request: Request) {
       .eq('id', childId)
       .single()
 
-    const child_age_days = child?.date_of_birth
-      ? Math.floor((Date.now() - new Date(child.date_of_birth).getTime()) / 86_400_000)
-      : null
+    const birth = parseDob(child?.date_of_birth)
+    const child_age_days = birth ? Math.floor((Date.now() - birth.getTime()) / 86_400_000) : null
 
     const month = new Date().getMonth()
     const season =

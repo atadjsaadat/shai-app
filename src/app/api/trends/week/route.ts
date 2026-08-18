@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { getTargets } from '@/lib/nutrition/targets'
 import type { Targets } from '@/lib/nutrition/targets'
+import { parseDob } from '@/lib/format/dates'
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -31,8 +32,8 @@ export async function GET(request: Request) {
   ])
 
   let ageMonths = 24
-  if (childResult.data?.date_of_birth) {
-    const dob = new Date(childResult.data.date_of_birth)
+  const dob = parseDob(childResult.data?.date_of_birth)
+  if (dob) {
     const now = new Date()
     ageMonths = (now.getFullYear() - dob.getFullYear()) * 12 + (now.getMonth() - dob.getMonth())
   }
