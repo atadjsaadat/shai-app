@@ -5,6 +5,39 @@
 -- =====================================================
 
 -- ─────────────────────────────────────────────────────
+-- food_logs — PK rename (cloud schema used log_id, code expects id)
+-- ─────────────────────────────────────────────────────
+DO $$ BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'food_logs' AND column_name = 'log_id'
+  ) THEN
+    ALTER TABLE food_logs RENAME COLUMN log_id TO id;
+  END IF;
+END $$;
+
+-- ─────────────────────────────────────────────────────
+-- food_logs — premium micronutrients (may be missing from older cloud schema)
+-- ─────────────────────────────────────────────────────
+ALTER TABLE food_logs
+  ADD COLUMN IF NOT EXISTS calcium_mg    numeric,
+  ADD COLUMN IF NOT EXISTS iron_mg       numeric,
+  ADD COLUMN IF NOT EXISTS vitamin_c_mg  numeric,
+  ADD COLUMN IF NOT EXISTS vitamin_a_mcg numeric,
+  ADD COLUMN IF NOT EXISTS vitamin_d_mcg numeric,
+  ADD COLUMN IF NOT EXISTS zinc_mg       numeric,
+  ADD COLUMN IF NOT EXISTS omega3_mg     numeric;
+
+ALTER TABLE barcode_cache
+  ADD COLUMN IF NOT EXISTS calcium_mg    numeric,
+  ADD COLUMN IF NOT EXISTS iron_mg       numeric,
+  ADD COLUMN IF NOT EXISTS vitamin_c_mg  numeric,
+  ADD COLUMN IF NOT EXISTS vitamin_a_mcg numeric,
+  ADD COLUMN IF NOT EXISTS vitamin_d_mcg numeric,
+  ADD COLUMN IF NOT EXISTS zinc_mg       numeric,
+  ADD COLUMN IF NOT EXISTS omega3_mg     numeric;
+
+-- ─────────────────────────────────────────────────────
 -- food_logs — extended micronutrients + context columns
 -- ─────────────────────────────────────────────────────
 ALTER TABLE food_logs
