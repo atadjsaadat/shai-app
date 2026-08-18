@@ -382,22 +382,18 @@ export default function HomePage() {
         </div>
       )}
 
+      {hasMeals && (
       <section>
         <div className={styles.sectionHeader}>
           <p className={styles.sectionLabel}>Today&apos;s nutrition</p>
-          {hasMeals && <p className={styles.rdaHint}>bar fills to daily target</p>}
+          <p className={styles.rdaHint}>bar fills to daily target</p>
         </div>
         <div className={styles.nutrientCard}>
-          {!loading && !hasMeals ? (
-            <p className={styles.nutrientEmpty}>Add a meal below to see today&apos;s nutrition fill up.</p>
-          ) : (
-            <>
-              <NutrientCol nutrients={LEFT_NUTRIENTS}  totals={totals} targets={targets} loading={loading} />
-              <NutrientCol nutrients={RIGHT_NUTRIENTS} totals={totals} targets={targets} loading={loading} />
-            </>
-          )}
+          <NutrientCol nutrients={LEFT_NUTRIENTS}  totals={totals} targets={targets} loading={false} />
+          <NutrientCol nutrients={RIGHT_NUTRIENTS} totals={totals} targets={targets} loading={false} />
         </div>
       </section>
+      )}
 
       {hasMeals && (
         <section>
