@@ -8,7 +8,7 @@ import JournalLockScreen from '@/components/JournalLockScreen';
 import { createSpeechRecognition } from '@/lib/speech/recognition';
 import { compressPhoto } from '@/lib/storage/upload';
 import { STORAGE } from '@/lib/storage/keys';
-import { formatAge, formatDateLong, formatDateMedium } from '@/lib/format/dates';
+import { formatAge, formatDateLong, formatDateMedium, parseDob } from '@/lib/format/dates';
 import styles from './page.module.css';
 
 // ── Journal note colours (cycling per entry) ──────────
@@ -91,7 +91,9 @@ function formatEntryTime(iso: string): string {
 
 function ageAtEntry(dob: string | null, createdAt: string): string {
   if (!dob) return '';
-  const days = Math.floor((new Date(createdAt).getTime() - new Date(dob).getTime()) / 86400000);
+  const birth = parseDob(dob);
+  if (!birth) return '';
+  const days = Math.floor((new Date(createdAt).getTime() - birth.getTime()) / 86400000);
   if (days < 0) return '';
   return formatAge(days);
 }
