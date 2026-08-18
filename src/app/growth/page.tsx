@@ -249,6 +249,10 @@ export default function GrowthPage() {
         </div>
       </header>
 
+      {loading ? (
+        <div className="pageSpinner" />
+      ) : (
+        <div className="pageReady">
       {/* Latest measurements */}
       {!loading && latest && (
         <div className={styles.statsRow}>
@@ -476,6 +480,9 @@ export default function GrowthPage() {
             ))}
           </div>
         </section>
+      )}
+
+        </div>
       )}
 
       <AIDisclosure />

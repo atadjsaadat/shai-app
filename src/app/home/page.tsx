@@ -324,7 +324,11 @@ export default function HomePage() {
         </Link>
       </header>
 
-      <div className={styles.shaiCard}>
+      {loading ? (
+        <div className="pageSpinner" />
+      ) : (
+        <div className="pageReady">
+        <div className={styles.shaiCard}>
         <SHAiBrand expression={hasMeals ? 'celebrating' : 'default'} width={88} />
         <p className={styles.shaiMessage}>{shaiMessage}</p>
       </div>
@@ -479,6 +483,9 @@ export default function HomePage() {
             )}
           </div>
         </section>
+      )}
+
+        </div>
       )}
 
       <AIDisclosure />

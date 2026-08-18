@@ -461,26 +461,21 @@ export default function TrendsPage() {
         {childName && <p className={styles.subtitle}>{childName}&apos;s week</p>}
       </header>
 
+      {loading ? (
+        <div className="pageSpinner" />
+      ) : (
+        <div className="pageReady">
       {/* ── Week dot strip ── */}
       <section>
         <div className={styles.sectionHeader}>
           <p className={styles.sectionLabel}>This week</p>
-          {!loading && logCountText && (
+          {logCountText && (
             <p className={styles.loggedCount}>{logCountText}</p>
           )}
         </div>
 
         <div className={styles.daysCard}>
-          {loading ? (
-            <div className={styles.dotsRow}>
-              {Array.from({ length: 7 }, (_, i) => (
-                <div key={i} className={styles.dayCol}>
-                  <div className={styles.dotEmpty} />
-                  <span className={styles.dayLabel}>···</span>
-                </div>
-              ))}
-            </div>
-          ) : noChild ? (
+          {noChild ? (
             <p className={styles.emptyHint}>No child profile found</p>
           ) : data ? (
             <div className={styles.dotsRow}>
@@ -572,9 +567,7 @@ export default function TrendsPage() {
         </div>
 
         <div className={styles.nutrientCard}>
-          {loading ? (
-            <p className={styles.emptyHint}>Loading…</p>
-          ) : data?.averages ? (
+          {data?.averages ? (
             <>
               <NutrientCol nutrients={LEFT_NUTRIENTS}  averages={data.averages} targets={data.targets} onSelect={setSelectedNutrient} />
               <NutrientCol nutrients={RIGHT_NUTRIENTS} averages={data.averages} targets={data.targets} onSelect={setSelectedNutrient} />
@@ -790,6 +783,9 @@ export default function TrendsPage() {
           </div>
           <AIDisclosure />
         </section>
+      )}
+
+        </div>
       )}
 
       <BottomNav />
