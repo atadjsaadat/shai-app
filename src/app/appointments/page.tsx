@@ -106,10 +106,18 @@ function TypeBadge({ type }: { type: AppointmentType | null }) {
   )
 }
 
+interface AppointmentsCache { appointments: Appointment[] }
+let _appointmentsCache: AppointmentsCache | null = null
+function readAppointmentsCache(): AppointmentsCache | null {
+  if (typeof window === 'undefined') return null
+  return _appointmentsCache
+}
+
 export default function AppointmentsPage() {
   const router = useRouter()
-  const [appointments, setAppointments] = useState<Appointment[]>([])
-  const [loading, setLoading] = useState(true)
+  const _c = readAppointmentsCache()
+  const [appointments, setAppointments] = useState<Appointment[]>(_c?.appointments ?? [])
+  const [loading, setLoading] = useState<boolean>(!_c)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -128,7 +136,12 @@ export default function AppointmentsPage() {
         if (r.status === 401) { router.replace('/login'); return null }
         return r.json()
       })
-      .then(data => { if (data) setAppointments(data.appointments ?? []) })
+      .then(data => {
+        if (data) {
+          setAppointments(data.appointments ?? [])
+          _appointmentsCache = { appointments: data.appointments ?? [] }
+        }
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [router])

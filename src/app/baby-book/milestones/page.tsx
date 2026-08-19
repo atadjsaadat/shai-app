@@ -106,6 +106,13 @@ const MILESTONE_TYPE_PATHS: Record<string, React.JSX.Element> = {
   something_special:    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>,
 }
 
+interface MilestonesCache {
+  entries: BabyBookEntry[];
+  tier: string;
+  childDob: string | null;
+}
+let _milestonesCache: MilestonesCache | null = null;
+
 interface FormState {
   domain: Domain | null;
   milestone_type: MilestoneType;
@@ -124,10 +131,13 @@ const DEFAULT_FORM: FormState = {
 
 export default function BabyBookPage() {
   const router = useRouter();
-  const [entries, setEntries] = useState<BabyBookEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [tier, setTier] = useState<string>('free');
-  const [childName, setChildName] = useState<string | null>(null);
+  const _c = _milestonesCache;
+  const [entries, setEntries] = useState<BabyBookEntry[]>(_c?.entries ?? []);
+  const [loading, setLoading] = useState<boolean>(!_c);
+  const [tier, setTier] = useState<string>(_c?.tier ?? 'free');
+  const [childName, setChildName] = useState<string | null>(() =>
+    typeof window !== 'undefined' ? localStorage.getItem(STORAGE.CHILD_NAME) : null
+  );
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -137,12 +147,9 @@ export default function BabyBookPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<Domain | null>(null);
   const [viewMode, setViewMode] = useState<'domain' | 'timeline'>('domain');
-  const [childDob, setChildDob] = useState<string | null>(null);
+  const [childDob, setChildDob] = useState<string | null>(_c?.childDob ?? null);
 
   useEffect(() => {
-    const name = localStorage.getItem(STORAGE.CHILD_NAME);
-    setChildName(name);
-
     Promise.all([
       fetch('/api/baby-book').then(r => r.json()),
       fetch('/api/children').then(r => r.json()),
@@ -150,6 +157,11 @@ export default function BabyBookPage() {
       if (bookData.entries) setEntries(bookData.entries);
       if (childData.tier) setTier(childData.tier);
       if (childData.childDob) setChildDob(childData.childDob);
+      _milestonesCache = {
+        entries: bookData.entries ?? [],
+        tier: childData.tier ?? 'free',
+        childDob: childData.childDob ?? null,
+      };
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 

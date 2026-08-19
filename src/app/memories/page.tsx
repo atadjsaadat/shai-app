@@ -121,6 +121,11 @@ function MicButton({ listening, onClick, disabled }: { listening: boolean; onCli
   );
 }
 
+// ── Module-level cache — survives component unmounts ───
+
+interface MemoriesCache { entries: JournalEntry[]; wins: Win[] }
+let _memoriesCache: MemoriesCache | null = null;
+
 // ── Component ──────────────────────────────────────────
 
 export default function JourneyPage() {
@@ -134,8 +139,9 @@ export default function JourneyPage() {
   const [child, setChild] = useState<ChildProfile | null>(null);
 
   // Journal state
-  const [entries, setEntries] = useState<JournalEntry[]>([]);
-  const [journalLoading, setJournalLoading] = useState(true);
+  const _c = _memoriesCache;
+  const [entries, setEntries] = useState<JournalEntry[]>(_c?.entries ?? []);
+  const [journalLoading, setJournalLoading] = useState<boolean>(!_c);
   const [composing, setComposing] = useState(false);
   const [composerText, setComposerText] = useState('');
   const [composerInterim, setComposerInterim] = useState('');
@@ -146,7 +152,9 @@ export default function JourneyPage() {
   const [listenTarget, setListenTarget] = useState<'composer' | 'edit'>('composer');
   const [journalSaving, setJournalSaving] = useState(false);
   const [cleaning, setCleaning] = useState(false);
-  const [childId, setChildId] = useState<string | null>(null);
+  const [childId, setChildId] = useState<string | null>(() =>
+    typeof window !== 'undefined' ? localStorage.getItem(STORAGE.ACTIVE_CHILD_ID) : null
+  );
   const [journalSearch, setJournalSearch] = useState('');
 
   const speechRef = useRef<ReturnType<typeof createSpeechRecognition> | null>(null);
@@ -154,8 +162,8 @@ export default function JourneyPage() {
   const editRef = useRef<HTMLTextAreaElement>(null);
 
   // Wins state
-  const [wins, setWins] = useState<Win[]>([]);
-  const [winsLoading, setWinsLoading] = useState(true);
+  const [wins, setWins] = useState<Win[]>(_c?.wins ?? []);
+  const [winsLoading, setWinsLoading] = useState<boolean>(!_c);
   const [showForm, setShowForm] = useState(false);
   const [selectedWin, setSelectedWin] = useState<Win | null>(null);
   const [winType, setWinType] = useState('new_food');
@@ -202,27 +210,22 @@ export default function JourneyPage() {
   useEffect(() => {
     const cid = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
     setChildId(cid);
-    fetch('/api/journey')
-      .then(r => r.json())
-      .then(data => { if (data.entries) setEntries(data.entries); })
-      .catch(() => {})
-      .finally(() => setJournalLoading(false));
-    fetch('/api/children')
-      .then(r => r.json())
-      .then(data => {
-        if (data.childName) setChild({ name: data.childName, date_of_birth: data.childDob ?? null });
-      })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    fetch('/api/wins')
-      .then((r) => r.json())
-      .then((json) => {
-        if (json.error === 'Not authenticated') { router.replace('/login'); return; }
-        setWins(json.wins ?? []);
-      })
-      .finally(() => setWinsLoading(false));
+    Promise.all([
+      fetch('/api/journey').then(r => r.json()),
+      fetch('/api/wins').then(r => r.json()),
+      fetch('/api/children').then(r => r.json()),
+    ]).then(([journalData, winsData, childData]) => {
+      if (winsData.error === 'Not authenticated') { router.replace('/login'); return; }
+      const freshEntries = journalData.entries ?? [];
+      const freshWins = winsData.wins ?? [];
+      setEntries(freshEntries);
+      setWins(freshWins);
+      if (childData.childName) setChild({ name: childData.childName, date_of_birth: childData.childDob ?? null });
+      _memoriesCache = { entries: freshEntries, wins: freshWins };
+    }).catch(() => {}).finally(() => {
+      setJournalLoading(false);
+      setWinsLoading(false);
+    });
   }, [router]);
 
   useEffect(() => {

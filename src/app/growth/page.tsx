@@ -109,16 +109,34 @@ function getShaiMessage(
   return parts.length > 0 ? parts.join(' ') : null
 }
 
+interface GrowthCache {
+  records: GrowthRecord[]
+  sex: string
+  dob: string | null
+  childId: string | null
+  childName: string | null
+}
+let _growthCache: GrowthCache | null = null
+function readGrowthCache(): GrowthCache | null {
+  if (typeof window === 'undefined') return null
+  return _growthCache
+}
+
 export default function GrowthPage() {
   const router = useRouter()
+  const _c = readGrowthCache()
   const [tab, setTab] = useState<Tab>('weight')
-  const [records, setRecords] = useState<GrowthRecord[]>([])
-  const [sex, setSex] = useState<string>('male')
-  const [accent, setAccent] = useState<string>(ACCENT_DEFAULT)
-  const [dob, setDob] = useState<string | null>(null)
-  const [childName, setChildName] = useState<string | null>(null)
-  const [childId, setChildId] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [records, setRecords] = useState<GrowthRecord[]>(_c?.records ?? [])
+  const [sex, setSex] = useState<string>(_c?.sex ?? 'male')
+  const [accent, setAccent] = useState<string>(_c ? accentForSex(_c.sex) : ACCENT_DEFAULT)
+  const [dob, setDob] = useState<string | null>(_c?.dob ?? null)
+  const [childName, setChildName] = useState<string | null>(
+    _c?.childName ?? (typeof window !== 'undefined' ? localStorage.getItem(STORAGE.CHILD_NAME) : null)
+  )
+  const [childId, setChildId] = useState<string | null>(
+    _c?.childId ?? (typeof window !== 'undefined' ? localStorage.getItem(STORAGE.ACTIVE_CHILD_ID) : null)
+  )
+  const [loading, setLoading] = useState<boolean>(!_c)
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [formDate, setFormDate] = useState(new Date().toISOString().slice(0, 10))
@@ -155,6 +173,13 @@ export default function GrowthPage() {
           setSex(json.sex ?? 'male')
           setAccent(accentForSex(json.sex ?? null))
           setDob(json.dob ?? null)
+          _growthCache = {
+            records: json.records ?? [],
+            sex: json.sex ?? 'male',
+            dob: json.dob ?? null,
+            childId: cId,
+            childName: localStorage.getItem(STORAGE.CHILD_NAME),
+          }
         }
       } catch { /* silently fail */ }
 

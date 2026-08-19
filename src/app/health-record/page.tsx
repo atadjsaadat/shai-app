@@ -39,11 +39,22 @@ function todayLocalDate(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+interface HealthCache {
+  child: ChildProfile | null;
+  vaccinations: Map<string, VaccinationRecord>;
+}
+let _healthCache: HealthCache | null = null;
+function readHealthCache(): HealthCache | null {
+  if (typeof window === 'undefined') return null;
+  return _healthCache;
+}
+
 export default function HealthRecordPage() {
   const router = useRouter();
-  const [child, setChild] = useState<ChildProfile | null>(null);
-  const [vaccinations, setVaccinations] = useState<Map<string, VaccinationRecord>>(new Map());
-  const [loading, setLoading] = useState(true);
+  const _c = readHealthCache();
+  const [child, setChild] = useState<ChildProfile | null>(_c?.child ?? null);
+  const [vaccinations, setVaccinations] = useState<Map<string, VaccinationRecord>>(_c?.vaccinations ?? new Map());
+  const [loading, setLoading] = useState<boolean>(!_c);
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [dateInput, setDateInput] = useState('');
   const [saving, setSaving] = useState<string | null>(null);
@@ -72,6 +83,7 @@ export default function HealthRecordPage() {
           const map = new Map<string, VaccinationRecord>();
           for (const v of data.vaccinations) map.set(v.vaccine_key, v);
           setVaccinations(map);
+          _healthCache = { child: data.child ?? null, vaccinations: map };
         }
       })
       .catch(() => {})
