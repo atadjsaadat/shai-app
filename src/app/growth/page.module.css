@@ -203,6 +203,7 @@
   flex-direction: column;
   gap: 14px;
   box-shadow: var(--card-shadow);
+  overflow: hidden;
 }
 
 .formTitle {
@@ -242,6 +243,8 @@
   outline: none;
   transition: border-color 0.15s;
   font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .input:focus { border-color: var(--child-accent, var(--terracotta)); }
