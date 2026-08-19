@@ -177,7 +177,7 @@ export default function AccountPage() {
                   <span className={styles.avatarInitial}>{initial}</span>
                 )}
               </button>
-              <span className={styles.cameraBadge}>
+              <span className={styles.cameraBadge} onClick={() => fileInputRef.current?.click()}>
                 {uploadingAvatar ? (
                   <span style={{ fontSize: 9, fontWeight: 700 }}>…</span>
                 ) : (
