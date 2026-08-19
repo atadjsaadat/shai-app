@@ -538,7 +538,7 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
           )}
           {totalCount > 0 && (
             <p className={styles.feedCounter}>
-              {totalCount.toLocaleString()} feed{totalCount !== 1 ? 's' : ''} logged with {childName ?? 'your little one'} since birth
+              {totalCount.toLocaleString()} feed{totalCount !== 1 ? 's' : ''} logged with {childName ?? 'your little one'} in SHAi
             </p>
           )}
           {todayBreastMins > 0 && (
@@ -548,10 +548,10 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
             <p className={styles.feedCounter}>{formatMl(todayMl)} fed today</p>
           )}
           {totalBreastMinutes > 0 && (
-            <p className={styles.feedCounter}>{formatMins(totalBreastMinutes)} of breastfeeding since birth</p>
+            <p className={styles.feedCounter}>{formatMins(totalBreastMinutes)} of breastfeeding logged in SHAi</p>
           )}
           {totalAmountMl > 0 && (
-            <p className={styles.feedCounter}>{formatMl(totalAmountMl)} fed since birth</p>
+            <p className={styles.feedCounter}>{formatMl(totalAmountMl)} of milk logged in SHAi</p>
           )}
         </div>
 
