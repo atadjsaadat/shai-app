@@ -128,16 +128,24 @@ function feedLabel(f: FeedRecord): string {
   return type + detail;
 }
 
+interface FeedsCache {
+  feeds: FeedRecord[]; ageDays: number | null; totalCount: number;
+  firstFeedAt: string | null; nightFeedCount: number;
+  totalBreastMinutes: number; totalAmountMl: number;
+}
+let _feedsCache: FeedsCache | null = null;
+
 export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArchive: boolean) => void }) {
-  const [feeds, setFeeds] = useState<FeedRecord[]>([]);
+  const [feeds, setFeeds] = useState<FeedRecord[]>(_feedsCache?.feeds ?? []);
   const [childId, setChildId] = useState<string | null>(null);
   const [childName, setChildName] = useState<string | null>(null);
-  const [ageDays, setAgeDays] = useState<number | null>(null);
-  const [totalCount, setTotalCount] = useState<number>(0);
-  const [firstFeedAt, setFirstFeedAt] = useState<string | null>(null);
-  const [nightFeedCount, setNightFeedCount] = useState<number>(0);
-  const [totalBreastMinutes, setTotalBreastMinutes] = useState<number>(0);
-  const [totalAmountMl, setTotalAmountMl] = useState<number>(0);
+  const [ageDays, setAgeDays] = useState<number | null>(_feedsCache?.ageDays ?? null);
+  const [totalCount, setTotalCount] = useState<number>(_feedsCache?.totalCount ?? 0);
+  const [firstFeedAt, setFirstFeedAt] = useState<string | null>(_feedsCache?.firstFeedAt ?? null);
+  const [nightFeedCount, setNightFeedCount] = useState<number>(_feedsCache?.nightFeedCount ?? 0);
+  const [totalBreastMinutes, setTotalBreastMinutes] = useState<number>(_feedsCache?.totalBreastMinutes ?? 0);
+  const [totalAmountMl, setTotalAmountMl] = useState<number>(_feedsCache?.totalAmountMl ?? 0);
+  const [loading, setLoading] = useState(_feedsCache === null);
   const [alarm, setAlarm] = useState<Alarm | null>(null);
   const [reminderMins, setReminderMins] = useState<number | null>(null);
   const [tick, setTick] = useState(0);
@@ -188,16 +196,25 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
       .then(r => r.json())
       .then(json => {
         if (!json.error) {
-          setFeeds(json.feeds ?? []);
-          if (json.ageDays != null) setAgeDays(json.ageDays);
-          if (json.totalCount != null) setTotalCount(json.totalCount);
-          if (json.firstFeedAt) setFirstFeedAt(json.firstFeedAt);
-          if (json.nightFeedCount != null) setNightFeedCount(json.nightFeedCount);
-          if (json.totalBreastMinutes != null) setTotalBreastMinutes(json.totalBreastMinutes);
-          if (json.totalAmountMl != null) setTotalAmountMl(json.totalAmountMl);
+          const feeds = json.feeds ?? [];
+          const ageDays = json.ageDays ?? null;
+          const totalCount = json.totalCount ?? 0;
+          const firstFeedAt = json.firstFeedAt ?? null;
+          const nightFeedCount = json.nightFeedCount ?? 0;
+          const totalBreastMinutes = json.totalBreastMinutes ?? 0;
+          const totalAmountMl = json.totalAmountMl ?? 0;
+          _feedsCache = { feeds, ageDays, totalCount, firstFeedAt, nightFeedCount, totalBreastMinutes, totalAmountMl };
+          setFeeds(feeds);
+          setAgeDays(ageDays);
+          setTotalCount(totalCount);
+          setFirstFeedAt(firstFeedAt);
+          setNightFeedCount(nightFeedCount);
+          setTotalBreastMinutes(totalBreastMinutes);
+          setTotalAmountMl(totalAmountMl);
         }
+        setLoading(false);
       })
-      .catch(() => {});
+      .catch(() => { setLoading(false); });
   }, []);
 
   function applyReminder(mins: number | null) {
@@ -750,7 +767,7 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
         </div>
       )}
 
-      {todayFeeds.length === 0 && !showForm && (
+      {!loading && todayFeeds.length === 0 && !showForm && (
         <p className={styles.emptyHint}>No feeds logged today yet.</p>
       )}
     </div>
