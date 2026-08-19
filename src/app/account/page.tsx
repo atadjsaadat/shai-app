@@ -164,20 +164,15 @@ export default function AccountPage() {
       ) : (
         <>
           <div className={styles.profileRow}>
-            <div className={styles.avatarWrap}>
-              <button
-                className={styles.avatarBtn}
-                onClick={() => fileInputRef.current?.click()}
-                aria-label="Change profile picture"
-                disabled={uploadingAvatar}
-              >
+            <label className={styles.avatarWrap} htmlFor="avatar-upload" aria-label="Change profile picture">
+              <div className={styles.avatarBtn}>
                 {avatarUrl ? (
                   <img src={avatarUrl} alt="Profile" className={styles.avatarImg} />
                 ) : (
                   <span className={styles.avatarInitial}>{initial}</span>
                 )}
-              </button>
-              <span className={styles.cameraBadge} onClick={() => fileInputRef.current?.click()}>
+              </div>
+              <span className={styles.cameraBadge}>
                 {uploadingAvatar ? (
                   <span style={{ fontSize: 9, fontWeight: 700 }}>…</span>
                 ) : (
@@ -187,14 +182,16 @@ export default function AccountPage() {
                   </svg>
                 )}
               </span>
-            </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={handleAvatarChange}
-            />
+              <input
+                id="avatar-upload"
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                disabled={uploadingAvatar}
+                onChange={handleAvatarChange}
+              />
+            </label>
             <div className={styles.profileInfo}>
               {email && <p className={styles.profileEmail}>{email}</p>}
               <span className={`${styles.tierBadge} ${profile?.tier === 'premium' ? styles.tierPremium : profile?.tier === 'clinical' ? styles.tierClinical : styles.tierFree}`}>

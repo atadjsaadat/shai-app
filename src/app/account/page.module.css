@@ -60,15 +60,13 @@
   width: 54px;
   height: 54px;
   flex-shrink: 0;
+  cursor: pointer;
 }
 
 .avatarBtn {
   width: 54px;
   height: 54px;
   border-radius: 50%;
-  border: none;
-  cursor: pointer;
-  padding: 0;
   background: var(--terracotta);
   overflow: hidden;
 }
