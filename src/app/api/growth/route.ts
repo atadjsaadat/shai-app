@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     .from('children')
     .select('id, date_of_birth, sex')
     .eq('id', childId)
-    .eq('user_id', user.id)
+    .or(`user_id.eq.${user.id},linked_user_ids.cs.{${user.id}}`)
     .single()
 
   if (!child) return NextResponse.json({ error: 'Child not found' }, { status: 404 })
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     .from('children')
     .select('id, date_of_birth, sex')
     .eq('id', childId)
-    .eq('user_id', user.id)
+    .or(`user_id.eq.${user.id},linked_user_ids.cs.{${user.id}}`)
     .single()
 
   if (!child) return NextResponse.json({ error: 'Child not found' }, { status: 404 })

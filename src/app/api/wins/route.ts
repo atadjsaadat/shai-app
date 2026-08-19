@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
   const { data: child } = await admin
     .from('children')
     .select('id')
-    .eq('user_id', user.id)
+    .or(`user_id.eq.${user.id},linked_user_ids.cs.{${user.id}}`)
+    .limit(1)
     .single()
 
   if (!child) return NextResponse.json({ wins: [] })
@@ -44,7 +45,8 @@ export async function POST(req: NextRequest) {
   const { data: child } = await admin
     .from('children')
     .select('id, date_of_birth')
-    .eq('user_id', user.id)
+    .or(`user_id.eq.${user.id},linked_user_ids.cs.{${user.id}}`)
+    .limit(1)
     .single()
 
   if (!child) return NextResponse.json({ error: 'No child found' }, { status: 404 })

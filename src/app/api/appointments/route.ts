@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { getAppointments, createAppointment } from '@/lib/appointments/queries'
 import type { CreateAppointmentInput } from '@/lib/appointments/types'
 
-async function getChildId(supabase: Awaited<ReturnType<typeof createClient>>): Promise<string | null> {
-  const { data } = await supabase.from('children').select('id').limit(1).single()
+async function getChildId(userId: string): Promise<string | null> {
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from('children')
+    .select('id')
+    .or(`user_id.eq.${userId},linked_user_ids.cs.{${userId}}`)
+    .limit(1)
+    .single()
   return data?.id ?? null
 }
 
@@ -13,7 +19,7 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-  const childId = await getChildId(supabase)
+  const childId = await getChildId(user.id)
   if (!childId) return NextResponse.json({ appointments: [] })
 
   try {
@@ -29,7 +35,7 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-  const childId = await getChildId(supabase)
+  const childId = await getChildId(user.id)
   if (!childId) return NextResponse.json({ error: 'No child profile' }, { status: 400 })
 
   const body = await req.json() as CreateAppointmentInput
