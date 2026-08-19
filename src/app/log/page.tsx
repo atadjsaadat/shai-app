@@ -673,18 +673,16 @@ export default function LogPage() {
 
       {/* ── Meal type tabs ── */}
       <div className={styles.tabsRow}>
-        {(childAgeMonths === null || childAgeMonths <= 12 || feedsIsArchive) && (
-          <button
-            className={`${styles.tab} ${activeTab === 'feeds' ? styles.tabActive : ''}`}
-            style={activeTab === 'feeds'
-              ? { background: '#7AA5C4', borderColor: '#7AA5C4' }
-              : { borderColor: '#7AA5C4', color: '#7AA5C4' }
-            }
-            onClick={() => setActiveTab('feeds')}
-          >
-            {(childAgeMonths !== null && childAgeMonths > 6) || feedsIsArchive ? 'Feeding chapter' : 'Feeds'}
-          </button>
-        )}
+        <button
+          className={`${styles.tab} ${activeTab === 'feeds' ? styles.tabActive : ''}`}
+          style={activeTab === 'feeds'
+            ? { background: '#7AA5C4', borderColor: '#7AA5C4' }
+            : { borderColor: '#7AA5C4', color: '#7AA5C4' }
+          }
+          onClick={() => setActiveTab('feeds')}
+        >
+          {feedsIsArchive ? 'Feeding chapter' : 'Feeds'}
+        </button>
         {MEAL_TYPES.map((type) => (
           <button
             key={type}
