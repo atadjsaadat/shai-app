@@ -231,6 +231,7 @@
 
 .input {
   width: 100%;
+  min-width: 0;
   padding: 10px 12px;
   border: 1.5px solid var(--oat-dark);
   border-radius: 10px;
