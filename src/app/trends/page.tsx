@@ -270,6 +270,26 @@ function getMondayDate(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+// Module-level cache — survives component unmounts so re-navigation is instant
+interface TrendsCache {
+  cacheKey: string;
+  data: WeekData;
+  weekWins: WinEntry[];
+  childId: string;
+  childName: string | null;
+}
+
+let _trendsCache: TrendsCache | null = null;
+
+function getTrendsCacheKey(): string {
+  return `${localDate()}_${getMondayDate()}`;
+}
+
+function readTrendsCache(): TrendsCache | null {
+  if (typeof window === 'undefined' || !_trendsCache) return null;
+  return _trendsCache.cacheKey === getTrendsCacheKey() ? _trendsCache : null;
+}
+
 function NutrientCol({ nutrients, averages, targets, onSelect }: {
   nutrients: NutrientDef[];
   averages: Totals;
@@ -306,12 +326,17 @@ function NutrientCol({ nutrients, averages, targets, onSelect }: {
 
 export default function TrendsPage() {
   const today = localDate();
-  const [activeChildId, setActiveChildId] = useState<string | null>(null);
-  const [childName, setChildName] = useState<string | null>(null);
-  const [data, setData] = useState<WeekData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const _c = readTrendsCache();
+  const [activeChildId, setActiveChildId] = useState<string | null>(
+    _c?.childId ?? (typeof window !== 'undefined' ? localStorage.getItem(STORAGE.ACTIVE_CHILD_ID) : null)
+  );
+  const [childName, setChildName] = useState<string | null>(
+    _c?.childName ?? (typeof window !== 'undefined' ? localStorage.getItem(STORAGE.CHILD_NAME) : null)
+  );
+  const [data, setData] = useState<WeekData | null>(_c?.data ?? null);
+  const [loading, setLoading] = useState<boolean>(!_c);
   const [noChild, setNoChild] = useState(false);
-  const [weekWins, setWeekWins] = useState<WinEntry[]>([]);
+  const [weekWins, setWeekWins] = useState<WinEntry[]>(_c?.weekWins ?? []);
   const [insight, setInsight] = useState<string | null>(null);
   const [insightLoading, setInsightLoading] = useState(false);
   const [snapshotDate, setSnapshotDate] = useState<string | null>(null);
@@ -350,15 +375,22 @@ export default function TrendsPage() {
         fetch(`/api/wins?since=${monday}`),
       ]);
 
+      let freshData: WeekData | null = null;
+      let freshWins: WinEntry[] = [];
+
       try {
         const json = await weekRes.json();
-        if (!json.error) setData(json);
+        if (!json.error) { freshData = json; setData(json); }
       } catch { /* silently fail */ }
 
       try {
         const winsJson = await winsRes.json();
-        if (winsJson.wins) setWeekWins(winsJson.wins);
+        if (winsJson.wins) { freshWins = winsJson.wins; setWeekWins(winsJson.wins); }
       } catch { /* silently fail */ }
+
+      if (freshData) {
+        _trendsCache = { cacheKey: getTrendsCacheKey(), data: freshData, weekWins: freshWins, childId, childName: name };
+      }
 
       setLoading(false);
 

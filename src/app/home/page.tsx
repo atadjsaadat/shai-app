@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import SHAiPresence from '@/components/SHAiPresence';
 import SHAiBrand from '@/components/SHAiBrand';
 import BottomNav from '@/components/BottomNav';
 import styles from './page.module.css';
@@ -79,6 +78,50 @@ const WIN_COLOURS: Record<string, { bg: string; text: string }> = {
   other:       { bg: '#F0D8E4', text: '#803050' },
 };
 
+interface HomeApiResponse {
+  childId: string | null;
+  childName: string | null;
+  totals: Totals;
+  targets: Targets;
+  meals: Meal[];
+  ageMonths: number;
+  appointments: Array<{ title: string; scheduled_at: string }>;
+  wins: Array<{ id: string; win_type: string; food_involved: string | null }>;
+  leap: { id: number; name: string; type: string; shaiMessage: string; daysUntil: number } | null;
+}
+
+// Module-level cache — lives outside React, survives component unmounts.
+// On re-navigation the component remounts and reads from this synchronously
+// in useState initialisers, so the first render already has data. No spinner.
+//
+// cacheKey is date-only (stable within a day) and intentionally excludes
+// childId. The API URL includes childId when available, but on first visit
+// childId isn't in localStorage yet — it arrives in the response. If the
+// cacheKey were the full URL, the key would change between first and second
+// visit (no childId → has childId), causing a cache miss every time.
+let _homeCache: { cacheKey: string; data: HomeApiResponse } | null = null;
+
+function getCacheKey(): string {
+  return `${localDate()}_${getMondayDate()}`;
+}
+
+function buildApiUrl(): string {
+  const childId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
+  const offset = -new Date().getTimezoneOffset();
+  const params = new URLSearchParams({
+    date: localDate(),
+    utcOffset: String(offset),
+    weekSince: `${getMondayDate()}T00:00:00`,
+  });
+  if (childId) params.set('childId', childId);
+  return `/api/home?${params}`;
+}
+
+function readCache(): HomeApiResponse | null {
+  if (typeof window === 'undefined' || !_homeCache) return null;
+  return _homeCache.cacheKey === getCacheKey() ? _homeCache.data : null;
+}
+
 function getGreeting(): string {
   const h = new Date().getHours();
   if (h >= 5 && h < 12) return 'Good morning';
@@ -132,11 +175,10 @@ function buildNutrientLines(totals: Totals, targets: Targets): NutrientLine[] {
   ];
 }
 
-function NutrientCol({ nutrients, totals, targets, loading }: {
+function NutrientCol({ nutrients, totals, targets }: {
   nutrients: NutrientDef[];
   totals: Totals | null;
   targets: Targets | null;
-  loading: boolean;
 }) {
   return (
     <div className={styles.nutrientCol}>
@@ -153,7 +195,7 @@ function NutrientCol({ nutrients, totals, targets, loading }: {
               </div>
             </div>
             <span className={styles.nutrientValue}>
-              {loading ? '…' : value > 0 ? formatValue(value, n.key) : '—'}
+              {value > 0 ? formatValue(value, n.key) : '—'}
             </span>
           </div>
         );
@@ -166,104 +208,85 @@ export default function HomePage() {
   const greeting = useMemo(getGreeting, []);
   const date = useMemo(getDate, []);
 
-  const [childName, setChildName] = useState<string | null>(null);
-  const [totals, setTotals] = useState<Totals | null>(null);
-  const [targets, setTargets] = useState<Targets | null>(null);
-  const [meals, setMeals] = useState<Meal[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [ageMonths, setAgeMonths] = useState<number>(24);
+  // Read from module-level cache synchronously — on re-navigation this is
+  // already populated so the very first render has data and loading = false.
+  const [homeData, setHomeData] = useState<HomeApiResponse | null>(readCache);
 
+  // Seed name from localStorage for the header greeting during first load.
+  const [cachedName] = useState<string | null>(() =>
+    typeof window !== 'undefined' ? localStorage.getItem(STORAGE.CHILD_NAME) : null
+  );
+
+  const [leapDismissed, setLeapDismissed] = useState(false);
   const [weeklySummary, setWeeklySummary] = useState<string | null>(null);
   const [weeklyLoading, setWeeklyLoading] = useState(false);
-
   const [dailyFeedback, setDailyFeedback] = useState<string | null>(null);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [showFeedbackSection, setShowFeedbackSection] = useState(false);
 
-  const [todayAppointments, setTodayAppointments] = useState<{ title: string; scheduled_at: string }[]>([]);
-  const [weeklyWins, setWeeklyWins] = useState<Array<{ id: string; win_type: string; food_involved: string | null }>>([]);
-  const [upcomingLeap, setUpcomingLeap] = useState<{ id: number; name: string; type: string; shaiMessage: string; daysUntil: number } | null>(null);
-  const [leapDismissed, setLeapDismissed] = useState(false);
+  // Derive everything from homeData — no intermediate state to go stale.
+  const childName         = homeData?.childName ?? cachedName;
+  const totals            = homeData?.totals ?? null;
+  const targets           = homeData?.targets ?? null;
+  const meals             = homeData?.meals ?? [];
+  const ageMonths         = homeData?.ageMonths ?? 24;
+  const weeklyWins        = homeData?.wins ?? [];
+  const upcomingLeap      = homeData?.leap ?? null;
+  const todayAppointments = (homeData?.appointments ?? []).filter(
+    (a) => a.scheduled_at.startsWith(localDate())
+  );
+  const hasMeals = meals.length > 0;
+  const loading  = !homeData;
 
   useEffect(() => {
-    async function init() {
-      let childId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
-      let name = localStorage.getItem(STORAGE.CHILD_NAME);
+    const cacheKey = getCacheKey();
+    const url = buildApiUrl();
 
-      if (!childId) {
-        try {
-          const json = await fetch('/api/children').then((r) => r.json());
-          if (json.childId) {
-            childId = json.childId;
-            name = json.childName ?? null;
-            localStorage.setItem(STORAGE.ACTIVE_CHILD_ID, childId!);
-            if (name) localStorage.setItem(STORAGE.CHILD_NAME, name);
-          }
-        } catch { /* silently fall through — childId stays null */ }
-      }
+    fetch(url)
+      .then((r) => r.json())
+      .then((data: HomeApiResponse) => {
+        _homeCache = { cacheKey, data };
+        setHomeData(data);
+        if (data.childId && !localStorage.getItem(STORAGE.ACTIVE_CHILD_ID)) {
+          localStorage.setItem(STORAGE.ACTIVE_CHILD_ID, data.childId);
+          if (data.childName) localStorage.setItem(STORAGE.CHILD_NAME, data.childName);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
-      setChildName(name);
-      if (!childId) { setLoading(false); return; }
+  // Weekly summary — AI call, long-lived localStorage cache.
+  useEffect(() => {
+    if (!homeData?.childId) return;
+    const childId = homeData.childId;
+    const name = homeData.childName ?? cachedName;
+    const today = localDate();
+    const offset = -new Date().getTimezoneOffset();
+    const weekSince = getMondayDate();
+    const weeklyCacheKey = STORAGE.weeklySummary(weekSince);
+    const cached = localStorage.getItem(weeklyCacheKey);
+    if (cached) { setWeeklySummary(cached); return; }
+    setWeeklyLoading(true);
+    fetch(`/api/home/weekly-summary?childId=${childId}&date=${today}&utcOffset=${offset}&childName=${encodeURIComponent(name ?? 'your little one')}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.summary) {
+          setWeeklySummary(d.summary);
+          localStorage.setItem(weeklyCacheKey, d.summary);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setWeeklyLoading(false));
+  }, [homeData?.childId, cachedName]);
 
-      const offset = -new Date().getTimezoneOffset();
-      const today = localDate();
-
-      fetch(`/api/home/today?childId=${childId}&date=${today}&utcOffset=${offset}`)
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.totals)                  setTotals(data.totals);
-          if (data.targets)                 setTargets(data.targets);
-          if (data.meals)                   setMeals(data.meals);
-          if (data.ageMonths !== undefined) setAgeMonths(data.ageMonths);
-        })
-        .catch(() => {})
-        .finally(() => setLoading(false));
-
-      const weeklyCacheKey = STORAGE.weeklySummary(getMondayDate());
-      const cachedWeekly = localStorage.getItem(weeklyCacheKey);
-      if (cachedWeekly) {
-        setWeeklySummary(cachedWeekly);
-      } else {
-        setWeeklyLoading(true);
-        fetch(`/api/home/weekly-summary?childId=${childId}&date=${today}&utcOffset=${offset}&childName=${encodeURIComponent(name ?? 'your little one')}`)
-          .then((r) => r.json())
-          .then((data) => {
-            if (data.summary) {
-              setWeeklySummary(data.summary);
-              localStorage.setItem(weeklyCacheKey, data.summary);
-            }
-          })
-          .catch(() => {})
-          .finally(() => setWeeklyLoading(false));
-      }
-
-      fetch('/api/appointments')
-        .then((r) => r.json())
-        .then((data) => {
-          setTodayAppointments(
-            (data.appointments ?? []).filter((a: { scheduled_at: string }) => a.scheduled_at.startsWith(localDate()))
-          );
-        })
-        .catch(() => {});
-
-      fetch(`/api/wins?since=${getMondayDate()}T00:00:00`)
-        .then((r) => r.json())
-        .then((data) => { if (data.wins) setWeeklyWins(data.wins); })
-        .catch(() => {});
-
-      fetch(`/api/home/leaps?childId=${childId}`)
-        .then((r) => r.json())
-        .then((data) => { if (data.event) setUpcomingLeap(data.event); })
-        .catch(() => {});
-
-      const hour = new Date().getHours();
-      if (hour >= 18 && hour < 22) {
-        setShowFeedbackSection(true);
-        const cachedFeedback = localStorage.getItem(STORAGE.dailyFeedback(today));
-        if (cachedFeedback) setDailyFeedback(cachedFeedback);
-      }
+  // Daily feedback — time-gated, on-demand.
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour >= 18 && hour < 22) {
+      setShowFeedbackSection(true);
+      const cached = localStorage.getItem(STORAGE.dailyFeedback(localDate()));
+      if (cached) setDailyFeedback(cached);
     }
-    init();
   }, []);
 
   async function handleGenerateFeedback() {
@@ -287,8 +310,6 @@ export default function HomePage() {
     setFeedbackLoading(false);
   }
 
-  const hasMeals = meals.length > 0;
-
   function buildStatusMessage(): string {
     const name = childName ?? 'your little one';
     if (!hasMeals) return `Ready when you are — tap Log below to start tracking ${name}'s meals.`;
@@ -297,11 +318,9 @@ export default function HomePage() {
     const saltPct  = targets.sodium_mg     > 0 ? totals.sodium_mg     / targets.sodium_mg     : 0;
     const calPct   = targets.calories_kcal > 0 ? totals.calories_kcal / targets.calories_kcal : 0;
     const fatPct   = targets.fat_g         > 0 ? totals.fat_g         / targets.fat_g         : 0;
-    // More than double the RDA on a dangerous nutrient — be clear, not dismissive
     if (sugarPct > 2)  return `Today's sugar was well over the recommended amount for ${name}'s age — a lighter day tomorrow would help balance things out.`;
     if (saltPct  > 2)  return `Today's salt was well over the recommended amount for ${name}'s age — worth aiming lighter tomorrow.`;
     if (calPct   > 2)  return `Today's calories were well above what's recommended for ${name}'s age — worth aiming for something lighter tomorrow.`;
-    // Over target but not double — acknowledge as treat day
     if (sugarPct > 1.5 || fatPct > 1.5) return `Treat day for ${name} — a balanced one tomorrow will even things out.`;
     if (calPct   > 1.5) return `Big calorie day for ${name} — a lighter one tomorrow will balance it out.`;
     if (calPct   < 0.4) return `Light start for ${name} so far — plenty of time to top up.`;
@@ -389,8 +408,8 @@ export default function HomePage() {
           <p className={styles.rdaHint}>bar fills to daily target</p>
         </div>
         <div className={styles.nutrientCard}>
-          <NutrientCol nutrients={LEFT_NUTRIENTS}  totals={totals} targets={targets} loading={false} />
-          <NutrientCol nutrients={RIGHT_NUTRIENTS} totals={totals} targets={targets} loading={false} />
+          <NutrientCol nutrients={LEFT_NUTRIENTS}  totals={totals} targets={targets} />
+          <NutrientCol nutrients={RIGHT_NUTRIENTS} totals={totals} targets={targets} />
         </div>
       </section>
       )}
