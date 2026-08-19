@@ -379,7 +379,11 @@ export default function ProfilePage() {
           {child && (
             <div className={styles.heroCard}>
               <div className={styles.avatar}>
-                {child.name.charAt(0).toUpperCase()}
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                ) : (
+                  child.name.charAt(0).toUpperCase()
+                )}
               </div>
               <p className={styles.childName}>{child.name}</p>
               {age && <p className={styles.childAge}>{age}</p>}
