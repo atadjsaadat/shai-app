@@ -55,15 +55,20 @@
   flex-shrink: 0;
 }
 
-.avatarBtn {
+.avatarWrap {
   position: relative;
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+}
+
+.avatarBtn {
   width: 54px;
   height: 54px;
   border-radius: 50%;
   border: none;
   cursor: pointer;
   padding: 0;
-  flex-shrink: 0;
   background: var(--terracotta);
   overflow: hidden;
 }
@@ -88,8 +93,8 @@
 
 .cameraBadge {
   position: absolute;
-  top: -2px;
-  right: -2px;
+  top: -1px;
+  right: -1px;
   width: 20px;
   height: 20px;
   border-radius: 50%;

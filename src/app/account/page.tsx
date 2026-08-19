@@ -164,20 +164,22 @@ export default function AccountPage() {
       ) : (
         <>
           <div className={styles.profileRow}>
-            <button
-              className={styles.avatarBtn}
-              onClick={() => fileInputRef.current?.click()}
-              aria-label="Change profile picture"
-              disabled={uploadingAvatar}
-            >
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="Profile" className={styles.avatarImg} />
-              ) : (
-                <span className={styles.avatarInitial}>{initial}</span>
-              )}
+            <div className={styles.avatarWrap}>
+              <button
+                className={styles.avatarBtn}
+                onClick={() => fileInputRef.current?.click()}
+                aria-label="Change profile picture"
+                disabled={uploadingAvatar}
+              >
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Profile" className={styles.avatarImg} />
+                ) : (
+                  <span className={styles.avatarInitial}>{initial}</span>
+                )}
+              </button>
               <span className={styles.cameraBadge}>
                 {uploadingAvatar ? (
-                  <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-muted)' }}>…</span>
+                  <span style={{ fontSize: 9, fontWeight: 700 }}>…</span>
                 ) : (
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
@@ -185,7 +187,7 @@ export default function AccountPage() {
                   </svg>
                 )}
               </span>
-            </button>
+            </div>
             <input
               ref={fileInputRef}
               type="file"
