@@ -47,7 +47,9 @@ export default function AccountPage() {
         setProfile(data.profile);
         setResearchConsent(data.profile?.consent_data_research ?? false);
         setCountry(data.profile?.country ?? '');
-        setAvatarUrl(data.profile?.avatar_url ?? null);
+        const url = data.profile?.avatar_url ?? null;
+        setAvatarUrl(url);
+        if (url) localStorage.setItem(STORAGE.AVATAR_URL, url);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -82,7 +84,10 @@ export default function AccountPage() {
     try {
       const res = await fetch('/api/profile/avatar', { method: 'POST', body: form });
       const data = await res.json();
-      if (data.url) setAvatarUrl(data.url);
+      if (data.url) {
+        setAvatarUrl(data.url);
+        localStorage.setItem(STORAGE.AVATAR_URL, data.url);
+      }
     } catch { /* ignore */ } finally {
       setUploadingAvatar(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -97,6 +102,7 @@ export default function AccountPage() {
     } catch { /* ignore */ }
     localStorage.removeItem(STORAGE.ACTIVE_CHILD_ID);
     localStorage.removeItem(STORAGE.CHILD_NAME);
+    localStorage.removeItem(STORAGE.AVATAR_URL);
     router.replace('/login');
   }
 

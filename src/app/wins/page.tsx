@@ -48,10 +48,12 @@ function winColour(value: string) {
 }
 
 
+let _winsCache: Win[] | null = null;
+
 export default function WinsPage() {
   const router = useRouter();
-  const [wins, setWins] = useState<Win[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [wins, setWins] = useState<Win[]>(_winsCache ?? []);
+  const [loading, setLoading] = useState(_winsCache === null);
   const [showForm, setShowForm] = useState(false);
   const [selectedWin, setSelectedWin] = useState<Win | null>(null);
   const [winType, setWinType] = useState('new_food');
@@ -73,7 +75,7 @@ export default function WinsPage() {
       .then((r) => r.json())
       .then((json) => {
         if (json.error === 'Not authenticated') { router.replace('/login'); return; }
-        setWins(json.wins ?? []);
+        setWins(_winsCache = json.wins ?? []);
       })
       .finally(() => setLoading(false));
   }, [router]);

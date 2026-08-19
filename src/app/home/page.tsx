@@ -240,9 +240,12 @@ export default function HomePage() {
   // already populated so the very first render has data and loading = false.
   const [homeData, setHomeData] = useState<HomeApiResponse | null>(readCache);
 
-  // Seed name from localStorage for the header greeting during first load.
+  // Seed name and avatar from localStorage for the header during first load.
   const [cachedName] = useState<string | null>(() =>
     typeof window !== 'undefined' ? localStorage.getItem(STORAGE.CHILD_NAME) : null
+  );
+  const [cachedAvatarUrl] = useState<string | null>(() =>
+    typeof window !== 'undefined' ? localStorage.getItem(STORAGE.AVATAR_URL) : null
   );
 
   const [leapDismissed, setLeapDismissed] = useState(false);
@@ -279,6 +282,7 @@ export default function HomePage() {
           localStorage.setItem(STORAGE.ACTIVE_CHILD_ID, data.childId);
           if (data.childName) localStorage.setItem(STORAGE.CHILD_NAME, data.childName);
         }
+        if (data.parentAvatarUrl) localStorage.setItem(STORAGE.AVATAR_URL, data.parentAvatarUrl);
       })
       .catch(() => {});
   }, []);
@@ -367,8 +371,8 @@ export default function HomePage() {
           <p className={styles.date}>{date}</p>
         </div>
         <Link href="/profile" className={styles.avatar} aria-label="Profile">
-          {homeData?.parentAvatarUrl ? (
-            <img src={homeData.parentAvatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          {(homeData?.parentAvatarUrl ?? cachedAvatarUrl) ? (
+            <img src={(homeData?.parentAvatarUrl ?? cachedAvatarUrl)!} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
             childName?.charAt(0).toUpperCase()
           )}

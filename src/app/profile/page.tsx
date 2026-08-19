@@ -8,6 +8,7 @@ import { ALLERGY_GROUPS, COMMON_INTOLERANCES } from '@/lib/allergens';
 import styles from './page.module.css';
 import AIDisclosure from '@/components/AIDisclosure';
 import { parseDob } from '@/lib/format/dates';
+import { STORAGE } from '@/lib/storage/keys';
 
 interface ProfileData {
   tier: 'free' | 'premium' | 'clinical';
@@ -35,6 +36,19 @@ interface PendingInvite {
   expires_at: string;
 }
 
+interface ProfilePageCache {
+  profile: ProfileData | null;
+  child: ChildData | null;
+  email: string | null;
+  avatarUrl: string | null;
+  linkedPartners: LinkedPartner[];
+  pendingInvites: PendingInvite[];
+  childId: string | null;
+  isOwner: boolean;
+  journalLockEnabled: boolean;
+}
+let _profilePageCache: ProfilePageCache | null = null;
+
 function formatAge(dob: string | null | undefined): string {
   const birth = parseDob(dob);
   if (!birth) return '';
@@ -55,16 +69,18 @@ function capitalize(s: string | null | undefined): string {
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [child, setChild] = useState<ChildData | null>(null);
-  const [email, setEmail] = useState<string | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<ProfileData | null>(_profilePageCache?.profile ?? null);
+  const [child, setChild] = useState<ChildData | null>(_profilePageCache?.child ?? null);
+  const [email, setEmail] = useState<string | null>(_profilePageCache?.email ?? null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(
+    _profilePageCache?.avatarUrl ?? (typeof window !== 'undefined' ? localStorage.getItem(STORAGE.AVATAR_URL) : null)
+  );
+  const [loading, setLoading] = useState(_profilePageCache === null);
   const [consentSaving, setConsentSaving] = useState(false);
-  const [linkedPartners, setLinkedPartners] = useState<LinkedPartner[]>([]);
-  const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
-  const [childId, setChildId] = useState<string | null>(null);
-  const [isOwner, setIsOwner] = useState(false);
+  const [linkedPartners, setLinkedPartners] = useState<LinkedPartner[]>(_profilePageCache?.linkedPartners ?? []);
+  const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>(_profilePageCache?.pendingInvites ?? []);
+  const [childId, setChildId] = useState<string | null>(_profilePageCache?.childId ?? null);
+  const [isOwner, setIsOwner] = useState(_profilePageCache?.isOwner ?? false);
   const [creatingInvite, setCreatingInvite] = useState(false);
   const [activeInviteLink, setActiveInviteLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -77,7 +93,7 @@ export default function ProfilePage() {
 
   // Journal lock state
   type PinFlow = 'idle' | 'setup_enter' | 'setup_confirm' | 'disable_verify' | 'change_verify' | 'change_enter' | 'change_confirm';
-  const [journalLockEnabled, setJournalLockEnabled] = useState(false);
+  const [journalLockEnabled, setJournalLockEnabled] = useState(_profilePageCache?.journalLockEnabled ?? false);
   const [pinFlow, setPinFlow] = useState<PinFlow>('idle');
   const privacyCardRef = useRef<HTMLDivElement>(null);
   const privacySwipeRef = useRef<{x: number; y: number} | null>(null);
@@ -95,23 +111,35 @@ export default function ProfilePage() {
       .then(async ([profileRes, inviteRes, pinRes]) => {
         if (profileRes.status === 401) { router.replace('/login'); return; }
         const profileData = await profileRes.json();
+        const avatarUrl = profileData.profile?.avatar_url ?? null;
         setProfile(profileData.profile);
         setChild(profileData.child);
         setEmail(profileData.email ?? null);
-        setAvatarUrl(profileData.profile?.avatar_url ?? null);
+        setAvatarUrl(avatarUrl);
+        if (avatarUrl) localStorage.setItem(STORAGE.AVATAR_URL, avatarUrl);
 
-        if (inviteRes.ok) {
-          const inviteData = await inviteRes.json();
+        const inviteData = inviteRes.ok ? await inviteRes.json() : null;
+        if (inviteData) {
           setLinkedPartners(inviteData.linkedPartners ?? []);
           setPendingInvites(inviteData.pendingInvites ?? []);
           setChildId(inviteData.childId ?? null);
           setIsOwner(true);
         }
 
-        if (pinRes.ok) {
-          const pinData = await pinRes.json();
-          setJournalLockEnabled(pinData.enabled ?? false);
-        }
+        const pinData = pinRes.ok ? await pinRes.json() : null;
+        if (pinData) setJournalLockEnabled(pinData.enabled ?? false);
+
+        _profilePageCache = {
+          profile: profileData.profile,
+          child: profileData.child,
+          email: profileData.email ?? null,
+          avatarUrl,
+          linkedPartners: inviteData?.linkedPartners ?? [],
+          pendingInvites: inviteData?.pendingInvites ?? [],
+          childId: inviteData?.childId ?? null,
+          isOwner: !!inviteData,
+          journalLockEnabled: pinData?.enabled ?? false,
+        };
       })
       .catch(() => {})
       .finally(() => setLoading(false));
