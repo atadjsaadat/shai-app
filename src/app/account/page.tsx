@@ -7,6 +7,7 @@ import styles from './page.module.css';
 
 interface ProfileData {
   tier: 'free' | 'premium' | 'clinical';
+  consent_data_research: boolean;
 }
 
 export default function AccountPage() {
@@ -19,6 +20,7 @@ export default function AccountPage() {
   const [deleteStep, setDeleteStep] = useState<'idle' | 'confirm' | 'deleting'>('idle');
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [researchConsent, setResearchConsent] = useState(false);
 
   useEffect(() => {
     fetch('/api/profile')
@@ -27,10 +29,21 @@ export default function AccountPage() {
         if (data.error) { router.replace('/login'); return; }
         setEmail(data.email);
         setProfile(data.profile);
+        setResearchConsent(data.profile?.consent_data_research ?? false);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [router]);
+
+  async function handleResearchToggle() {
+    const newVal = !researchConsent;
+    setResearchConsent(newVal);
+    await fetch('/api/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ consent_data_research: newVal }),
+    });
+  }
 
   async function handleSignOut() {
     if (signingOut) return;
@@ -84,6 +97,12 @@ export default function AccountPage() {
   const initial = email ? email[0].toUpperCase() : '?';
   const tierLabel = profile?.tier === 'premium' ? 'Premium' : profile?.tier === 'clinical' ? 'Clinical' : 'Free plan';
 
+  const chevron = (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={styles.chevron}>
+      <path d="M8 5l5 5-5 5"/>
+    </svg>
+  );
+
   return (
     <div className={styles.page}>
       <header className={styles.topBar}>
@@ -92,50 +111,80 @@ export default function AccountPage() {
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
-        <p className={styles.title}>Your account</p>
+        <p className={styles.title}>Account</p>
+        <div style={{ width: 28 }} />
       </header>
 
       {loading ? (
-        <p className={styles.hint}>Loading…</p>
+        <div className="pageSpinner" />
       ) : (
         <>
-          {/* ── Hero ── */}
-          <div className={styles.heroCard}>
+          <div className={styles.profileRow}>
             <div className={styles.avatar}>{initial}</div>
-            {email && <p className={styles.heroEmail}>{email}</p>}
-            <span className={`${styles.tierBadge} ${profile?.tier === 'premium' ? styles.tierPremium : profile?.tier === 'clinical' ? styles.tierClinical : styles.tierFree}`}>
-              {tierLabel}
-            </span>
+            <div className={styles.profileInfo}>
+              {email && <p className={styles.profileEmail}>{email}</p>}
+              <span className={`${styles.tierBadge} ${profile?.tier === 'premium' ? styles.tierPremium : profile?.tier === 'clinical' ? styles.tierClinical : styles.tierFree}`}>
+                {tierLabel}
+              </span>
+            </div>
           </div>
 
-          {/* ── Your data ── */}
-          <p className={styles.sectionLabel}>YOUR DATA</p>
-          <div className={styles.card}>
-            <button className={styles.rowBtn} onClick={handleExport} disabled={exporting}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              <span className={styles.rowBtnLabel}>{exporting ? 'Preparing…' : 'Download my data'}</span>
-              <span className={styles.rowBtnHint}>GDPR — your right to a copy</span>
-            </button>
-          </div>
-
-          {/* ── Account ── */}
           <p className={styles.sectionLabel}>ACCOUNT</p>
-          <div className={styles.card}>
-            <button className={styles.rowBtn} onClick={handleSignOut} disabled={signingOut}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-              <span className={styles.rowBtnLabel}>{signingOut ? 'Signing out…' : 'Sign out'}</span>
+          <div className={styles.listCard}>
+            <div className={styles.listRow}>
+              <span className={styles.rowLabel}>Email</span>
+              <span className={styles.rowValue}>{email ?? '—'}</span>
+            </div>
+            <div className={styles.listRow}>
+              <span className={styles.rowLabel}>Plan</span>
+              <span className={`${styles.tierBadgeInline} ${profile?.tier === 'premium' ? styles.tierPremium : profile?.tier === 'clinical' ? styles.tierClinical : styles.tierFree}`}>
+                {tierLabel}
+              </span>
+            </div>
+          </div>
+
+          <p className={styles.sectionLabel}>PRIVACY & DATA</p>
+          <div className={styles.listCard}>
+            <div className={styles.listRow}>
+              <div className={styles.rowLabelBlock}>
+                <span className={styles.rowLabel}>Research data sharing</span>
+                <span className={styles.rowSub}>Share anonymised data to help improve SHAi</span>
+              </div>
+              <button
+                role="switch"
+                aria-checked={researchConsent}
+                className={`${styles.toggle} ${researchConsent ? styles.toggleOn : ''}`}
+                onClick={handleResearchToggle}
+              />
+            </div>
+            <button className={styles.listRowBtn} onClick={handleExport} disabled={exporting}>
+              <span className={styles.rowLabel}>{exporting ? 'Preparing download…' : 'Download my data'}</span>
+              <span className={styles.rowValue}>GDPR</span>
+              {chevron}
             </button>
           </div>
 
-          {/* ── Danger zone ── */}
+          <p className={styles.sectionLabel}>LEGAL</p>
+          <div className={styles.listCard}>
+            <div className={styles.listRow}>
+              <span className={styles.rowLabel}>Privacy policy</span>
+              {chevron}
+            </div>
+            <div className={styles.listRow}>
+              <span className={styles.rowLabel}>Terms of use</span>
+              {chevron}
+            </div>
+          </div>
+
+          <p className={styles.sectionLabel}>SESSION</p>
+          <div className={styles.listCard}>
+            <button className={styles.listRowBtn} onClick={handleSignOut} disabled={signingOut}>
+              <span className={`${styles.rowLabel} ${styles.signOutLabel}`}>
+                {signingOut ? 'Signing out…' : 'Sign out'}
+              </span>
+            </button>
+          </div>
+
           {deleteStep === 'idle' && (
             <button className={styles.deleteBtn} onClick={() => setDeleteStep('confirm')}>
               Delete account
@@ -162,16 +211,12 @@ export default function AccountPage() {
                   className={styles.deleteCancelBtn}
                   onClick={() => { setDeleteStep('idle'); setDeleteConfirm(''); setDeleteError(null); }}
                   disabled={deleteStep === 'deleting'}
-                >
-                  Cancel
-                </button>
+                >Cancel</button>
                 <button
                   className={styles.deleteConfirmBtn}
                   onClick={handleDeleteAccount}
                   disabled={deleteConfirm !== 'DELETE' || deleteStep === 'deleting'}
-                >
-                  {deleteStep === 'deleting' ? 'Deleting…' : 'Delete everything'}
-                </button>
+                >{deleteStep === 'deleting' ? 'Deleting…' : 'Delete everything'}</button>
               </div>
             </div>
           )}
