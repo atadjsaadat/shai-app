@@ -154,7 +154,7 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
   const [nightFeedCount, setNightFeedCount] = useState<number>(_feedsCache?.nightFeedCount ?? 0);
   const [totalBreastMinutes, setTotalBreastMinutes] = useState<number>(_feedsCache?.totalBreastMinutes ?? 0);
   const [totalAmountMl, setTotalAmountMl] = useState<number>(_feedsCache?.totalAmountMl ?? 0);
-  const [loading, setLoading] = useState(_feedsCache === null);
+  const [loading, setLoading] = useState(true);
   const [alarm, setAlarm] = useState<Alarm | null>(null);
   const [reminderMins, setReminderMins] = useState<number | null>(null);
   const [tick, setTick] = useState(0);
