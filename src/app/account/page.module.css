@@ -86,15 +86,19 @@
   color: white;
 }
 
-.avatarOverlay {
+.cameraBadge {
   position: absolute;
-  inset: 0;
+  top: -2px;
+  right: -2px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  background: rgba(0,0,0,0.3);
+  background: var(--oat);
+  border: 2px solid var(--cream);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--text-secondary);
 }
 
 .profileInfo {
