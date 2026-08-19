@@ -418,13 +418,18 @@ export default function GrowthPage() {
           <p className={styles.formTitle}>{editingRecord ? 'Edit measurement' : 'Add a measurement'}</p>
           <div className={styles.field}>
             <label className={styles.label}>Date</label>
-            <input
-              type="date"
-              className={styles.input}
-              value={formDate}
-              max={new Date().toISOString().slice(0, 10)}
-              onChange={e => setFormDate(e.target.value)}
-            />
+            <div className={styles.dateWrap}>
+              <span className={styles.dateDisplay}>
+                {new Date(formDate + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </span>
+              <input
+                type="date"
+                className={styles.dateInput}
+                value={formDate}
+                max={new Date().toISOString().slice(0, 10)}
+                onChange={e => setFormDate(e.target.value)}
+              />
+            </div>
           </div>
           <div className={styles.fieldRow}>
             <div className={styles.field}>

@@ -249,6 +249,33 @@
 
 .input:focus { border-color: var(--child-accent, var(--terracotta)); }
 
+.dateWrap {
+  position: relative;
+  width: 100%;
+}
+
+.dateDisplay {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 10px;
+  background: var(--cream);
+  font-size: 15px;
+  color: var(--text-primary);
+  font-family: inherit;
+}
+
+.dateInput {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
 .errorText {
   font-size: 13px;
   color: #C0392B;
