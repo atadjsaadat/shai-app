@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createSpeechRecognition } from '@/lib/speech/recognition';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import SHAiPresence from '@/components/SHAiPresence';
 import Confetti from '@/components/Confetti';
 import BarcodeScanner from '@/components/BarcodeScanner';
@@ -213,11 +213,11 @@ function FoodItemCard({ item, multiplier = 1, portionLabel, isWin, onWinToggle }
 
 export default function LogPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [mealType, setMealType] = useState<MealType>(detectMealType);
-  const [activeTab, setActiveTab] = useState<MealType | 'feeds'>(
-    searchParams.get('tab') === 'feeds' ? 'feeds' : detectMealType()
-  );
+  const [activeTab, setActiveTab] = useState<MealType | 'feeds'>(() => {
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('tab') === 'feeds') return 'feeds';
+    return detectMealType();
+  });
   const [feedsIsArchive, setFeedsIsArchive] = useState(false);
   const [childAgeMonths, setChildAgeMonths] = useState<number | null>(null);
   const [messages, setMessages] = useState<LogMessage[]>([
