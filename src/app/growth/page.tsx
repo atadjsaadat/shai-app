@@ -138,7 +138,9 @@ export default function GrowthPage() {
   )
   const [loading, setLoading] = useState<boolean>(!_c)
   const [showForm, setShowForm] = useState(false)
+  const [editingRecord, setEditingRecord] = useState<GrowthRecord | null>(null)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [formDate, setFormDate] = useState(new Date().toISOString().slice(0, 10))
   const [formWeight, setFormWeight] = useState('')
   const [formHeight, setFormHeight] = useState('')
@@ -188,36 +190,70 @@ export default function GrowthPage() {
     init()
   }, [])
 
+  function openEdit(r: GrowthRecord) {
+    setEditingRecord(r)
+    setFormDate(r.recorded_at.slice(0, 10))
+    setFormWeight(r.weight_kg?.toString() ?? '')
+    setFormHeight(r.height_cm?.toString() ?? '')
+    setFormHead(r.head_cm?.toString() ?? '')
+    setFormNotes(r.notes ?? '')
+    setError(null)
+    setShowForm(true)
+  }
+
+  function closeForm() {
+    setShowForm(false)
+    setEditingRecord(null)
+    setFormDate(new Date().toISOString().slice(0, 10))
+    setFormWeight('')
+    setFormHeight('')
+    setFormHead('')
+    setFormNotes('')
+    setError(null)
+  }
+
   async function handleSave() {
     if (!childId) return
     if (!formWeight && !formHeight && !formHead) { setError('Enter at least one measurement.'); return }
     setSaving(true)
     setError(null)
 
+    const body = editingRecord
+      ? { id: editingRecord.id, recordedAt: new Date(formDate).toISOString(), weightKg: formWeight ? parseFloat(formWeight) : undefined, heightCm: formHeight ? parseFloat(formHeight) : undefined, headCm: formHead ? parseFloat(formHead) : undefined, notes: formNotes || undefined }
+      : { childId, recordedAt: new Date(formDate).toISOString(), weightKg: formWeight ? parseFloat(formWeight) : undefined, heightCm: formHeight ? parseFloat(formHeight) : undefined, headCm: formHead ? parseFloat(formHead) : undefined, notes: formNotes || undefined }
+
     const res = await fetch('/api/growth', {
-      method: 'POST',
+      method: editingRecord ? 'PATCH' : 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        childId,
-        recordedAt: new Date(formDate).toISOString(),
-        weightKg: formWeight ? parseFloat(formWeight) : undefined,
-        heightCm: formHeight ? parseFloat(formHeight) : undefined,
-        headCm: formHead ? parseFloat(formHead) : undefined,
-        notes: formNotes || undefined,
-      }),
+      body: JSON.stringify(body),
     })
     const json = await res.json()
     if (json.error) { setError(json.error); setSaving(false); return }
 
-    setRecords(prev => [...prev, json.record].sort((a, b) =>
-      new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime()
-    ))
-    setShowForm(false)
-    setFormWeight('')
-    setFormHeight('')
-    setFormHead('')
-    setFormNotes('')
+    setRecords(prev => {
+      const updated = editingRecord
+        ? prev.map(r => r.id === editingRecord.id ? json.record : r)
+        : [...prev, json.record]
+      return updated.sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime())
+    })
+    closeForm()
     setSaving(false)
+  }
+
+  async function handleDelete() {
+    if (!editingRecord || deleting) return
+    setDeleting(true)
+    const res = await fetch('/api/growth', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: editingRecord.id }),
+    })
+    const json = await res.json()
+    if (!json.error) {
+      setRecords(prev => prev.filter(r => r.id !== editingRecord.id))
+      closeForm()
+    }
+    setDeleting(false)
   }
 
   const latest = records.length > 0 ? records[records.length - 1] : null
@@ -379,7 +415,7 @@ export default function GrowthPage() {
       {/* Add measurement form */}
       {showForm ? (
         <div className={styles.formCard}>
-          <p className={styles.formTitle}>Add a measurement</p>
+          <p className={styles.formTitle}>{editingRecord ? 'Edit measurement' : 'Add a measurement'}</p>
           <div className={styles.field}>
             <label className={styles.label}>Date</label>
             <input
@@ -443,18 +479,23 @@ export default function GrowthPage() {
           </div>
           {error && <p className={styles.errorText}>{error}</p>}
           <div className={styles.formButtons}>
-            <button className={styles.cancelBtn} onClick={() => { setShowForm(false); setError(null) }}>
+            <button className={styles.cancelBtn} onClick={closeForm}>
               Cancel
             </button>
             <button
               className={styles.saveBtn}
               style={{ boxShadow: `0 4px 16px ${hexToRgba(tabAccent, 0.3)}` }}
               onClick={handleSave}
-              disabled={saving}
+              disabled={saving || deleting}
             >
-              {saving ? 'Saving…' : 'Save'}
+              {saving ? 'Saving…' : editingRecord ? 'Update' : 'Save'}
             </button>
           </div>
+          {editingRecord && (
+            <button className={styles.deleteRecordBtn} onClick={handleDelete} disabled={deleting || saving}>
+              {deleting ? 'Deleting…' : 'Delete this measurement'}
+            </button>
+          )}
         </div>
       ) : (
         <button
@@ -473,7 +514,15 @@ export default function GrowthPage() {
           <div className={styles.historyList}>
             {[...records].reverse().map(r => (
               <div key={r.id} className={styles.historyRow}>
-                <div className={styles.historyDate}>{formatDate(r.recorded_at)}</div>
+                <div className={styles.historyRowTop}>
+                  <div className={styles.historyDate}>{formatDate(r.recorded_at)}</div>
+                  <button className={styles.historyEditBtn} onClick={() => openEdit(r)} aria-label="Edit">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                </div>
                 <div className={styles.historyVals}>
                   {r.weight_kg != null && (
                     <span className={styles.historyVal}>

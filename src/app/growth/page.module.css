@@ -341,6 +341,47 @@
   margin: 0;
 }
 
+.historyRowTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.historyEditBtn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+}
+
+.historyEditBtn:hover {
+  color: var(--terracotta);
+}
+
+.deleteRecordBtn {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: center;
+  padding: 8px;
+  width: 100%;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  margin-top: 4px;
+}
+
+.deleteRecordBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .aiDisclosure {
   font-size: 11px;
   color: var(--text-muted);
