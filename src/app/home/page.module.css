@@ -61,6 +61,45 @@
   box-shadow: var(--card-shadow);
 }
 
+/* ── Last feed card ──────────────────────────────────── */
+.lastFeedCard {
+  background: var(--oat);
+  border-radius: 20px;
+  padding: 14px 18px;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-decoration: none;
+  color: inherit;
+}
+
+.lastFeedLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lastFeedLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.lastFeedTime {
+  font-size: 22px;
+  font-weight: 800;
+  color: #7AA5C4;
+}
+
+.lastFeedDetail {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
 .shaiMessage {
   font-size: 14px;
   color: var(--text-secondary);

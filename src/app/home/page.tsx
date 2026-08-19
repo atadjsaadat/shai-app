@@ -78,6 +78,14 @@ const WIN_COLOURS: Record<string, { bg: string; text: string }> = {
   other:       { bg: '#F0D8E4', text: '#803050' },
 };
 
+interface LastFeed {
+  logged_at: string;
+  feed_type: 'breast' | 'formula' | 'expressed';
+  breast_side: 'left' | 'right' | 'both' | null;
+  duration_minutes: number | null;
+  amount_ml: number | null;
+}
+
 interface HomeApiResponse {
   childId: string | null;
   childName: string | null;
@@ -88,6 +96,7 @@ interface HomeApiResponse {
   appointments: Array<{ title: string; scheduled_at: string }>;
   wins: Array<{ id: string; win_type: string; food_involved: string | null }>;
   leap: { id: number; name: string; type: string; shaiMessage: string; daysUntil: number } | null;
+  lastFeed: LastFeed | null;
 }
 
 // Module-level cache — lives outside React, survives component unmounts.
@@ -152,6 +161,22 @@ function getMondayDate(): string {
 
 function formatApptTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+function timeSinceFeed(iso: string): string {
+  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
+  if (mins < 1) return 'just now';
+  if (mins < 90) return `${mins} min ago`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${h}h${m > 0 ? ` ${m}m` : ''} ago`;
+}
+
+function feedDetail(f: LastFeed): string {
+  const side = f.breast_side ? ` · ${f.breast_side[0].toUpperCase()}${f.breast_side.slice(1)}` : '';
+  const type = f.feed_type === 'breast' ? `Breast${side}` : f.feed_type === 'formula' ? 'Formula' : 'Expressed';
+  const detail = f.feed_type === 'breast' && f.duration_minutes ? ` · ${f.duration_minutes} min` : f.amount_ml != null ? ` · ${f.amount_ml}ml` : '';
+  return type + detail;
 }
 
 function formatValue(value: number, key: keyof Totals): string {
@@ -351,6 +376,19 @@ export default function HomePage() {
         <SHAiBrand expression={hasMeals ? 'celebrating' : 'default'} width={88} />
         <p className={styles.shaiMessage}>{shaiMessage}</p>
       </div>
+
+      {homeData?.lastFeed && (
+        <Link href="/log" className={styles.lastFeedCard}>
+          <div className={styles.lastFeedLeft}>
+            <p className={styles.lastFeedLabel}>Last feed</p>
+            <p className={styles.lastFeedTime} suppressHydrationWarning>{timeSinceFeed(homeData.lastFeed.logged_at)}</p>
+            <p className={styles.lastFeedDetail}>{feedDetail(homeData.lastFeed)}</p>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M8 5l5 5-5 5"/>
+          </svg>
+        </Link>
+      )}
 
       <InstallBanner />
 

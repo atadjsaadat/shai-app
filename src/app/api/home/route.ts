@@ -59,7 +59,7 @@ export async function GET(request: Request) {
     return q
   })()
 
-  const [logsResult, childDetailsResult, appointmentsResult, winsResult] = await Promise.all([
+  const [logsResult, childDetailsResult, appointmentsResult, winsResult, lastFeedResult] = await Promise.all([
     admin
       .from('food_logs')
       .select('meal_type, food_name, calories_kcal, protein_g, carbs_g, fat_g, fibre_g, sugar_g, sodium_mg, iron_mg, is_hard_food_day')
@@ -80,6 +80,12 @@ export async function GET(request: Request) {
       .eq('child_id', childId)
       .order('scheduled_at', { ascending: true }),
     winsQuery,
+    admin
+      .from('newborn_feed_logs')
+      .select('logged_at, feed_type, breast_side, duration_minutes, amount_ml')
+      .eq('child_id', childId)
+      .order('logged_at', { ascending: false })
+      .limit(1),
   ])
 
   if (!childRow) childRow = (childDetailsResult as { data: ChildRow | null }).data
@@ -157,5 +163,6 @@ export async function GET(request: Request) {
     appointments: appointmentsResult.data ?? [],
     wins: winsResult.data ?? [],
     leap,
+    lastFeed: lastFeedResult.data?.[0] ?? null,
   })
 }
