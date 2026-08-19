@@ -99,15 +99,15 @@
 .relationChip {
   background: var(--oat-dark);
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 700;
-  padding: 4px 12px;
+  padding: 7px 18px;
   border-radius: 20px;
-  margin-top: 4px;
+  margin-top: 6px;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
 }
 
 /* ── Section labels ──────────────────────────────────── */
