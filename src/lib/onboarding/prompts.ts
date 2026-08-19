@@ -1,19 +1,5 @@
 import type { OnboardingData } from './types';
 
-const AMBIGUOUS_NAMES = new Set([
-  'alex', 'alexis', 'sam', 'samuel', 'charlie', 'riley', 'jordan', 'avery',
-  'casey', 'morgan', 'taylor', 'river', 'finley', 'finn', 'quinn', 'rowan',
-  'skylar', 'skyler', 'sage', 'robin', 'remi', 'remy', 'drew', 'blake',
-  'cameron', 'cam', 'eden', 'elliot', 'elliott', 'emery', 'emory', 'frankie',
-  'harley', 'hayden', 'hunter', 'jamie', 'jessie', 'kendall', 'kerry',
-  'kieran', 'lee', 'logan', 'london', 'max', 'micah', 'milan', 'parker',
-  'peyton', 'phoenix', 'reese', 'reese', 'ryan', 'shay', 'sterling', 'sydney',
-  'tatum', 'terry', 'tobi', 'toby', 'tracy', 'val',
-]);
-
-export function isNameAmbiguous(name: string): boolean {
-  return AMBIGUOUS_NAMES.has(name.trim().toLowerCase());
-}
 
 function describeCollected(collected: OnboardingData): string {
   const lines: string[] = [];
@@ -39,8 +25,8 @@ function describeRemaining(collected: OnboardingData): string {
   const remaining: string[] = [];
   if (!collected.childName) remaining.push('child\'s name');
   if (!collected.birthMonthYear) remaining.push('month and year of birth');
-  if (!collected.sex && collected.childName && isNameAmbiguous(collected.childName)) {
-    remaining.push('sex (name is ambiguous — must ask)');
+  if (!collected.sex && collected.childName) {
+    remaining.push('sex (always required — ask warmly after you know the name)');
   }
   if (collected.allergies === undefined) remaining.push('allergies');
   if (collected.isSelectiveEater === undefined) remaining.push('selective eater (yes/no)');
@@ -63,7 +49,7 @@ Collect the following information through natural conversation — not a form. O
 REQUIRED FIELDS:
 1. Child's first name
 2. Month and year of birth (ask naturally: "when were they born?")
-3. Sex — ONLY ask if the name is genuinely ambiguous (like Alex, Sam, Charlie, Riley, Jordan etc). Do NOT ask for clearly gendered names.
+3. Sex — always ask, warmly and briefly, after you know the name. ("Just so I can set things up properly for [name] — boy or girl?") Accept "prefer not to say" and map to not_specified.
 4. Allergies — ask warmly, reassure "none" is perfectly fine. Accept free text.
 5. Selective eater — yes/no. If yes: one warm follow-up ("What kinds of things does [name] tend to avoid, or is it more of a general fussiness?"). Keep it light, never judgemental.
 6. Birth weight — frame as optional with a clear skip option ("no worries if you don't have that off the top of your head"). If skipped: acknowledge warmly and move on immediately.
