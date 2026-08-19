@@ -366,7 +366,7 @@ export default function ProfilePage() {
           {avatarUrl ? (
             <img src={avatarUrl} alt="Profile" className={styles.headerAvatarImg} />
           ) : (
-            email?.charAt(0).toUpperCase() ?? '?'
+            email?.charAt(0).toUpperCase() ?? ''
           )}
         </Link>
       </header>
