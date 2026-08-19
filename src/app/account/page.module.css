@@ -90,20 +90,11 @@
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: rgba(0,0,0,0.35);
+  background: rgba(0,0,0,0.3);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  font-weight: 700;
   color: white;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.avatarBtn:hover .avatarOverlay,
-.avatarBtn:active .avatarOverlay {
-  opacity: 1;
 }
 
 .profileInfo {
