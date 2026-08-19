@@ -7,6 +7,7 @@ export interface Profile {
   data_retention_preference: string | null;
   account_deleted_at: string | null;
   country: string | null;
+  avatar_url: string | null;
   language: string;
   subscription_type: string | null;
   subscription_start: string | null;

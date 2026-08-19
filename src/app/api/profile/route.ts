@@ -8,7 +8,7 @@ export async function GET() {
 
   const admin = createAdminClient()
   const [profileResult, childResult] = await Promise.all([
-    supabase.from('profiles').select('tier, consent_data_research').eq('id', user.id).single(),
+    supabase.from('profiles').select('tier, consent_data_research, country, avatar_url').eq('id', user.id).single(),
     admin.from('children')
       .select('name, date_of_birth, sex, allergies, intolerances, is_selective_eater, relationship_to_child')
       .eq('user_id', user.id)
@@ -29,13 +29,14 @@ export async function PATCH(request: Request) {
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
   const body = await request.json()
-  if (typeof body.consent_data_research !== 'boolean') {
-    return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
-  }
+  const update: Record<string, unknown> = {}
+  if (typeof body.consent_data_research === 'boolean') update.consent_data_research = body.consent_data_research
+  if (typeof body.country === 'string') update.country = body.country || null
+  if (Object.keys(update).length === 0) return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
 
   const { error } = await supabase
     .from('profiles')
-    .update({ consent_data_research: body.consent_data_research })
+    .update(update)
     .eq('id', user.id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

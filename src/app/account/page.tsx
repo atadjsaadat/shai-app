@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { STORAGE } from '@/lib/storage/keys';
 import styles from './page.module.css';
@@ -8,10 +8,22 @@ import styles from './page.module.css';
 interface ProfileData {
   tier: 'free' | 'premium' | 'clinical';
   consent_data_research: boolean;
+  country: string | null;
+  avatar_url: string | null;
 }
+
+const COUNTRIES = [
+  'Malta', 'United Kingdom', 'Ireland', 'United States', 'Canada', 'Australia',
+  'New Zealand', 'Germany', 'France', 'Italy', 'Spain', 'Portugal', 'Netherlands',
+  'Belgium', 'Switzerland', 'Austria', 'Sweden', 'Norway', 'Denmark', 'Finland',
+  'Poland', 'Greece', 'Cyprus', 'United Arab Emirates', 'Singapore', 'India',
+  'South Africa', 'Brazil', 'Argentina', 'Mexico', 'Other',
+];
 
 export default function AccountPage() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [email, setEmail] = useState<string | null>(null);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -21,6 +33,10 @@ export default function AccountPage() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [researchConsent, setResearchConsent] = useState(false);
+  const [country, setCountry] = useState<string>('');
+  const [editingCountry, setEditingCountry] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   useEffect(() => {
     fetch('/api/profile')
@@ -30,6 +46,8 @@ export default function AccountPage() {
         setEmail(data.email);
         setProfile(data.profile);
         setResearchConsent(data.profile?.consent_data_research ?? false);
+        setCountry(data.profile?.country ?? '');
+        setAvatarUrl(data.profile?.avatar_url ?? null);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -43,6 +61,32 @@ export default function AccountPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ consent_data_research: newVal }),
     });
+  }
+
+  async function handleCountrySave(value: string) {
+    setCountry(value);
+    setEditingCountry(false);
+    await fetch('/api/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ country: value }),
+    });
+  }
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || uploadingAvatar) return;
+    setUploadingAvatar(true);
+    const form = new FormData();
+    form.append('avatar', file);
+    try {
+      const res = await fetch('/api/profile/avatar', { method: 'POST', body: form });
+      const data = await res.json();
+      if (data.url) setAvatarUrl(data.url);
+    } catch { /* ignore */ } finally {
+      setUploadingAvatar(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   }
 
   async function handleSignOut() {
@@ -120,7 +164,26 @@ export default function AccountPage() {
       ) : (
         <>
           <div className={styles.profileRow}>
-            <div className={styles.avatar}>{initial}</div>
+            <button
+              className={styles.avatarBtn}
+              onClick={() => fileInputRef.current?.click()}
+              aria-label="Change profile picture"
+              disabled={uploadingAvatar}
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Profile" className={styles.avatarImg} />
+              ) : (
+                <span className={styles.avatarInitial}>{initial}</span>
+              )}
+              <span className={styles.avatarOverlay}>{uploadingAvatar ? '…' : '+'}</span>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleAvatarChange}
+            />
             <div className={styles.profileInfo}>
               {email && <p className={styles.profileEmail}>{email}</p>}
               <span className={`${styles.tierBadge} ${profile?.tier === 'premium' ? styles.tierPremium : profile?.tier === 'clinical' ? styles.tierClinical : styles.tierFree}`}>
@@ -141,6 +204,26 @@ export default function AccountPage() {
                 {tierLabel}
               </span>
             </div>
+            <button className={styles.listRowBtn} onClick={() => setEditingCountry(v => !v)}>
+              <span className={styles.rowLabel}>Country</span>
+              <span className={styles.rowValue}>{country || 'Not set'}</span>
+              {chevron}
+            </button>
+            {editingCountry && (
+              <div className={styles.countryPicker}>
+                <select
+                  className={styles.countrySelect}
+                  value={country}
+                  onChange={e => handleCountrySave(e.target.value)}
+                  autoFocus
+                >
+                  <option value="">Select country</option>
+                  {COUNTRIES.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           <p className={styles.sectionLabel}>PRIVACY & DATA</p>
