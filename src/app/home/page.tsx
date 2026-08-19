@@ -378,7 +378,11 @@ export default function HomePage() {
       </div>
 
       {homeData?.lastFeed && (
-        <Link href="/log?tab=feeds" className={styles.lastFeedCard}>
+        <Link
+          href="/log"
+          className={styles.lastFeedCard}
+          onClick={() => sessionStorage.setItem('shai_log_tab', 'feeds')}
+        >
           <div className={styles.lastFeedLeft}>
             <p className={styles.lastFeedLabel}>Last feed</p>
             <p className={styles.lastFeedTime} suppressHydrationWarning>{timeSinceFeed(homeData.lastFeed.logged_at)}</p>

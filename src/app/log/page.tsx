@@ -214,7 +214,13 @@ function FoodItemCard({ item, multiplier = 1, portionLabel, isWin, onWinToggle }
 export default function LogPage() {
   const router = useRouter();
   const [mealType, setMealType] = useState<MealType>(detectMealType);
-  const [activeTab, setActiveTab] = useState<MealType | 'feeds'>(detectMealType);
+  const [activeTab, setActiveTab] = useState<MealType | 'feeds'>(() => {
+    if (typeof window !== 'undefined') {
+      const tab = sessionStorage.getItem('shai_log_tab');
+      if (tab === 'feeds') { sessionStorage.removeItem('shai_log_tab'); return 'feeds'; }
+    }
+    return detectMealType();
+  });
   const [feedsIsArchive, setFeedsIsArchive] = useState(false);
   const [childAgeMonths, setChildAgeMonths] = useState<number | null>(null);
   const [messages, setMessages] = useState<LogMessage[]>([
@@ -331,11 +337,6 @@ export default function LogPage() {
     return () => { speechRef.current?.stop(); };
   }, []);
 
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('tab') === 'feeds') {
-      setActiveTab('feeds');
-    }
-  }, []);
 
   async function toggleLogDictation() {
     const speech = speechRef.current;
