@@ -114,7 +114,9 @@ export default function OnboardingPage() {
 
     return (
       <div className={styles.completion}>
-        <SHAiPresence expression="celebrating" size={80} />
+        <div style={{ marginBottom: 12, marginTop: -32 }}>
+          <SHAiPresence expression="celebrating" size={80} />
+        </div>
         <p className={styles.completionHeading}>Congratulations on {childName}!</p>
         <p className={styles.completionSub}>You&apos;re all set, {parentName ?? 'you'}</p>
 
