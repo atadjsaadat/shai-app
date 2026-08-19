@@ -136,7 +136,16 @@ interface FeedsCache {
 let _feedsCache: FeedsCache | null = null;
 
 export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArchive: boolean) => void }) {
-  const [feeds, setFeeds] = useState<FeedRecord[]>(_feedsCache?.feeds ?? []);
+  const [feeds, setFeeds] = useState<FeedRecord[]>(() => {
+    if (_feedsCache) return _feedsCache.feeds;
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem('shai_feeds_prefetch');
+        if (raw) return [JSON.parse(raw) as FeedRecord];
+      } catch { /* ignore */ }
+    }
+    return [];
+  });
   const [childId, setChildId] = useState<string | null>(null);
   const [childName, setChildName] = useState<string | null>(null);
   const [ageDays, setAgeDays] = useState<number | null>(_feedsCache?.ageDays ?? null);
@@ -204,6 +213,7 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
           const totalBreastMinutes = json.totalBreastMinutes ?? 0;
           const totalAmountMl = json.totalAmountMl ?? 0;
           _feedsCache = { feeds, ageDays, totalCount, firstFeedAt, nightFeedCount, totalBreastMinutes, totalAmountMl };
+          sessionStorage.removeItem('shai_feeds_prefetch');
           setFeeds(feeds);
           setAgeDays(ageDays);
           setTotalCount(totalCount);

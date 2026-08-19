@@ -79,11 +79,13 @@ const WIN_COLOURS: Record<string, { bg: string; text: string }> = {
 };
 
 interface LastFeed {
+  id: string;
   logged_at: string;
   feed_type: 'breast' | 'formula' | 'expressed';
   breast_side: 'left' | 'right' | 'both' | null;
   duration_minutes: number | null;
   amount_ml: number | null;
+  reaction_type: string[] | null;
 }
 
 interface HomeApiResponse {
@@ -381,7 +383,10 @@ export default function HomePage() {
         <Link
           href="/log"
           className={styles.lastFeedCard}
-          onClick={() => sessionStorage.setItem('shai_log_tab', 'feeds')}
+          onClick={() => {
+            sessionStorage.setItem('shai_log_tab', 'feeds');
+            sessionStorage.setItem('shai_feeds_prefetch', JSON.stringify(homeData.lastFeed));
+          }}
         >
           <div className={styles.lastFeedLeft}>
             <p className={styles.lastFeedLabel}>Last feed</p>

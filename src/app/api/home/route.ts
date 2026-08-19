@@ -82,7 +82,7 @@ export async function GET(request: Request) {
     winsQuery,
     admin
       .from('newborn_feed_logs')
-      .select('logged_at, feed_type, breast_side, duration_minutes, amount_ml')
+      .select('id, logged_at, feed_type, breast_side, duration_minutes, amount_ml, reaction_type')
       .eq('child_id', childId)
       .order('logged_at', { ascending: false })
       .limit(1),
