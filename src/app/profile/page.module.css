@@ -13,6 +13,9 @@
 /* ── Header ──────────────────────────────────────────── */
 .topBar {
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .title {
@@ -20,6 +23,31 @@
   font-weight: 800;
   color: var(--text-primary);
   line-height: 1.2;
+}
+
+.headerAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--oat-dark);
+  border: 2px solid var(--terracotta);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  text-decoration: none;
+  box-shadow: var(--btn-shadow);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.headerAvatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .loadingHint {

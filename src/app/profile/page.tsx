@@ -57,6 +57,8 @@ export default function ProfilePage() {
   const router = useRouter();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [child, setChild] = useState<ChildData | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [consentSaving, setConsentSaving] = useState(false);
   const [linkedPartners, setLinkedPartners] = useState<LinkedPartner[]>([]);
@@ -95,6 +97,8 @@ export default function ProfilePage() {
         const profileData = await profileRes.json();
         setProfile(profileData.profile);
         setChild(profileData.child);
+        setEmail(profileData.email ?? null);
+        setAvatarUrl(profileData.profile?.avatar_url ?? null);
 
         if (inviteRes.ok) {
           const inviteData = await inviteRes.json();
@@ -358,6 +362,13 @@ export default function ProfilePage() {
     <div className={styles.page}>
       <header className={styles.topBar}>
         <p className={styles.title}>Profile</p>
+        <Link href="/account" className={styles.headerAvatar} aria-label="Account">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="Profile" className={styles.headerAvatarImg} />
+          ) : (
+            email?.charAt(0).toUpperCase() ?? '?'
+          )}
+        </Link>
       </header>
 
       {loading ? (
