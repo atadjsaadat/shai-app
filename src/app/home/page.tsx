@@ -91,6 +91,7 @@ interface LastFeed {
 interface HomeApiResponse {
   childId: string | null;
   childName: string | null;
+  parentAvatarUrl: string | null;
   totals: Totals;
   targets: Targets;
   meals: Meal[];
@@ -366,7 +367,11 @@ export default function HomePage() {
           <p className={styles.date}>{date}</p>
         </div>
         <Link href="/profile" className={styles.avatar} aria-label="Profile">
-          {childName?.charAt(0).toUpperCase()}
+          {homeData?.parentAvatarUrl ? (
+            <img src={homeData.parentAvatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            childName?.charAt(0).toUpperCase()
+          )}
         </Link>
       </header>
 

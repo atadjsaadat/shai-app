@@ -59,7 +59,7 @@ export async function GET(request: Request) {
     return q
   })()
 
-  const [logsResult, childDetailsResult, appointmentsResult, winsResult, lastFeedResult] = await Promise.all([
+  const [logsResult, childDetailsResult, appointmentsResult, winsResult, lastFeedResult, profileResult] = await Promise.all([
     admin
       .from('food_logs')
       .select('meal_type, food_name, calories_kcal, protein_g, carbs_g, fat_g, fibre_g, sugar_g, sodium_mg, iron_mg, is_hard_food_day')
@@ -86,6 +86,7 @@ export async function GET(request: Request) {
       .eq('child_id', childId)
       .order('logged_at', { ascending: false })
       .limit(1),
+    supabase.from('profiles').select('avatar_url').eq('id', user.id).single(),
   ])
 
   if (!childRow) childRow = (childDetailsResult as { data: ChildRow | null }).data
@@ -156,6 +157,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     childId,
     childName: childRow?.name ?? null,
+    parentAvatarUrl: profileResult.data?.avatar_url ?? null,
     totals,
     targets,
     meals,
