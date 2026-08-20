@@ -23,15 +23,19 @@ export default function PullToRefresh({ children, onRefresh }: {
     const el = containerRef.current;
     if (!el) return;
 
+    function scrollTop(): number {
+      return document.scrollingElement?.scrollTop ?? window.scrollY;
+    }
+
     function onTouchStart(e: TouchEvent) {
-      if (window.scrollY > 0 || refreshingRef.current) return;
+      if (scrollTop() > 0 || refreshingRef.current) return;
       startY.current = e.touches[0].clientY;
       pulling.current = true;
     }
 
     function onTouchMove(e: TouchEvent) {
       if (!pulling.current) return;
-      if (window.scrollY > 0) {
+      if (scrollTop() > 0) {
         pulling.current = false;
         pullYRef.current = 0;
         setPullY(0);
@@ -67,7 +71,9 @@ export default function PullToRefresh({ children, onRefresh }: {
       }
     }
 
-    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    // touchstart must be non-passive so iOS doesn't commit to native overscroll
+    // before our touchmove can call preventDefault
+    el.addEventListener('touchstart', onTouchStart, { passive: false });
     el.addEventListener('touchmove', onTouchMove, { passive: false });
     el.addEventListener('touchend', onTouchEnd, { passive: true });
     el.addEventListener('touchcancel', onTouchEnd, { passive: true });
