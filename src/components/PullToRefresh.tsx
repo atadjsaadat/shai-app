@@ -118,7 +118,7 @@ export default function PullToRefresh({ children, onRefresh }: {
         style={{
           transform: pullY > 0 ? `translateY(${pullY}px)` : undefined,
           transition: pullY > 0 ? undefined : 'transform 0.25s ease',
-          willChange: 'transform',
+          willChange: pullY > 0 ? 'transform' : 'auto',
         }}
       >
         {children}
