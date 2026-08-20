@@ -284,32 +284,28 @@ export default function HomePage() {
       .catch(() => {});
   }, []);
 
-  // Daily feedback — on-demand, cached per day.
+  // Daily feedback — auto-fetches when meals are logged, cached per day.
   useEffect(() => {
     const cached = localStorage.getItem(STORAGE.dailyFeedback(localDate()));
-    if (cached) setDailyFeedback(cached);
-  }, []);
-
-  async function handleGenerateFeedback() {
-    if (!totals || !targets || feedbackLoading) return;
+    if (cached) { setDailyFeedback(cached); return; }
+    if (!homeData || !hasMeals || !totals || !targets) return;
     setFeedbackLoading(true);
-    try {
-      const nutrients = buildNutrientLines(totals, targets);
-      const res = await fetch('/api/home/daily-feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ childName: childName ?? 'your little one', ageMonths, nutrients }),
-      });
-      const data = await res.json();
-      if (data.feedback) {
-        setDailyFeedback(data.feedback);
-        localStorage.setItem(STORAGE.dailyFeedback(localDate()), data.feedback);
-      }
-    } catch {
-      // silently fail
-    }
-    setFeedbackLoading(false);
-  }
+    const nutrients = buildNutrientLines(totals, targets);
+    fetch('/api/home/daily-feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ childName: childName ?? 'your little one', ageMonths, nutrients }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.feedback) {
+          setDailyFeedback(d.feedback);
+          localStorage.setItem(STORAGE.dailyFeedback(localDate()), d.feedback);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setFeedbackLoading(false));
+  }, [homeData, hasMeals, totals, targets, childName, ageMonths]);
 
   function buildStatusMessage(): string {
     const name = childName ?? 'your little one';
@@ -489,20 +485,14 @@ export default function HomePage() {
         </section>
       )}
 
-      {hasMeals && (
+      {hasMeals && (feedbackLoading || dailyFeedback) && (
         <section>
           <p className={styles.sectionLabel}>Today at a glance</p>
           <div className={styles.insightCard}>
-            {dailyFeedback ? (
-              <p className={styles.insightText}>{dailyFeedback}</p>
+            {feedbackLoading ? (
+              <p className={styles.insightLoading}>SHAi is thinking…</p>
             ) : (
-              <button
-                className={styles.feedbackBtn}
-                onClick={handleGenerateFeedback}
-                disabled={feedbackLoading}
-              >
-                {feedbackLoading ? 'SHAi is thinking…' : 'Ask SHAi'}
-              </button>
+              <p className={styles.insightText}>{dailyFeedback}</p>
             )}
           </div>
         </section>
