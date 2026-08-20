@@ -179,6 +179,19 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
   }, []);
 
   useEffect(() => {
+    if (!alarm || alarm.dueAt <= Date.now()) return;
+    const id = setTimeout(() => {
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        new Notification('Feed reminder', {
+          body: `Time for ${childName ?? 'your little one'}'s next feed`,
+          icon: '/icons/icon-192.png',
+        });
+      }
+    }, alarm.dueAt - Date.now());
+    return () => clearTimeout(id);
+  }, [alarm, childName]);
+
+  useEffect(() => {
     const lastAt = feeds[0]?.logged_at ?? null;
     const days = lastAt ? Math.floor((Date.now() - new Date(lastAt).getTime()) / 86_400_000) : null;
     onArchiveChange?.(totalCount > 0 && days !== null && days >= 14);
@@ -234,6 +247,9 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
       localStorage.removeItem(STORAGE.feedReminderMins(childId));
     } else {
       localStorage.setItem(STORAGE.feedReminderMins(childId), String(mins));
+      if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
     }
   }
 

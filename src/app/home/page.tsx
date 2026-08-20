@@ -167,6 +167,15 @@ function formatApptTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }
 
+function timeUntilAlarm(dueAt: number): string {
+  const mins = Math.ceil((dueAt - Date.now()) / 60_000);
+  if (mins <= 0) return 'overdue';
+  if (mins < 90) return `in ${mins} min`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `in ${h}h${m > 0 ? ` ${m}m` : ''}`;
+}
+
 function timeSinceFeed(iso: string): string {
   const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
   if (mins < 1) return 'just now';
@@ -252,6 +261,8 @@ export default function HomePage() {
   const [leapDismissed, setLeapDismissed] = useState(false);
   const [dailyFeedback, setDailyFeedback] = useState<string | null>(null);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedAlarm, setFeedAlarm] = useState<{ dueAt: number } | null>(null);
+  const [, setAlarmTick] = useState(0);
 
   // Derive everything from homeData — no intermediate state to go stale.
   const childName         = homeData?.childName ?? cachedName;
@@ -282,10 +293,36 @@ export default function HomePage() {
 
   useEffect(() => { fetchHomeData().catch(() => {}); }, [fetchHomeData]);
 
+  useEffect(() => {
+    const cId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
+    if (!cId) return;
+    try {
+      const stored = localStorage.getItem(STORAGE.feedAlarm(cId));
+      if (stored) {
+        const parsed: { dueAt: number } = JSON.parse(stored);
+        if (parsed.dueAt > Date.now()) setFeedAlarm(parsed);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    if (!feedAlarm) return;
+    const id = setInterval(() => setAlarmTick(t => t + 1), 60_000);
+    return () => clearInterval(id);
+  }, [feedAlarm]);
+
   const onRefresh = useCallback(async () => {
     _homeCache = null;
     localStorage.removeItem(STORAGE.dailyFeedback(localDate()));
     setDailyFeedback(null);
+    const cId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
+    if (cId) {
+      try {
+        const stored = localStorage.getItem(STORAGE.feedAlarm(cId));
+        const parsed = stored ? (JSON.parse(stored) as { dueAt: number }) : null;
+        setFeedAlarm(parsed && parsed.dueAt > Date.now() ? parsed : null);
+      } catch { setFeedAlarm(null); }
+    }
     await fetchHomeData();
   }, [fetchHomeData]);
 
@@ -373,6 +410,11 @@ export default function HomePage() {
             <p className={styles.lastFeedLabel}>Last feed</p>
             <p className={styles.lastFeedTime} suppressHydrationWarning>{timeSinceFeed(homeData.lastFeed.logged_at)}</p>
             <p className={styles.lastFeedDetail}>{feedDetail(homeData.lastFeed)}</p>
+            {feedAlarm && feedAlarm.dueAt > Date.now() && (
+              <p className={styles.lastFeedCountdown} suppressHydrationWarning>
+                Next feed {timeUntilAlarm(feedAlarm.dueAt)}
+              </p>
+            )}
           </div>
           <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M8 5l5 5-5 5"/>
