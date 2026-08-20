@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import SHAiBrand from '@/components/SHAiBrand';
 import BottomNav from '@/components/BottomNav';
@@ -9,6 +9,7 @@ import type { NutrientLine } from '@/lib/log/types';
 import { STORAGE } from '@/lib/storage/keys';
 import AIDisclosure from '@/components/AIDisclosure';
 import InstallBanner from '@/components/InstallBanner';
+import PullToRefresh from '@/components/PullToRefresh';
 
 interface Totals {
   calories_kcal: number;
@@ -266,23 +267,27 @@ export default function HomePage() {
   const hasMeals = meals.length > 0;
   const loading  = !homeData;
 
-  useEffect(() => {
+  const fetchHomeData = useCallback(async () => {
     const cacheKey = getCacheKey();
     const url = buildApiUrl();
-
-    fetch(url)
-      .then((r) => r.json())
-      .then((data: HomeApiResponse) => {
-        _homeCache = { cacheKey, data };
-        setHomeData(data);
-        if (data.childId && !localStorage.getItem(STORAGE.ACTIVE_CHILD_ID)) {
-          localStorage.setItem(STORAGE.ACTIVE_CHILD_ID, data.childId);
-          if (data.childName) localStorage.setItem(STORAGE.CHILD_NAME, data.childName);
-        }
-        if (data.parentAvatarUrl) localStorage.setItem(STORAGE.AVATAR_URL, data.parentAvatarUrl);
-      })
-      .catch(() => {});
+    const data: HomeApiResponse = await fetch(url).then((r) => r.json());
+    _homeCache = { cacheKey, data };
+    setHomeData(data);
+    if (data.childId && !localStorage.getItem(STORAGE.ACTIVE_CHILD_ID)) {
+      localStorage.setItem(STORAGE.ACTIVE_CHILD_ID, data.childId);
+      if (data.childName) localStorage.setItem(STORAGE.CHILD_NAME, data.childName);
+    }
+    if (data.parentAvatarUrl) localStorage.setItem(STORAGE.AVATAR_URL, data.parentAvatarUrl);
   }, []);
+
+  useEffect(() => { fetchHomeData().catch(() => {}); }, [fetchHomeData]);
+
+  const onRefresh = useCallback(async () => {
+    _homeCache = null;
+    localStorage.removeItem(STORAGE.dailyFeedback(localDate()));
+    setDailyFeedback(null);
+    await fetchHomeData();
+  }, [fetchHomeData]);
 
   // Daily feedback — auto-fetches when meals are logged, cached per day.
   useEffect(() => {
@@ -327,6 +332,7 @@ export default function HomePage() {
   const shaiMessage = buildStatusMessage();
 
   return (
+    <PullToRefresh onRefresh={onRefresh}>
     <div className={styles.page}>
       <header className={styles.topBar}>
         <div>
@@ -504,5 +510,6 @@ export default function HomePage() {
       <AIDisclosure />
       <BottomNav />
     </div>
+    </PullToRefresh>
   );
 }

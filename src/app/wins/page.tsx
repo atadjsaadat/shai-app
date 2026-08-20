@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import BottomNav from '@/components/BottomNav';
 import SHAiPresence from '@/components/SHAiPresence';
@@ -10,6 +10,7 @@ import { compressPhoto } from '@/lib/storage/upload';
 import AIDisclosure from '@/components/AIDisclosure';
 import { formatAge, formatDateLong, formatDateMedium } from '@/lib/format/dates';
 import styles from './page.module.css';
+import PullToRefresh from '@/components/PullToRefresh';
 
 interface Win {
   id: string;
@@ -69,6 +70,8 @@ export default function WinsPage() {
   const [editingNote, setEditingNote] = useState(false);
   const [noteText, setNoteText] = useState('');
   const [savingNote, setSavingNote] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const refreshResolveRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     fetch('/api/wins')
@@ -77,8 +80,19 @@ export default function WinsPage() {
         if (json.error === 'Not authenticated') { router.replace('/login'); return; }
         setWins(_winsCache = json.wins ?? []);
       })
-      .finally(() => setLoading(false));
-  }, [router]);
+      .finally(() => {
+        setLoading(false);
+        refreshResolveRef.current?.();
+        refreshResolveRef.current = null;
+      });
+  }, [router, refreshKey]);
+
+  const onRefresh = useCallback(() => {
+    _winsCache = null;
+    setLoading(true);
+    setRefreshKey((k) => k + 1);
+    return new Promise<void>((resolve) => { refreshResolveRef.current = resolve; });
+  }, []);
 
   useEffect(() => {
     setEditingNote(false);
@@ -151,6 +165,7 @@ export default function WinsPage() {
   };
 
   return (
+    <PullToRefresh onRefresh={onRefresh}>
     <div className={styles.screen}>
       {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
       <div className={styles.header}>
@@ -440,5 +455,6 @@ export default function WinsPage() {
       <AIDisclosure />
       <BottomNav />
     </div>
+    </PullToRefresh>
   );
 }

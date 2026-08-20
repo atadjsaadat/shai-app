@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import BottomNav from '@/components/BottomNav';
 import { STORAGE } from '@/lib/storage/keys';
 import AIDisclosure from '@/components/AIDisclosure';
 import styles from './page.module.css';
+import PullToRefresh from '@/components/PullToRefresh';
 
 interface Totals {
   calories_kcal: number;
@@ -339,6 +340,8 @@ export default function TrendsPage() {
   const [weekWins, setWeekWins] = useState<WinEntry[]>(_c?.weekWins ?? []);
   const [insight, setInsight] = useState<string | null>(null);
   const [insightLoading, setInsightLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const refreshResolveRef = useRef<(() => void) | null>(null);
   const [snapshotDate, setSnapshotDate] = useState<string | null>(null);
   const [snapshotEntries, setSnapshotEntries] = useState<DayEntry[]>([]);
   const [snapshotLoading, setSnapshotLoading] = useState(false);
@@ -393,6 +396,8 @@ export default function TrendsPage() {
       }
 
       setLoading(false);
+      refreshResolveRef.current?.();
+      refreshResolveRef.current = null;
 
       const cacheKey = STORAGE.weeklySummary(monday);
       const cached = localStorage.getItem(cacheKey);
@@ -414,7 +419,7 @@ export default function TrendsPage() {
       }
     }
     init();
-  }, []);
+  }, [refreshKey]);
 
   async function toggleSnapshot(date: string) {
     if (snapshotDate === date) {
@@ -474,7 +479,18 @@ export default function TrendsPage() {
   const displayBestDay = bestDay;
   const displayWins = weekWins;
 
+  const onRefresh = useCallback(() => {
+    _trendsCache = null;
+    localStorage.removeItem(STORAGE.weeklySummary(getMondayDate()));
+    setInsight(null);
+    setData(null);
+    setLoading(true);
+    setRefreshKey((k) => k + 1);
+    return new Promise<void>((resolve) => { refreshResolveRef.current = resolve; });
+  }, []);
+
   return (
+    <PullToRefresh onRefresh={onRefresh}>
     <div className={styles.page}>
       <header className={styles.topBar}>
         <p className={styles.title}>Trends</p>
@@ -869,5 +885,6 @@ export default function TrendsPage() {
         );
       })()}
     </div>
+    </PullToRefresh>
   );
 }

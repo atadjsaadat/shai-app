@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import BottomNav from '@/components/BottomNav';
@@ -8,6 +8,7 @@ import { ALLERGY_GROUPS, COMMON_INTOLERANCES } from '@/lib/allergens';
 import styles from './page.module.css';
 import AIDisclosure from '@/components/AIDisclosure';
 import { parseDob } from '@/lib/format/dates';
+import PullToRefresh from '@/components/PullToRefresh';
 import { STORAGE } from '@/lib/storage/keys';
 
 interface ProfileData {
@@ -76,6 +77,8 @@ export default function ProfilePage() {
     _profilePageCache?.avatarUrl ?? (typeof window !== 'undefined' ? localStorage.getItem(STORAGE.AVATAR_URL) : null)
   );
   const [loading, setLoading] = useState(_profilePageCache === null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const refreshResolveRef = useRef<(() => void) | null>(null);
   const [consentSaving, setConsentSaving] = useState(false);
   const [linkedPartners, setLinkedPartners] = useState<LinkedPartner[]>(_profilePageCache?.linkedPartners ?? []);
   const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>(_profilePageCache?.pendingInvites ?? []);
@@ -142,8 +145,19 @@ export default function ProfilePage() {
         };
       })
       .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [router]);
+      .finally(() => {
+        setLoading(false);
+        refreshResolveRef.current?.();
+        refreshResolveRef.current = null;
+      });
+  }, [router, refreshKey]);
+
+  const onRefresh = useCallback(() => {
+    _profilePageCache = null;
+    setLoading(true);
+    setRefreshKey((k) => k + 1);
+    return new Promise<void>((resolve) => { refreshResolveRef.current = resolve; });
+  }, []);
 
   async function handleConsentToggle() {
     if (!profile || consentSaving) return;
@@ -387,6 +401,7 @@ export default function ProfilePage() {
   const relationship = capitalize(child?.relationship_to_child);
 
   return (
+    <PullToRefresh onRefresh={onRefresh}>
     <div className={styles.page}>
       <header className={styles.topBar}>
         <p className={styles.title}>Profile</p>
@@ -785,5 +800,6 @@ export default function ProfilePage() {
 
       <BottomNav />
     </div>
+    </PullToRefresh>
   );
 }

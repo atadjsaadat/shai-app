@@ -15,6 +15,7 @@ import type { MealFavourite } from '@/app/api/log/meal-favourites/route';
 import { STORAGE } from '@/lib/storage/keys';
 import { ALL_ALLERGENS, ALLERGY_TRIGGER_REACTIONS } from '@/lib/allergens';
 import AIDisclosure from '@/components/AIDisclosure';
+import PullToRefresh from '@/components/PullToRefresh';
 
 const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack', 'hydration'];
 
@@ -256,6 +257,8 @@ export default function LogPage() {
   const [showWinToast, setShowWinToast] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
 
+  const [refreshKey, setRefreshKey] = useState(0);
+  const refreshResolveRef = useRef<(() => void) | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const speechRef = useRef<ReturnType<typeof createSpeechRecognition> | null>(null);
@@ -401,8 +404,17 @@ export default function LogPage() {
         if (name) { setChildName(name); setMessages([{ id: '0', role: 'assistant', content: `What did ${name} have? The more detail the better — ingredients, type, and roughly how much.` }]); }
         if (storedId) setChildValidated(true);
         else router.replace('/onboarding');
+      })
+      .finally(() => {
+        refreshResolveRef.current?.();
+        refreshResolveRef.current = null;
       });
-  }, [router]);
+  }, [router, refreshKey]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshKey((k) => k + 1);
+    return new Promise<void>((resolve) => { refreshResolveRef.current = resolve; });
+  }, []);
 
   useEffect(() => {
     if (childValidated) loadQuickPicks(mealType);
@@ -657,6 +669,7 @@ export default function LogPage() {
   if (!childValidated) return null;
 
   return (
+    <PullToRefresh onRefresh={onRefresh}>
     <div className={styles.screen}>
       {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
       {showScanner && (
@@ -1141,5 +1154,6 @@ export default function LogPage() {
       )}
       </>)}
     </div>
+    </PullToRefresh>
   );
 }
