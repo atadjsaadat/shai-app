@@ -154,7 +154,6 @@ export default function ProfilePage() {
 
   const onRefresh = useCallback(() => {
     _profilePageCache = null;
-    setLoading(true);
     setRefreshKey((k) => k + 1);
     return new Promise<void>((resolve) => { refreshResolveRef.current = resolve; });
   }, []);
@@ -401,6 +400,7 @@ export default function ProfilePage() {
   const relationship = capitalize(child?.relationship_to_child);
 
   return (
+    <>
     <PullToRefresh onRefresh={onRefresh}>
     <div className={styles.page}>
       <header className={styles.topBar}>
@@ -798,8 +798,9 @@ export default function ProfilePage() {
         </div>
       )}
 
-      <BottomNav />
     </div>
     </PullToRefresh>
+    <BottomNav />
+    </>
   );
 }

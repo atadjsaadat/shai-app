@@ -483,13 +483,12 @@ export default function TrendsPage() {
     _trendsCache = null;
     localStorage.removeItem(STORAGE.weeklySummary(getMondayDate()));
     setInsight(null);
-    setData(null);
-    setLoading(true);
     setRefreshKey((k) => k + 1);
     return new Promise<void>((resolve) => { refreshResolveRef.current = resolve; });
   }, []);
 
   return (
+    <>
     <PullToRefresh onRefresh={onRefresh}>
     <div className={styles.page}>
       <header className={styles.topBar}>
@@ -824,8 +823,6 @@ export default function TrendsPage() {
         </div>
       )}
 
-      <BottomNav />
-
       {selectedNutrient && data?.averages && (() => {
         const n = selectedNutrient;
         const value = data.averages![n.key] ?? 0;
@@ -886,5 +883,7 @@ export default function TrendsPage() {
       })()}
     </div>
     </PullToRefresh>
+    <BottomNav />
+    </>
   );
 }

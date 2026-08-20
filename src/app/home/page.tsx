@@ -332,6 +332,7 @@ export default function HomePage() {
   const shaiMessage = buildStatusMessage();
 
   return (
+    <>
     <PullToRefresh onRefresh={onRefresh}>
     <div className={styles.page}>
       <header className={styles.topBar}>
@@ -508,8 +509,9 @@ export default function HomePage() {
       )}
 
       <AIDisclosure />
-      <BottomNav />
     </div>
     </PullToRefresh>
+    <BottomNav />
+    </>
   );
 }

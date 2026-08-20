@@ -89,7 +89,6 @@ export default function WinsPage() {
 
   const onRefresh = useCallback(() => {
     _winsCache = null;
-    setLoading(true);
     setRefreshKey((k) => k + 1);
     return new Promise<void>((resolve) => { refreshResolveRef.current = resolve; });
   }, []);
@@ -165,6 +164,7 @@ export default function WinsPage() {
   };
 
   return (
+    <>
     <PullToRefresh onRefresh={onRefresh}>
     <div className={styles.screen}>
       {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
@@ -453,8 +453,9 @@ export default function WinsPage() {
       )}
 
       <AIDisclosure />
-      <BottomNav />
     </div>
     </PullToRefresh>
+    <BottomNav />
+    </>
   );
 }
