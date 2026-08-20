@@ -249,11 +249,8 @@ export default function HomePage() {
   );
 
   const [leapDismissed, setLeapDismissed] = useState(false);
-  const [weeklySummary, setWeeklySummary] = useState<string | null>(null);
-  const [weeklyLoading, setWeeklyLoading] = useState(false);
   const [dailyFeedback, setDailyFeedback] = useState<string | null>(null);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
-  const [showFeedbackSection, setShowFeedbackSection] = useState(false);
 
   // Derive everything from homeData — no intermediate state to go stale.
   const childName         = homeData?.childName ?? cachedName;
@@ -287,38 +284,10 @@ export default function HomePage() {
       .catch(() => {});
   }, []);
 
-  // Weekly summary — AI call, long-lived localStorage cache.
+  // Daily feedback — on-demand, cached per day.
   useEffect(() => {
-    if (!homeData?.childId) return;
-    const childId = homeData.childId;
-    const name = homeData.childName ?? cachedName;
-    const today = localDate();
-    const offset = -new Date().getTimezoneOffset();
-    const weekSince = getMondayDate();
-    const weeklyCacheKey = STORAGE.weeklySummary(weekSince);
-    const cached = localStorage.getItem(weeklyCacheKey);
-    if (cached) { setWeeklySummary(cached); return; }
-    setWeeklyLoading(true);
-    fetch(`/api/home/weekly-summary?childId=${childId}&date=${today}&utcOffset=${offset}&childName=${encodeURIComponent(name ?? 'your little one')}`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.summary) {
-          setWeeklySummary(d.summary);
-          localStorage.setItem(weeklyCacheKey, d.summary);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setWeeklyLoading(false));
-  }, [homeData?.childId, cachedName]);
-
-  // Daily feedback — time-gated, on-demand.
-  useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour >= 18 && hour < 22) {
-      setShowFeedbackSection(true);
-      const cached = localStorage.getItem(STORAGE.dailyFeedback(localDate()));
-      if (cached) setDailyFeedback(cached);
-    }
+    const cached = localStorage.getItem(STORAGE.dailyFeedback(localDate()));
+    if (cached) setDailyFeedback(cached);
   }, []);
 
   async function handleGenerateFeedback() {
@@ -520,26 +489,9 @@ export default function HomePage() {
         </section>
       )}
 
-      {(weeklyLoading || weeklySummary) && (
-        <section style={{ marginTop: 8 }}>
-          <p className={styles.sectionLabel}>This week at a glance</p>
-          <div className={styles.insightCard}>
-            {weeklyLoading ? (
-              <p className={styles.insightLoading}>Getting your week summary…</p>
-            ) : (
-              <ul className={styles.insightList}>
-                {weeklySummary!.split('\n').filter(l => l.trim()).map((line, i) => (
-                  <li key={i} className={styles.insightListItem}>{line.replace(/^-\s*/, '')}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </section>
-      )}
-
-      {showFeedbackSection && hasMeals && (
+      {hasMeals && (
         <section>
-          <p className={styles.sectionLabel}>How did today go?</p>
+          <p className={styles.sectionLabel}>Today at a glance</p>
           <div className={styles.insightCard}>
             {dailyFeedback ? (
               <p className={styles.insightText}>{dailyFeedback}</p>
