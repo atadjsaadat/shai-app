@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import styles from './BottomNav.module.css';
@@ -56,11 +58,13 @@ const TABS = [
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const left = TABS.slice(0, 2);
   const right = TABS.slice(2);
 
-  return (
+  const nav = (
     <nav className={styles.nav}>
       <div className={styles.bar}>
         {left.map((tab) => {
@@ -104,4 +108,6 @@ export default function BottomNav() {
       <div className={styles.safeArea} />
     </nav>
   );
+
+  return mounted ? createPortal(nav, document.body) : null;
 }
