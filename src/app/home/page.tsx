@@ -298,10 +298,7 @@ export default function HomePage() {
     if (!cId) return;
     try {
       const stored = localStorage.getItem(STORAGE.feedAlarm(cId));
-      if (stored) {
-        const parsed: { dueAt: number } = JSON.parse(stored);
-        if (parsed.dueAt > Date.now()) setFeedAlarm(parsed);
-      }
+      if (stored) setFeedAlarm(JSON.parse(stored) as { dueAt: number });
     } catch { /* ignore */ }
   }, []);
 

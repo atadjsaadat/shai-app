@@ -27,6 +27,21 @@ const REMINDER_OPTIONS = [
 
 interface Alarm { dueAt: number; intervalMins: number }
 
+let _notifTimer: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleNotification(dueAt: number, name: string | null): void {
+  if (_notifTimer != null) clearTimeout(_notifTimer);
+  _notifTimer = setTimeout(() => {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      new Notification('Feed reminder', {
+        body: `Time for ${name ?? 'your little one'}'s next feed`,
+        icon: '/icons/icon-192.png',
+      });
+    }
+    _notifTimer = null;
+  }, dueAt - Date.now());
+}
+
 interface FeedRecord {
   id: string;
   logged_at: string;
@@ -179,16 +194,7 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
   }, []);
 
   useEffect(() => {
-    if (!alarm || alarm.dueAt <= Date.now()) return;
-    const id = setTimeout(() => {
-      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-        new Notification('Feed reminder', {
-          body: `Time for ${childName ?? 'your little one'}'s next feed`,
-          icon: '/icons/icon-192.png',
-        });
-      }
-    }, alarm.dueAt - Date.now());
-    return () => clearTimeout(id);
+    if (alarm && alarm.dueAt > Date.now()) scheduleNotification(alarm.dueAt, childName);
   }, [alarm, childName]);
 
   useEffect(() => {
@@ -245,10 +251,21 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
     setReminderMins(mins);
     if (mins == null) {
       localStorage.removeItem(STORAGE.feedReminderMins(childId));
+      localStorage.removeItem(STORAGE.feedAlarm(childId));
+      setAlarm(null);
     } else {
       localStorage.setItem(STORAGE.feedReminderMins(childId), String(mins));
       if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
         Notification.requestPermission();
+      }
+      const lastFeedAt = feeds[0]?.logged_at;
+      if (lastFeedAt) {
+        const dueAt = new Date(lastFeedAt).getTime() + mins * 60_000;
+        if (dueAt > Date.now()) {
+          const newAlarm: Alarm = { dueAt, intervalMins: mins };
+          localStorage.setItem(STORAGE.feedAlarm(childId), JSON.stringify(newAlarm));
+          setAlarm(newAlarm);
+        }
       }
     }
   }
