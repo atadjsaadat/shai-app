@@ -261,7 +261,18 @@ export default function HomePage() {
   const [leapDismissed, setLeapDismissed] = useState(false);
   const [dailyFeedback, setDailyFeedback] = useState<string | null>(null);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
-  const [feedAlarm, setFeedAlarm] = useState<{ dueAt: number } | null>(null);
+  // Initialise synchronously so the card appears on the very first render
+  // without waiting for homeData or a useEffect cycle.
+  const [feedAlarm, setFeedAlarm] = useState<{ dueAt: number } | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const cId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
+    if (!cId) return null;
+    try {
+      const stored = localStorage.getItem(STORAGE.feedAlarm(cId));
+      const parsed = stored ? (JSON.parse(stored) as { dueAt: number }) : null;
+      return parsed && parsed.dueAt > Date.now() ? parsed : null;
+    } catch { return null; }
+  });
   const [, setAlarmTick] = useState(0);
 
   // Derive everything from homeData — no intermediate state to go stale.
