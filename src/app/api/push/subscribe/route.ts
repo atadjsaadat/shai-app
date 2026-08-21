@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient();
   await admin.from('push_subscriptions').upsert(
-    { user_id: user.id, endpoint, p256dh: keys.p256dh, auth: keys.auth },
+    { user_id: user.id, endpoint, p256dh: keys.p256dh, auth_key: keys.auth },
     { onConflict: 'user_id,endpoint' }
   );
 

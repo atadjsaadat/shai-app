@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     // Get all push subscriptions for this user
     const { data: subs } = await admin
       .from('push_subscriptions')
-      .select('endpoint, p256dh, auth')
+      .select('endpoint, p256dh, auth_key')
       .eq('user_id', alarm.user_id);
 
     // Get child name for the notification body
@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
     for (const sub of subs ?? []) {
       try {
         await webpush.sendNotification(
-          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth_key } },
           payload
         );
         sent++;
