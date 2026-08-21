@@ -172,7 +172,6 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
   const [loading, setLoading] = useState(true);
   const [alarm, setAlarm] = useState<Alarm | null>(null);
   const [reminderMins, setReminderMins] = useState<number | null>(null);
-  const [reminderConfirmed, setReminderConfirmed] = useState(false);
   const [tick, setTick] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -267,8 +266,6 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
       const newAlarm: Alarm = { dueAt, intervalMins: mins };
       localStorage.setItem(STORAGE.feedAlarm(cId), JSON.stringify(newAlarm));
       setAlarm(newAlarm);
-      setReminderConfirmed(true);
-      setTimeout(() => setReminderConfirmed(false), 3000);
     }
   }
 
@@ -620,7 +617,7 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
             </svg>
             <span className={styles.reminderLabel}>
               {reminderMins != null
-                ? `Remind every ${REMINDER_OPTIONS.find(o => o.mins === reminderMins)?.label ?? `${reminderMins / 60}h`}`
+                ? <><span className={styles.alarmSet}>Alarm set</span>{` · every ${REMINDER_OPTIONS.find(o => o.mins === reminderMins)?.label ?? `${reminderMins / 60}h`}`}</>
                 : 'Feed reminders'}
             </span>
           </div>
@@ -647,11 +644,6 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
           </div>
         )}
 
-        {reminderConfirmed && alarm && (
-          <p className={styles.reminderConfirmed}>
-            Reminder set — next feed {timeUntil(alarm.dueAt)}
-          </p>
-        )}
       </div>
 
       {!showForm ? (
