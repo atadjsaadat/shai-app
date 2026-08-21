@@ -63,6 +63,31 @@
 }
 
 /* ── Last feed card ──────────────────────────────────── */
+.feedAlarmCard {
+  background: var(--oat);
+  border-radius: 20px;
+  padding: 14px 18px;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-decoration: none;
+  color: inherit;
+}
+
+.feedAlarmLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--terracotta);
+}
+
+.feedAlarmLabel {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--terracotta);
+}
+
 .lastFeedCard {
   background: var(--oat);
   border-radius: 20px;

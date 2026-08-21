@@ -294,13 +294,14 @@ export default function HomePage() {
   useEffect(() => { fetchHomeData().catch(() => {}); }, [fetchHomeData]);
 
   useEffect(() => {
-    const cId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
+    const cId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID) ?? homeData?.childId;
     if (!cId) return;
     try {
       const stored = localStorage.getItem(STORAGE.feedAlarm(cId));
-      if (stored) setFeedAlarm(JSON.parse(stored) as { dueAt: number });
+      const parsed = stored ? (JSON.parse(stored) as { dueAt: number }) : null;
+      setFeedAlarm(parsed && parsed.dueAt > Date.now() ? parsed : null);
     } catch { /* ignore */ }
-  }, []);
+  }, [homeData?.childId]);
 
   useEffect(() => {
     if (!feedAlarm) return;
@@ -394,6 +395,20 @@ export default function HomePage() {
         <p className={styles.shaiMessage}>{shaiMessage}</p>
       </div>
 
+      {feedAlarm && feedAlarm.dueAt > Date.now() && (
+        <Link href="/log" className={styles.feedAlarmCard} onClick={() => sessionStorage.setItem('shai_log_tab', 'feeds')}>
+          <div className={styles.feedAlarmLeft}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span className={styles.feedAlarmLabel} suppressHydrationWarning>Next feed {timeUntilAlarm(feedAlarm.dueAt)}</span>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M8 5l5 5-5 5"/>
+          </svg>
+        </Link>
+      )}
+
       {homeData?.lastFeed && (
         <Link
           href="/log"
@@ -407,11 +422,6 @@ export default function HomePage() {
             <p className={styles.lastFeedLabel}>Last feed</p>
             <p className={styles.lastFeedTime} suppressHydrationWarning>{timeSinceFeed(homeData.lastFeed.logged_at)}</p>
             <p className={styles.lastFeedDetail}>{feedDetail(homeData.lastFeed)}</p>
-            {feedAlarm && feedAlarm.dueAt > Date.now() && (
-              <p className={styles.lastFeedCountdown} suppressHydrationWarning>
-                Next feed {timeUntilAlarm(feedAlarm.dueAt)}
-              </p>
-            )}
           </div>
           <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M8 5l5 5-5 5"/>
