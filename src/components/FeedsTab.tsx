@@ -271,17 +271,23 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
 
     if (loadedMins != null) {
       setReminderMins(loadedMins);
-      if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-        Notification.requestPermission();
-      }
-      if (loadedAlarm && loadedAlarm.dueAt > Date.now()) {
-        setAlarm(loadedAlarm);
-      } else {
-        // Alarm missing or already fired — reset from now so reminder is always live
-        const newAlarm: Alarm = { dueAt: Date.now() + loadedMins * 60_000, intervalMins: loadedMins };
-        localStorage.setItem(STORAGE.feedAlarm(cId), JSON.stringify(newAlarm));
-        setAlarm(newAlarm);
-      }
+      const activeAlarm = (loadedAlarm && loadedAlarm.dueAt > Date.now())
+        ? loadedAlarm
+        : { dueAt: Date.now() + loadedMins * 60_000, intervalMins: loadedMins };
+      localStorage.setItem(STORAGE.feedAlarm(cId), JSON.stringify(activeAlarm));
+      setAlarm(activeAlarm);
+      // Re-sync server alarm and push subscription on every app open
+      syncAlarmServer(cId, activeAlarm).catch(() => {});
+      getPushSubscription()
+        .then(sub => {
+          if (!sub) return;
+          return fetch('/api/push/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(sub),
+          });
+        })
+        .catch(() => {});
     }
 
     fetch(`/api/newborn?childId=${cId}`)
