@@ -29,17 +29,27 @@ interface Alarm { dueAt: number; intervalMins: number }
 
 let _notifTimer: ReturnType<typeof setTimeout> | null = null;
 
+function fireNotification(name: string | null, overdue = false): void {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  new Notification('Feed reminder', {
+    body: overdue
+      ? `Feed time passed for ${name ?? 'your little one'} — logging one now?`
+      : `Time for ${name ?? 'your little one'}'s next feed`,
+    icon: '/icons/icon-192.png',
+  });
+}
+
 function scheduleNotification(dueAt: number, name: string | null): void {
   if (_notifTimer != null) clearTimeout(_notifTimer);
+  const delay = dueAt - Date.now();
+  if (delay <= 0) {
+    fireNotification(name, true);
+    return;
+  }
   _notifTimer = setTimeout(() => {
-    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-      new Notification('Feed reminder', {
-        body: `Time for ${name ?? 'your little one'}'s next feed`,
-        icon: '/icons/icon-192.png',
-      });
-    }
+    fireNotification(name);
     _notifTimer = null;
-  }, dueAt - Date.now());
+  }, delay);
 }
 
 interface FeedRecord {
@@ -195,6 +205,17 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
 
   useEffect(() => {
     if (alarm && alarm.dueAt > Date.now()) scheduleNotification(alarm.dueAt, childName);
+  }, [alarm, childName]);
+
+  useEffect(() => {
+    if (!alarm) return;
+    function onVisible() {
+      if (document.visibilityState === 'visible' && alarm && alarm.dueAt <= Date.now()) {
+        fireNotification(childName, true);
+      }
+    }
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
   }, [alarm, childName]);
 
   useEffect(() => {
