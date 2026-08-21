@@ -28,13 +28,23 @@ const REMINDER_OPTIONS = [
 interface Alarm { dueAt: number; intervalMins: number }
 
 let _notifTimer: ReturnType<typeof setTimeout> | null = null;
+let _feedDueCallback: (() => void) | null = null;
+
+// Must be called from a user-gesture handler (button click) — browsers block
+// permission prompts from non-gesture contexts.
+async function requestNotificationPermission(): Promise<boolean> {
+  if (typeof window === 'undefined' || !('Notification' in window)) return false;
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') return false;
+  const result = await Notification.requestPermission();
+  return result === 'granted';
+}
 
 async function getPushSubscription(): Promise<PushSubscription | null> {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+  if (Notification.permission !== 'granted') return null;
   const reg = await navigator.serviceWorker.register('/sw.js');
   await navigator.serviceWorker.ready;
-  const permission = await Notification.requestPermission();
-  if (permission !== 'granted') return null;
   const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
   const existing = await reg.pushManager.getSubscription();
   if (existing) return existing;
@@ -83,10 +93,12 @@ function scheduleNotification(dueAt: number, name: string | null): void {
   const delay = dueAt - Date.now();
   if (delay <= 0) {
     fireNotification(name, true);
+    _feedDueCallback?.();
     return;
   }
   _notifTimer = setTimeout(() => {
     fireNotification(name);
+    _feedDueCallback?.();
     _notifTimer = null;
   }, delay);
 }
@@ -221,6 +233,7 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
   const [loading, setLoading] = useState(true);
   const [alarm, setAlarm] = useState<Alarm | null>(null);
   const [reminderMins, setReminderMins] = useState<number | null>(null);
+  const [feedDue, setFeedDue] = useState(false);
   const [tick, setTick] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -236,6 +249,11 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
   const [showReactions, setShowReactions] = useState(false);
   const [allergyPromptActive, setAllergyPromptActive] = useState(false);
   const [allergyContextFeed, setAllergyContextFeed] = useState<string | null>(null);
+
+  useEffect(() => {
+    _feedDueCallback = () => setFeedDue(true);
+    return () => { _feedDueCallback = null; };
+  }, []);
 
   useEffect(() => {
     const id = setInterval(() => setTick(t => t + 1), 60_000);
@@ -356,7 +374,9 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
       const newAlarm: Alarm = { dueAt, intervalMins: mins };
       localStorage.setItem(STORAGE.feedAlarm(cId), JSON.stringify(newAlarm));
       setAlarm(newAlarm);
-      getPushSubscription()
+      // Request permission first (must be in click-handler context), then try push
+      requestNotificationPermission()
+        .then(() => getPushSubscription())
         .then(sub => {
           if (!sub) return;
           return fetch('/api/push/subscribe', {
@@ -447,6 +467,7 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
       setAllergyPromptActive(true);
     }
 
+    setFeedDue(false);
     setShowForm(false);
     setSaving(false);
   }
@@ -653,6 +674,17 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
 
   return (
     <div className={styles.container}>
+
+      {feedDue && (
+        <div className={styles.feedDueBanner}>
+          <span className={styles.feedDueBannerText}>
+            Time for {childName ?? 'your little one'}&apos;s feed!
+          </span>
+          <button className={styles.feedDueBannerDismiss} onClick={() => setFeedDue(false)}>
+            Got it
+          </button>
+        </div>
+      )}
 
       {(childName || ageDays != null) && (
         <div className={styles.header}>

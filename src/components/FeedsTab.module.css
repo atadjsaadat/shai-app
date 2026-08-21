@@ -81,6 +81,38 @@
   margin: 4px 0 0;
 }
 
+/* ── Feed due in-app banner (fallback for platforms without push) ── */
+.feedDueBanner {
+  background: var(--terracotta);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: var(--card-shadow);
+}
+
+.feedDueBannerText {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  flex: 1;
+}
+
+.feedDueBannerDismiss {
+  background: rgba(255,255,255,0.25);
+  border: none;
+  border-radius: 10px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
 .alarmBox {
   display: flex;
   align-items: center;
