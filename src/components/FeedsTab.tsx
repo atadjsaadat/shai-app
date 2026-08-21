@@ -60,14 +60,22 @@ async function syncAlarmServer(childId: string, alarm: { dueAt: number; interval
   }
 }
 
-function fireNotification(name: string | null, overdue = false): void {
+async function fireNotification(name: string | null, overdue = false): Promise<void> {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
-  new Notification('Feed reminder', {
-    body: overdue
-      ? `Feed time passed for ${name ?? 'your little one'} — logging one now?`
-      : `Time for ${name ?? 'your little one'}'s next feed`,
-    icon: '/icons/icon-192.png',
-  });
+  const title = 'Feed reminder';
+  const body = overdue
+    ? `Feed time passed for ${name ?? 'your little one'} — logging one now?`
+    : `Time for ${name ?? 'your little one'}'s next feed`;
+  const opts = { body, icon: '/icons/icon-192.png', badge: '/icons/icon-192.png', tag: 'feed-reminder', renotify: true };
+  // Mobile Chrome requires SW showNotification — new Notification() is desktop-only
+  if ('serviceWorker' in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      await reg.showNotification(title, opts);
+      return;
+    } catch { /* fall through to desktop path */ }
+  }
+  new Notification(title, { body, icon: '/icons/icon-192.png' });
 }
 
 function scheduleNotification(dueAt: number, name: string | null): void {
