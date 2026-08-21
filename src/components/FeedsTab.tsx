@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { STORAGE } from '@/lib/storage/keys';
 import { ALLERGY_TRIGGER_REACTIONS } from '@/lib/allergens';
 import SHAiPresence from '@/components/SHAiPresence';
@@ -235,6 +235,9 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
   const [reminderMins, setReminderMins] = useState<number | null>(null);
   const [feedDue, setFeedDue] = useState(false);
   const [tick, setTick] = useState(0);
+  const [pullY, setPullY] = useState(0);
+  const [refreshCounter, setRefreshCounter] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -280,6 +283,53 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
     const days = lastAt ? Math.floor((Date.now() - new Date(lastAt).getTime()) / 86_400_000) : null;
     onArchiveChange?.(totalCount > 0 && days !== null && days >= 14);
   }, [totalCount, feeds, onArchiveChange]);
+
+  // Pull-to-refresh — uses the container's own scrollTop, not document scroll
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const THRESHOLD = 65;
+    const s = { startY: 0, pulling: false, y: 0, busy: false };
+
+    function onTouchStart(e: TouchEvent) {
+      if (el!.scrollTop > 0 || s.busy) return;
+      s.startY = e.touches[0].clientY;
+      s.pulling = true;
+    }
+    function onTouchMove(e: TouchEvent) {
+      if (!s.pulling) return;
+      if (el!.scrollTop > 0) { s.pulling = false; s.y = 0; setPullY(0); return; }
+      const delta = e.touches[0].clientY - s.startY;
+      if (delta <= 0) { s.y = 0; setPullY(0); return; }
+      e.preventDefault();
+      s.y = Math.min(delta * 0.45, THRESHOLD + 20);
+      setPullY(s.y);
+    }
+    function onTouchEnd() {
+      if (!s.pulling) return;
+      s.pulling = false;
+      const y = s.y;
+      s.y = 0;
+      setPullY(0);
+      if (y >= THRESHOLD) {
+        s.busy = true;
+        _feedsCache = null;
+        setRefreshCounter(c => c + 1);
+        setTimeout(() => { s.busy = false; }, 1500);
+      }
+    }
+
+    el.addEventListener('touchstart', onTouchStart, { passive: false });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+    el.addEventListener('touchcancel', onTouchEnd, { passive: true });
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+      el.removeEventListener('touchcancel', onTouchEnd);
+    };
+  }, []);
 
   useEffect(() => {
     const cId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
@@ -355,7 +405,7 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
         setLoading(false);
       })
       .catch(() => { setLoading(false); });
-  }, []);
+  }, [refreshCounter]);
 
   async function applyReminder(mins: number | null) {
     const cId = childId ?? localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
@@ -492,6 +542,16 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
     return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   }
 
+  const pullSpinner = pullY > 8 ? (
+    <div style={{ position: 'fixed', top: 12, left: '50%', transform: 'translateX(-50%)', opacity: Math.min(1, pullY / 65), pointerEvents: 'none', zIndex: 9999 }}>
+      <div style={{ width: 24, height: 24, border: '2.5px solid var(--oat-dark)', borderTopColor: 'var(--terracotta)', borderRadius: '50%' }} />
+    </div>
+  ) : null;
+
+  const contentStyle: React.CSSProperties = pullY > 0
+    ? { transform: `translateY(${pullY}px)` }
+    : { transition: 'transform 0.25s ease' };
+
   if (isArchive) {
     const name = childName ?? 'your little one';
     const dominant = dominantType(feeds);
@@ -500,7 +560,9 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
       : null;
 
     return (
-      <div className={styles.container}>
+      <div ref={containerRef} className={styles.container}>
+        {pullSpinner}
+        <div style={contentStyle}>
         <div className={styles.archiveCard}>
           <div className={styles.archiveHeader}>
             <SHAiPresence expression="celebrating" size={40} />
@@ -668,12 +730,15 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
             )}
           </div>
         )}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className={styles.container}>
+    <div ref={containerRef} className={styles.container}>
+      {pullSpinner}
+      <div style={contentStyle}>
 
       {feedDue && (
         <div className={styles.feedDueBanner}>
@@ -947,6 +1012,7 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
       {!loading && todayFeeds.length === 0 && !showForm && (
         <p className={styles.emptyHint}>No feeds logged today yet.</p>
       )}
+      </div>
     </div>
   );
 }
