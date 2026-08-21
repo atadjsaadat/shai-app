@@ -259,14 +259,11 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
         Notification.requestPermission();
       }
       const lastFeedAt = feeds[0]?.logged_at;
-      if (lastFeedAt) {
-        const dueAt = new Date(lastFeedAt).getTime() + mins * 60_000;
-        if (dueAt > Date.now()) {
-          const newAlarm: Alarm = { dueAt, intervalMins: mins };
-          localStorage.setItem(STORAGE.feedAlarm(childId), JSON.stringify(newAlarm));
-          setAlarm(newAlarm);
-        }
-      }
+      const fromFeed = lastFeedAt ? new Date(lastFeedAt).getTime() + mins * 60_000 : 0;
+      const dueAt = fromFeed > Date.now() ? fromFeed : Date.now() + mins * 60_000;
+      const newAlarm: Alarm = { dueAt, intervalMins: mins };
+      localStorage.setItem(STORAGE.feedAlarm(childId), JSON.stringify(newAlarm));
+      setAlarm(newAlarm);
     }
   }
 
