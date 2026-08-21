@@ -29,6 +29,37 @@ interface Alarm { dueAt: number; intervalMins: number }
 
 let _notifTimer: ReturnType<typeof setTimeout> | null = null;
 
+async function getPushSubscription(): Promise<PushSubscription | null> {
+  if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+  const reg = await navigator.serviceWorker.register('/sw.js');
+  await navigator.serviceWorker.ready;
+  const permission = await Notification.requestPermission();
+  if (permission !== 'granted') return null;
+  const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
+  const existing = await reg.pushManager.getSubscription();
+  if (existing) return existing;
+  return reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: vapidKey,
+  });
+}
+
+async function syncAlarmServer(childId: string, alarm: { dueAt: number; intervalMins: number } | null): Promise<void> {
+  if (alarm) {
+    await fetch('/api/push/alarm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ childId, dueAt: new Date(alarm.dueAt).toISOString(), intervalMins: alarm.intervalMins }),
+    });
+  } else {
+    await fetch('/api/push/alarm', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ childId }),
+    });
+  }
+}
+
 function fireNotification(name: string | null, overdue = false): void {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
   new Notification('Feed reminder', {
@@ -294,7 +325,7 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
       .catch(() => { setLoading(false); });
   }, []);
 
-  function applyReminder(mins: number | null) {
+  async function applyReminder(mins: number | null) {
     const cId = childId ?? localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
     if (!cId) return;
     setReminderMins(mins);
@@ -302,18 +333,26 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
       localStorage.removeItem(STORAGE.feedReminderMins(cId));
       localStorage.removeItem(STORAGE.feedAlarm(cId));
       setAlarm(null);
-      setReminderConfirmed(false);
+      syncAlarmServer(cId, null).catch(() => {});
     } else {
       localStorage.setItem(STORAGE.feedReminderMins(cId), String(mins));
-      if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-        Notification.requestPermission();
-      }
       const lastFeedAt = feeds[0]?.logged_at;
       const fromFeed = lastFeedAt ? new Date(lastFeedAt).getTime() + mins * 60_000 : 0;
       const dueAt = fromFeed > Date.now() ? fromFeed : Date.now() + mins * 60_000;
       const newAlarm: Alarm = { dueAt, intervalMins: mins };
       localStorage.setItem(STORAGE.feedAlarm(cId), JSON.stringify(newAlarm));
       setAlarm(newAlarm);
+      getPushSubscription()
+        .then(sub => {
+          if (!sub) return;
+          return fetch('/api/push/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(sub),
+          });
+        })
+        .catch(() => {});
+      syncAlarmServer(cId, newAlarm).catch(() => {});
     }
   }
 
@@ -382,6 +421,7 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
       const newAlarm: Alarm = { dueAt: new Date(loggedAt).getTime() + reminderMins * 60_000, intervalMins: reminderMins };
       localStorage.setItem(alarmKey, JSON.stringify(newAlarm));
       setAlarm(newAlarm);
+      syncAlarmServer(cId, newAlarm).catch(() => {});
     } else {
       localStorage.removeItem(alarmKey);
       setAlarm(null);
