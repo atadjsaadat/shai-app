@@ -172,6 +172,7 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
   const [loading, setLoading] = useState(true);
   const [alarm, setAlarm] = useState<Alarm | null>(null);
   const [reminderMins, setReminderMins] = useState<number | null>(null);
+  const [reminderConfirmed, setReminderConfirmed] = useState(false);
   const [tick, setTick] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -247,14 +248,16 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
   }, []);
 
   function applyReminder(mins: number | null) {
-    if (!childId) return;
+    const cId = childId ?? localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
+    if (!cId) return;
     setReminderMins(mins);
     if (mins == null) {
-      localStorage.removeItem(STORAGE.feedReminderMins(childId));
-      localStorage.removeItem(STORAGE.feedAlarm(childId));
+      localStorage.removeItem(STORAGE.feedReminderMins(cId));
+      localStorage.removeItem(STORAGE.feedAlarm(cId));
       setAlarm(null);
+      setReminderConfirmed(false);
     } else {
-      localStorage.setItem(STORAGE.feedReminderMins(childId), String(mins));
+      localStorage.setItem(STORAGE.feedReminderMins(cId), String(mins));
       if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
         Notification.requestPermission();
       }
@@ -262,8 +265,10 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
       const fromFeed = lastFeedAt ? new Date(lastFeedAt).getTime() + mins * 60_000 : 0;
       const dueAt = fromFeed > Date.now() ? fromFeed : Date.now() + mins * 60_000;
       const newAlarm: Alarm = { dueAt, intervalMins: mins };
-      localStorage.setItem(STORAGE.feedAlarm(childId), JSON.stringify(newAlarm));
+      localStorage.setItem(STORAGE.feedAlarm(cId), JSON.stringify(newAlarm));
       setAlarm(newAlarm);
+      setReminderConfirmed(true);
+      setTimeout(() => setReminderConfirmed(false), 3000);
     }
   }
 
@@ -640,6 +645,12 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
               </button>
             ))}
           </div>
+        )}
+
+        {reminderConfirmed && alarm && (
+          <p className={styles.reminderConfirmed}>
+            Reminder set — next feed {timeUntil(alarm.dueAt)}
+          </p>
         )}
       </div>
 
