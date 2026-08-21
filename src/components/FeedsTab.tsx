@@ -210,15 +210,27 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
     if (!cId) return;
     setChildId(cId);
 
-    try {
-      const stored = localStorage.getItem(STORAGE.feedAlarm(cId));
-      if (stored) setAlarm(JSON.parse(stored));
-    } catch { /* ignore */ }
+    const storedAlarmRaw = localStorage.getItem(STORAGE.feedAlarm(cId));
+    let loadedAlarm: Alarm | null = null;
+    try { if (storedAlarmRaw) loadedAlarm = JSON.parse(storedAlarmRaw); } catch { /* ignore */ }
 
-    try {
-      const storedMins = localStorage.getItem(STORAGE.feedReminderMins(cId));
-      if (storedMins) setReminderMins(Number(storedMins));
-    } catch { /* ignore */ }
+    const storedMinsRaw = localStorage.getItem(STORAGE.feedReminderMins(cId));
+    const loadedMins = storedMinsRaw ? Number(storedMinsRaw) : null;
+
+    if (loadedMins != null) {
+      setReminderMins(loadedMins);
+      if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+      if (loadedAlarm && loadedAlarm.dueAt > Date.now()) {
+        setAlarm(loadedAlarm);
+      } else {
+        // Alarm missing or already fired — reset from now so reminder is always live
+        const newAlarm: Alarm = { dueAt: Date.now() + loadedMins * 60_000, intervalMins: loadedMins };
+        localStorage.setItem(STORAGE.feedAlarm(cId), JSON.stringify(newAlarm));
+        setAlarm(newAlarm);
+      }
+    }
 
     fetch(`/api/newborn?childId=${cId}`)
       .then(r => r.json())
@@ -240,6 +252,21 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
           setNightFeedCount(nightFeedCount);
           setTotalBreastMinutes(totalBreastMinutes);
           setTotalAmountMl(totalAmountMl);
+
+          // If reminder is on and the alarm we set from now can be improved using
+          // the actual last feed time, update it — but only if last-feed-based
+          // dueAt is in the future and sooner than our current alarm.
+          if (loadedMins != null && feeds[0]?.logged_at) {
+            const fromFeed = new Date(feeds[0].logged_at).getTime() + loadedMins * 60_000;
+            const currentAlarmRaw = localStorage.getItem(STORAGE.feedAlarm(cId));
+            let currentDueAt = 0;
+            try { if (currentAlarmRaw) currentDueAt = JSON.parse(currentAlarmRaw).dueAt; } catch { /* ignore */ }
+            if (fromFeed > Date.now() && fromFeed < currentDueAt) {
+              const refined: Alarm = { dueAt: fromFeed, intervalMins: loadedMins };
+              localStorage.setItem(STORAGE.feedAlarm(cId), JSON.stringify(refined));
+              setAlarm(refined);
+            }
+          }
         }
         setLoading(false);
       })
