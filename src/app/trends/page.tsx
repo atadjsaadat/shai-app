@@ -347,6 +347,10 @@ export default function TrendsPage() {
   const [snapshotEntries, setSnapshotEntries] = useState<DayEntry[]>([]);
   const [snapshotLoading, setSnapshotLoading] = useState(false);
   const [snapshotIsHardDay, setSnapshotIsHardDay] = useState(false);
+  const [weekSnapshotDate, setWeekSnapshotDate] = useState<string | null>(null);
+  const [weekSnapshotEntries, setWeekSnapshotEntries] = useState<DayEntry[]>([]);
+  const [weekSnapshotLoading, setWeekSnapshotLoading] = useState(false);
+  const [weekSnapshotIsHardDay, setWeekSnapshotIsHardDay] = useState(false);
   const [selectedNutrient, setSelectedNutrient] = useState<NutrientDef | null>(null);
 
   useEffect(() => {
@@ -423,26 +427,30 @@ export default function TrendsPage() {
     init();
   }, [refreshKey]);
 
-  async function toggleSnapshot(date: string) {
-    if (snapshotDate === date) {
-      setSnapshotDate(null);
-      setSnapshotEntries([]);
-      setSnapshotIsHardDay(false);
-      return;
-    }
-    setSnapshotDate(date);
-    setSnapshotEntries([]);
-    setSnapshotIsHardDay(false);
-    setSnapshotLoading(true);
+  async function fetchSnapshot(
+    date: string,
+    current: string | null,
+    setDate: (d: string | null) => void,
+    setEntries: (e: DayEntry[]) => void,
+    setLoading: (l: boolean) => void,
+    setIsHardDay: (h: boolean) => void,
+  ) {
+    if (current === date) { setDate(null); setEntries([]); setIsHardDay(false); return; }
+    setDate(date); setEntries([]); setIsHardDay(false); setLoading(true);
     try {
       const offset = -new Date().getTimezoneOffset();
-      const res = await fetch(`/api/trends/day?childId=${activeChildId}&date=${date}&utcOffset=${offset}`);
-      const json = await res.json();
-      if (json.entries) setSnapshotEntries(json.entries);
-      setSnapshotIsHardDay(json.isHardDay ?? false);
+      const json = await fetch(`/api/trends/day?childId=${activeChildId}&date=${date}&utcOffset=${offset}`).then(r => r.json());
+      if (json.entries) setEntries(json.entries);
+      setIsHardDay(json.isHardDay ?? false);
     } catch { /* silently fail */ }
-    setSnapshotLoading(false);
+    setLoading(false);
   }
+
+  const toggleSnapshot = (date: string) =>
+    fetchSnapshot(date, snapshotDate, setSnapshotDate, setSnapshotEntries, setSnapshotLoading, setSnapshotIsHardDay);
+
+  const toggleWeekSnapshot = (date: string) =>
+    fetchSnapshot(date, weekSnapshotDate, setWeekSnapshotDate, setWeekSnapshotEntries, setWeekSnapshotLoading, setWeekSnapshotIsHardDay);
 
   // Best day = day with most nutrient targets hit (≥50%), tiebreak on calories
   const bestDay: ScoredDayData | null = data
@@ -471,7 +479,7 @@ export default function TrendsPage() {
 
   const macroConfig = getMacroConfig(data?.ageMonths ?? 24);
 
-  // Snapshot grouping
+  // Snapshot grouping — Best Day panel
   const snapshotGroups: Record<string, DayEntry[]> = {};
   for (const e of snapshotEntries) {
     const k = e.meal_type ?? 'other';
@@ -479,6 +487,15 @@ export default function TrendsPage() {
   }
   const snapshotGroupKeys = MEAL_ORDER.filter(k => snapshotGroups[k]);
   const snapshotTotalKcal = snapshotEntries.reduce((s, e) => s + (e.calories_kcal ?? 0), 0);
+
+  // Snapshot grouping — Week dot panel
+  const weekSnapshotGroups: Record<string, DayEntry[]> = {};
+  for (const e of weekSnapshotEntries) {
+    const k = e.meal_type ?? 'other';
+    (weekSnapshotGroups[k] ??= []).push(e);
+  }
+  const weekSnapshotGroupKeys = MEAL_ORDER.filter(k => weekSnapshotGroups[k]);
+  const weekSnapshotTotalKcal = weekSnapshotEntries.reduce((s, e) => s + (e.calories_kcal ?? 0), 0);
 
   const displayMacroSplit = macroSplit;
   const displayBestDay = bestDay;
@@ -522,7 +539,7 @@ export default function TrendsPage() {
               <div className={styles.dotsRow}>
                 {data.days.map((day) => {
                   const isToday = day.date === today;
-                  const isSelected = snapshotDate === day.date;
+                  const isSelected = weekSnapshotDate === day.date;
                   return day.locked ? (
                     <div key={day.date} className={styles.dayCol}>
                       <div className={styles.dotLocked} />
@@ -532,7 +549,7 @@ export default function TrendsPage() {
                     <button
                       key={day.date}
                       className={`${styles.dayCol} ${styles.dayColBtn}${isSelected ? ` ${styles.dayColSelected}` : ''}`}
-                      onClick={() => toggleSnapshot(day.date)}
+                      onClick={() => toggleWeekSnapshot(day.date)}
                     >
                       {day.isHardDay ? (
                         <div className={`${styles.dotHardDay}${isSelected ? ` ${styles.dotFilledSelected}` : ''}`}>
@@ -559,36 +576,36 @@ export default function TrendsPage() {
                 })}
               </div>
 
-              {snapshotDate && data.days.some(d => d.date === snapshotDate) && (
+              {weekSnapshotDate && data.days.some(d => d.date === weekSnapshotDate) && (
                 <div className={styles.weekSnapshotPanel}>
                   <button
                     className={styles.weekSnapshotClose}
-                    onClick={() => { setSnapshotDate(null); setSnapshotEntries([]); setSnapshotIsHardDay(false); }}
+                    onClick={() => { setWeekSnapshotDate(null); setWeekSnapshotEntries([]); setWeekSnapshotIsHardDay(false); }}
                     aria-label="Close"
                   >×</button>
-                  {snapshotLoading ? (
+                  {weekSnapshotLoading ? (
                     <p className={styles.snapshotLoading}>Loading…</p>
-                  ) : snapshotIsHardDay ? (
+                  ) : weekSnapshotIsHardDay ? (
                     <>
-                      <p className={styles.snapshotHeader}>{data.days.find(d => d.date === snapshotDate)?.dayLabel}</p>
+                      <p className={styles.snapshotHeader}>{data.days.find(d => d.date === weekSnapshotDate)?.dayLabel}</p>
                       <p className={styles.snapshotEmpty}>Hard food day — logged and set aside.</p>
                     </>
-                  ) : snapshotEntries.length === 0 ? (
+                  ) : weekSnapshotEntries.length === 0 ? (
                     <>
-                      <p className={styles.snapshotHeader}>{data.days.find(d => d.date === snapshotDate)?.dayLabel}</p>
+                      <p className={styles.snapshotHeader}>{data.days.find(d => d.date === weekSnapshotDate)?.dayLabel}</p>
                       <p className={styles.snapshotEmpty}>No meals logged on this day.</p>
                     </>
                   ) : (
                     <>
                       <p className={styles.snapshotHeader}>
-                        {data.days.find(d => d.date === snapshotDate)?.dayLabel}&apos;s meals · {Math.round(snapshotTotalKcal)} kcal total
+                        {data.days.find(d => d.date === weekSnapshotDate)?.dayLabel}&apos;s meals · {Math.round(weekSnapshotTotalKcal)} kcal total
                       </p>
-                      {snapshotGroupKeys.map((key, idx) => (
+                      {weekSnapshotGroupKeys.map((key, idx) => (
                         <div key={key}>
                           {idx > 0 && <div className={styles.snapshotDivider} />}
                           <div className={styles.snapshotMealGroup}>
                             <p className={styles.snapshotMealLabel}>{MEAL_TYPE_LABELS[key]}</p>
-                            {snapshotGroups[key].map(e => (
+                            {weekSnapshotGroups[key].map(e => (
                               <div key={e.id} className={styles.snapshotEntry}>
                                 <div className={styles.snapshotFoodWrap}>
                                   <span className={styles.snapshotFood}>{e.food_name}</span>
