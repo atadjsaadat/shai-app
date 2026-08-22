@@ -1,8 +1,5 @@
 .page {
-  height: 100dvh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
+  min-height: 100dvh;
   background: var(--cream);
   padding: 60px 20px 0;
   padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
