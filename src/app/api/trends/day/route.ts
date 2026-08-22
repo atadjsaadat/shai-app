@@ -29,6 +29,8 @@ export async function GET(request: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const entries = (raw ?? []).filter(e => e.food_name && !e.is_hard_food_day)
-  return NextResponse.json({ entries })
+  const allEntries = raw ?? []
+  const entries = allEntries.filter(e => e.food_name && !e.is_hard_food_day)
+  const isHardDay = allEntries.some(e => e.is_hard_food_day)
+  return NextResponse.json({ entries, isHardDay })
 }

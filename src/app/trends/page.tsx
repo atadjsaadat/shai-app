@@ -345,6 +345,7 @@ export default function TrendsPage() {
   const [snapshotDate, setSnapshotDate] = useState<string | null>(null);
   const [snapshotEntries, setSnapshotEntries] = useState<DayEntry[]>([]);
   const [snapshotLoading, setSnapshotLoading] = useState(false);
+  const [snapshotIsHardDay, setSnapshotIsHardDay] = useState(false);
   const [selectedNutrient, setSelectedNutrient] = useState<NutrientDef | null>(null);
 
   useEffect(() => {
@@ -425,16 +426,19 @@ export default function TrendsPage() {
     if (snapshotDate === date) {
       setSnapshotDate(null);
       setSnapshotEntries([]);
+      setSnapshotIsHardDay(false);
       return;
     }
     setSnapshotDate(date);
     setSnapshotEntries([]);
+    setSnapshotIsHardDay(false);
     setSnapshotLoading(true);
     try {
       const offset = -new Date().getTimezoneOffset();
       const res = await fetch(`/api/trends/day?childId=${activeChildId}&date=${date}&utcOffset=${offset}`);
       const json = await res.json();
       if (json.entries) setSnapshotEntries(json.entries);
+      setSnapshotIsHardDay(json.isHardDay ?? false);
     } catch { /* silently fail */ }
     setSnapshotLoading(false);
   }
@@ -513,30 +517,83 @@ export default function TrendsPage() {
           {noChild ? (
             <p className={styles.emptyHint}>No child profile found</p>
           ) : data ? (
-            <div className={styles.dotsRow}>
-              {data.days.map((day) => {
-                const isToday = day.date === today;
-                return (
-                  <div key={day.date} className={styles.dayCol}>
-                    {day.locked ? (
+            <>
+              <div className={styles.dotsRow}>
+                {data.days.map((day) => {
+                  const isToday = day.date === today;
+                  const isSelected = snapshotDate === day.date;
+                  return day.locked ? (
+                    <div key={day.date} className={styles.dayCol}>
                       <div className={styles.dotLocked} />
-                    ) : day.hasLogs ? (
-                      <div className={`${styles.dotFilled}${isToday ? ` ${styles.dotToday}` : ''}`}>
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="2 6 5 9 10 3" />
-                        </svg>
-                      </div>
-                    ) : (
-                      <div className={`${styles.dotEmpty}${isToday ? ` ${styles.dotTodayEmpty}` : ''}`} />
-                    )}
-                    <span className={`${styles.dayLabel}${day.locked ? ` ${styles.dayLabelLocked}` : ''}${isToday ? ` ${styles.dayLabelToday}` : ''}`}>
-                      {day.dayLabel}
-                    </span>
-                    {isToday && <div className={styles.todayPip} />}
-                  </div>
-                );
-              })}
-            </div>
+                      <span className={`${styles.dayLabel} ${styles.dayLabelLocked}`}>{day.dayLabel}</span>
+                    </div>
+                  ) : (
+                    <button
+                      key={day.date}
+                      className={`${styles.dayCol} ${styles.dayColBtn}${isSelected ? ` ${styles.dayColSelected}` : ''}`}
+                      onClick={() => toggleSnapshot(day.date)}
+                    >
+                      {day.hasLogs ? (
+                        <div className={`${styles.dotFilled}${isToday ? ` ${styles.dotToday}` : ''}${isSelected ? ` ${styles.dotFilledSelected}` : ''}`}>
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="2 6 5 9 10 3" />
+                          </svg>
+                        </div>
+                      ) : (
+                        <div className={`${styles.dotEmpty}${isToday ? ` ${styles.dotTodayEmpty}` : ''}${isSelected ? ` ${styles.dotEmptySelected}` : ''}`} />
+                      )}
+                      <span className={`${styles.dayLabel}${isToday ? ` ${styles.dayLabelToday}` : ''}`}>{day.dayLabel}</span>
+                      {isToday && <div className={styles.todayPip} />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {snapshotDate && data.days.some(d => d.date === snapshotDate) && (
+                <div className={styles.weekSnapshotPanel}>
+                  {snapshotLoading ? (
+                    <p className={styles.snapshotLoading}>Loading…</p>
+                  ) : snapshotIsHardDay ? (
+                    <>
+                      <p className={styles.snapshotHeader}>{data.days.find(d => d.date === snapshotDate)?.dayLabel}</p>
+                      <p className={styles.snapshotEmpty}>Hard food day — logged and set aside.</p>
+                    </>
+                  ) : snapshotEntries.length === 0 ? (
+                    <>
+                      <p className={styles.snapshotHeader}>{data.days.find(d => d.date === snapshotDate)?.dayLabel}</p>
+                      <p className={styles.snapshotEmpty}>No meals logged on this day.</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className={styles.snapshotHeader}>
+                        {data.days.find(d => d.date === snapshotDate)?.dayLabel}&apos;s meals · {Math.round(snapshotTotalKcal)} kcal total
+                      </p>
+                      {snapshotGroupKeys.map((key, idx) => (
+                        <div key={key}>
+                          {idx > 0 && <div className={styles.snapshotDivider} />}
+                          <div className={styles.snapshotMealGroup}>
+                            <p className={styles.snapshotMealLabel}>{MEAL_TYPE_LABELS[key]}</p>
+                            {snapshotGroups[key].map(e => (
+                              <div key={e.id} className={styles.snapshotEntry}>
+                                <div className={styles.snapshotFoodWrap}>
+                                  <span className={styles.snapshotFood}>{e.food_name}</span>
+                                  {e.serving_size_description && (
+                                    <span className={styles.snapshotServing}>{e.serving_size_description}</span>
+                                  )}
+                                </div>
+                                <span className={styles.snapshotKcal}>
+                                  {e.calories_kcal != null && e.calories_kcal > 0 ? `${Math.round(e.calories_kcal)} kcal` : ''}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
+              )}
+            </>
           ) : (
             <p className={styles.emptyHint}>Tap Log below to start tracking</p>
           )}
