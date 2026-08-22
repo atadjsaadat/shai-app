@@ -193,7 +193,7 @@ function FoodItemCard({ item, multiplier = 1, portionLabel, isWin, onWinToggle, 
                 aria-label={isPinned ? 'Remove from favourites' : 'Add to favourites'}
                 type="button"
               >
-                ★
+                ♥
               </button>
             )}
             {onWinToggle && (
@@ -203,7 +203,7 @@ function FoodItemCard({ item, multiplier = 1, portionLabel, isWin, onWinToggle, 
                 aria-label="Mark as a win"
                 type="button"
               >
-                🎉
+                ★
               </button>
             )}
           </div>
@@ -811,7 +811,7 @@ export default function LogPage() {
         return (
           <div className={styles.favouritesSection}>
             <div className={styles.favouritesHeader}>
-              <p className={styles.favouritesLabel}><span className={styles.favouritesIcon}>★</span> Favourites</p>
+              <p className={styles.favouritesLabel}><span className={styles.favouritesIcon}>♥</span> Favourites</p>
               <button
                 className={`${styles.favouritesEditBtn}${favouritesEditMode ? ` ${styles.favouritesEditBtnActive}` : ''}`}
                 onClick={() => setFavouritesEditMode(m => !m)}
@@ -831,7 +831,7 @@ export default function LogPage() {
                       className={`${styles.favouriteChip}${isPinnedChip ? ` ${styles.favouriteChipPinned}` : ''}`}
                       onClick={() => !favouritesEditMode && handleMealFavourite(fav)}
                     >
-                      {isPinnedChip && <span className={styles.favouriteChipStar}>★</span>}
+                      {isPinnedChip && <span className={styles.favouriteChipStar}>♥</span>}
                       {fav.name}
                     </button>
                   </div>
