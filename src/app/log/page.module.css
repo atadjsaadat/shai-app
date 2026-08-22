@@ -215,7 +215,7 @@
 
 .favouritesIcon {
   display: inline-block;
-  animation: faceBouce 0.7s cubic-bezier(0.36, 0.07, 0.19, 0.97) 0.3s both;
+  color: var(--terracotta);
 }
 
 .favouritesChips {
@@ -724,12 +724,12 @@
   flex-shrink: 0;
   background: none;
   border: none;
-  font-size: 16px;
+  font-size: 22px;
   cursor: pointer;
-  opacity: 0.25;
+  opacity: 0.4;
   color: var(--terracotta);
   transition: opacity 0.15s;
-  padding: 0;
+  padding: 4px;
   line-height: 1;
 }
 
@@ -741,11 +741,11 @@
   flex-shrink: 0;
   background: none;
   border: none;
-  font-size: 18px;
+  font-size: 22px;
   cursor: pointer;
-  opacity: 0.35;
+  opacity: 0.4;
   transition: opacity 0.15s;
-  padding: 0;
+  padding: 4px;
   line-height: 1;
 }
 

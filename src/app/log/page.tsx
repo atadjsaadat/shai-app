@@ -185,7 +185,7 @@ function FoodItemCard({ item, multiplier = 1, portionLabel, isWin, onWinToggle, 
       <div className={styles.foodItemTop}>
         <div className={styles.foodItemTitleRow}>
           <span className={styles.foodName}>{item.food_name}</span>
-          <div style={{ display: 'flex', gap: '2px' }}>
+          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
             {onPinToggle && (
               <button
                 className={`${styles.pinInlineBtn}${isPinned ? ` ${styles.pinInlineBtnActive}` : ''}`}
@@ -811,7 +811,7 @@ export default function LogPage() {
         return (
           <div className={styles.favouritesSection}>
             <div className={styles.favouritesHeader}>
-              <p className={styles.favouritesLabel}><span className={styles.favouritesIcon}>😋</span> Favourites</p>
+              <p className={styles.favouritesLabel}><span className={styles.favouritesIcon}>★</span> Favourites</p>
               <button
                 className={`${styles.favouritesEditBtn}${favouritesEditMode ? ` ${styles.favouritesEditBtnActive}` : ''}`}
                 onClick={() => setFavouritesEditMode(m => !m)}
