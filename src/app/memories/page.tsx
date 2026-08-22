@@ -337,34 +337,37 @@ export default function JourneyPage() {
   const handleWinEditSave = async () => {
     if (!selectedWin || savingWinEdit) return;
     setSavingWinEdit(true);
+    try {
+      let photo_url = selectedWin.photo_url;
+      if (editPhotoFile) {
+        const compressed = await compressPhoto(editPhotoFile);
+        const form = new FormData();
+        form.append('photo', compressed, 'photo.jpg');
+        const uploadRes = await fetch('/api/wins/upload', { method: 'POST', body: form });
+        if (uploadRes.ok) {
+          const uploadJson = await uploadRes.json();
+          photo_url = uploadJson.url ?? photo_url;
+        }
+      }
 
-    let photo_url = selectedWin.photo_url;
-    if (editPhotoFile) {
-      const compressed = await compressPhoto(editPhotoFile);
-      const form = new FormData();
-      form.append('photo', compressed, 'photo.jpg');
-      const uploadRes = await fetch('/api/wins/upload', { method: 'POST', body: form });
-      const uploadJson = await uploadRes.json();
-      photo_url = uploadJson.url ?? photo_url;
-    }
-
-    const res = await fetch(`/api/wins/${selectedWin.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        win_type: editWinType,
-        food_involved: editFoodInvolved,
-        parent_note: editNote,
-        photo_url,
-      }),
-    });
-    const json = await res.json();
-    if (json.win) {
-      setSelectedWin(json.win);
-      setWins((prev) => prev.map((w) => w.id === json.win.id ? json.win : w));
-      closeWinEdit();
-    }
-    setSavingWinEdit(false);
+      const res = await fetch(`/api/wins/${selectedWin.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          win_type: editWinType,
+          food_involved: editFoodInvolved,
+          parent_note: editNote,
+          photo_url,
+        }),
+      });
+      const json = await res.json();
+      if (json.win) {
+        setSelectedWin(json.win);
+        setWins((prev) => prev.map((w) => w.id === json.win.id ? json.win : w));
+        closeWinEdit();
+      }
+    } catch { /* network failure */ }
+    finally { setSavingWinEdit(false); }
   };
 
   const handleEditPhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -384,33 +387,36 @@ export default function JourneyPage() {
   const handleWinSave = async () => {
     if (winsSaving) return;
     setWinsSaving(true);
+    try {
+      let photo_url: string | null = null;
+      if (photoFile) {
+        const compressed = await compressPhoto(photoFile);
+        const form = new FormData();
+        form.append('photo', compressed, 'photo.jpg');
+        const uploadRes = await fetch('/api/wins/upload', { method: 'POST', body: form });
+        if (uploadRes.ok) {
+          const uploadJson = await uploadRes.json();
+          photo_url = uploadJson.url ?? null;
+        }
+      }
 
-    let photo_url: string | null = null;
-    if (photoFile) {
-      const compressed = await compressPhoto(photoFile);
-      const form = new FormData();
-      form.append('photo', compressed, 'photo.jpg');
-      const uploadRes = await fetch('/api/wins/upload', { method: 'POST', body: form });
-      const uploadJson = await uploadRes.json();
-      photo_url = uploadJson.url ?? null;
-    }
-
-    const res = await fetch('/api/wins', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ win_type: winType, food_involved: foodInvolved, parent_note: parentNote, photo_url }),
-    });
-    const json = await res.json();
-    if (json.win) {
-      setWins((prev) => [json.win, ...prev]);
-      setShowForm(false);
-      setWinType('new_food');
-      setFoodInvolved('');
-      setParentNote('');
-      setPhotoFile(null);
-      if (photoPreview) { URL.revokeObjectURL(photoPreview); setPhotoPreview(null); }
-    }
-    setWinsSaving(false);
+      const res = await fetch('/api/wins', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ win_type: winType, food_involved: foodInvolved, parent_note: parentNote, photo_url }),
+      });
+      const json = await res.json();
+      if (json.win) {
+        setWins((prev) => [json.win, ...prev]);
+        setShowForm(false);
+        setWinType('new_food');
+        setFoodInvolved('');
+        setParentNote('');
+        setPhotoFile(null);
+        if (photoPreview) { URL.revokeObjectURL(photoPreview); setPhotoPreview(null); }
+      }
+    } catch { /* network failure — button resets, form stays open */ }
+    finally { setWinsSaving(false); }
   };
 
   // ── Journal handlers ─────────────────────────────────
