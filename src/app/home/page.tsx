@@ -25,6 +25,7 @@ interface Totals {
 interface Targets extends Totals {}
 
 interface MealItem {
+  id: string;
   food_name: string;
   calories_kcal: number | null;
 }

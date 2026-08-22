@@ -230,6 +230,7 @@ export default function LogPage() {
     return detectMealType();
   });
   const [editMealItems, setEditMealItems] = useState<Array<{ food_name: string; calories_kcal: number | null }> | null>(null);
+  const [editLogIds, setEditLogIds] = useState<string[]>([]);
   const [feedsIsArchive, setFeedsIsArchive] = useState(false);
   const [childAgeMonths, setChildAgeMonths] = useState<number | null>(null);
   const [messages, setMessages] = useState<LogMessage[]>([
@@ -419,7 +420,10 @@ export default function LogPage() {
     sessionStorage.removeItem('shai_edit_meal');
     try {
       const data = JSON.parse(stored);
-      if (Array.isArray(data.items) && data.items.length > 0) setEditMealItems(data.items);
+      if (Array.isArray(data.items) && data.items.length > 0) {
+        setEditMealItems(data.items);
+        setEditLogIds(data.items.map((i: { id?: string }) => i.id).filter(Boolean));
+      }
     } catch {}
   }, []);
 
@@ -602,6 +606,7 @@ export default function LogPage() {
       reactionType,
       isWin,
       winNote.trim() || null,
+      editLogIds.length > 0 ? editLogIds : undefined,
     );
 
     if (error) {

@@ -62,7 +62,7 @@ export async function GET(request: Request) {
   const [logsResult, childDetailsResult, appointmentsResult, winsResult, lastFeedResult, profileResult] = await Promise.all([
     admin
       .from('food_logs')
-      .select('meal_type, food_name, calories_kcal, protein_g, carbs_g, fat_g, fibre_g, sugar_g, sodium_mg, iron_mg, is_hard_food_day')
+      .select('id, meal_type, food_name, calories_kcal, protein_g, carbs_g, fat_g, fibre_g, sugar_g, sodium_mg, iron_mg, is_hard_food_day')
       .eq('child_id', childId)
       .gte('logged_at', utcStart)
       .lte('logged_at', utcEnd)
@@ -131,7 +131,7 @@ export async function GET(request: Request) {
       const fbEnd   = new Date(Date.UTC(ly, lm - 1, ld, 23, 59, 59) - offsetMinutes * 60_000).toISOString()
       const { data: fbLogs } = await admin
         .from('food_logs')
-        .select('meal_type, food_name, calories_kcal, protein_g, carbs_g, fat_g, fibre_g, sugar_g, sodium_mg, iron_mg, is_hard_food_day')
+        .select('id, meal_type, food_name, calories_kcal, protein_g, carbs_g, fat_g, fibre_g, sugar_g, sodium_mg, iron_mg, is_hard_food_day')
         .eq('child_id', childId)
         .gte('logged_at', fbStart)
         .lte('logged_at', fbEnd)
@@ -163,11 +163,11 @@ export async function GET(request: Request) {
   )
 
   const ORDER = ['breakfast', 'lunch', 'dinner', 'snack']
-  const mealMap = new Map<string, { food_name: string; calories_kcal: number | null }[]>()
+  const mealMap = new Map<string, { id: string; food_name: string; calories_kcal: number | null }[]>()
   for (const log of realLogs) {
     const type = log.meal_type ?? 'snack'
     if (!mealMap.has(type)) mealMap.set(type, [])
-    mealMap.get(type)!.push({ food_name: log.food_name, calories_kcal: log.calories_kcal })
+    mealMap.get(type)!.push({ id: log.id, food_name: log.food_name, calories_kcal: log.calories_kcal })
   }
   const meals = ORDER.filter((t) => mealMap.has(t)).map((t) => ({ meal_type: t, items: mealMap.get(t)! }))
   for (const [type, items] of mealMap) {
