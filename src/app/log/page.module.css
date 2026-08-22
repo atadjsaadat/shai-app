@@ -244,6 +244,17 @@
   color: var(--terra-dark);
 }
 
+.favouriteChipPinned {
+  border-color: var(--terracotta);
+  background: var(--terra-light);
+  color: var(--terra-dark);
+}
+
+.favouriteChipStar {
+  margin-right: 3px;
+  font-size: 10px;
+}
+
 .aiDisclosure {
   flex-shrink: 0;
   font-size: 11px;
@@ -707,6 +718,23 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+.pinInlineBtn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 0.25;
+  color: var(--terracotta);
+  transition: opacity 0.15s;
+  padding: 0;
+  line-height: 1;
+}
+
+.pinInlineBtnActive {
+  opacity: 1;
 }
 
 .winInlineBtn {

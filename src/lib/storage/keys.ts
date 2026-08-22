@@ -5,4 +5,5 @@ export const STORAGE = {
   dailyFeedback: (date: string) => `shai_daily_feedback_${date}`,
   weeklySummary: (monday: string) => `shai_weekly_summary_${monday}`,
   dismissedFavourites: (meal: string) => `shai_dismissed_favourites_${meal}`,
+  pinnedFavourites: (meal: string) => `shai_pinned_favs_${meal}`,
 } as const;

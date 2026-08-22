@@ -170,12 +170,14 @@ function ProductScoreCard({ item, novaClass, additivesN, childAgeMonths, childNa
   );
 }
 
-function FoodItemCard({ item, multiplier = 1, portionLabel, isWin, onWinToggle }: {
+function FoodItemCard({ item, multiplier = 1, portionLabel, isWin, onWinToggle, isPinned, onPinToggle }: {
   item: ParsedFoodItem;
   multiplier?: number;
   portionLabel?: string | null;
   isWin?: boolean;
   onWinToggle?: () => void;
+  isPinned?: boolean;
+  onPinToggle?: () => void;
 }) {
   const servingDesc = portionLabel ?? item.serving_size_description;
   return (
@@ -183,16 +185,28 @@ function FoodItemCard({ item, multiplier = 1, portionLabel, isWin, onWinToggle }
       <div className={styles.foodItemTop}>
         <div className={styles.foodItemTitleRow}>
           <span className={styles.foodName}>{item.food_name}</span>
-          {onWinToggle && (
-            <button
-              className={`${styles.winInlineBtn}${isWin ? ` ${styles.winInlineBtnActive}` : ''}`}
-              onClick={onWinToggle}
-              aria-label="Mark as a win"
-              type="button"
-            >
-              🎉
-            </button>
-          )}
+          <div style={{ display: 'flex', gap: '2px' }}>
+            {onPinToggle && (
+              <button
+                className={`${styles.pinInlineBtn}${isPinned ? ` ${styles.pinInlineBtnActive}` : ''}`}
+                onClick={onPinToggle}
+                aria-label={isPinned ? 'Remove from favourites' : 'Add to favourites'}
+                type="button"
+              >
+                ★
+              </button>
+            )}
+            {onWinToggle && (
+              <button
+                className={`${styles.winInlineBtn}${isWin ? ` ${styles.winInlineBtnActive}` : ''}`}
+                onClick={onWinToggle}
+                aria-label="Mark as a win"
+                type="button"
+              >
+                🎉
+              </button>
+            )}
+          </div>
         </div>
         {servingDesc && (
           <span className={styles.serving}>{servingDesc}</span>
@@ -278,12 +292,15 @@ export default function LogPage() {
   const [fromFavourite, setFromFavourite] = useState(false);
   const [favouritesEditMode, setFavouritesEditMode] = useState(false);
   const [dismissedFavourites, setDismissedFavourites] = useState<Set<string>>(new Set());
+  const [pinnedFavourites, setPinnedFavourites] = useState<Map<string, MealFavourite>>(new Map());
 
   const loadQuickPicks = useCallback((meal: MealType) => {
     const key = STORAGE.dismissedFavourites(meal);
     const dismissed = JSON.parse(localStorage.getItem(key) ?? '[]') as string[];
     setDismissedFavourites(new Set(dismissed));
     setFavouritesEditMode(false);
+    const pinnedRaw: MealFavourite[] = JSON.parse(localStorage.getItem(STORAGE.pinnedFavourites(meal)) ?? '[]');
+    setPinnedFavourites(new Map(pinnedRaw.map(f => [f.name.toLowerCase().trim(), f])));
     fetch(`/api/log/meal-favourites?mealType=${meal}`)
       .then((r) => r.json())
       .then((json) => setMealFavourites(json.meals ?? []))
@@ -296,6 +313,37 @@ export default function LogPage() {
     const updated = Array.from(new Set([...existing, name]));
     localStorage.setItem(key, JSON.stringify(updated));
     setDismissedFavourites(new Set(updated));
+    const pinnedKey = STORAGE.pinnedFavourites(mealType);
+    const existingPinned: MealFavourite[] = JSON.parse(localStorage.getItem(pinnedKey) ?? '[]');
+    const norm = name.toLowerCase().trim();
+    const updatedPinned = existingPinned.filter(f => f.name.toLowerCase().trim() !== norm);
+    localStorage.setItem(pinnedKey, JSON.stringify(updatedPinned));
+    setPinnedFavourites(new Map(updatedPinned.map(f => [f.name.toLowerCase().trim(), f])));
+  };
+
+  const handlePinToggle = (item: ParsedFoodItem) => {
+    const pinnedKey = STORAGE.pinnedFavourites(mealType);
+    const existing: MealFavourite[] = JSON.parse(localStorage.getItem(pinnedKey) ?? '[]');
+    const norm = item.food_name.toLowerCase().trim();
+    const isAlreadyPinned = existing.some(f => f.name.toLowerCase().trim() === norm);
+    let updated: MealFavourite[];
+    if (isAlreadyPinned) {
+      updated = existing.filter(f => f.name.toLowerCase().trim() !== norm);
+    } else {
+      updated = [{ name: item.food_name, foods: [item.food_name], use_count: 0,
+        calories_kcal: item.calories_kcal, protein_g: item.protein_g, carbs_g: item.carbs_g,
+        fat_g: item.fat_g, fibre_g: item.fibre_g, sugar_g: item.sugar_g,
+        saturated_fat_g: item.saturated_fat_g, sodium_mg: item.sodium_mg, iron_mg: item.iron_mg,
+        calcium_mg: item.calcium_mg, vitamin_c_mg: item.vitamin_c_mg, vitamin_a_mcg: item.vitamin_a_mcg,
+        vitamin_d_mcg: item.vitamin_d_mcg, zinc_mg: item.zinc_mg, omega3_mg: item.omega3_mg,
+        b12_mcg: item.b12_mcg, b6_mg: item.b6_mg, folate_mcg: item.folate_mcg,
+        magnesium_mg: item.magnesium_mg, potassium_mg: item.potassium_mg, omega6_mg: item.omega6_mg,
+        iodine_mcg: item.iodine_mcg, selenium_mcg: item.selenium_mcg, phosphorus_mg: item.phosphorus_mg,
+        choline_mg: item.choline_mg, dha_mg: item.dha_mg, vitamin_k_mcg: item.vitamin_k_mcg,
+      }, ...existing];
+    }
+    localStorage.setItem(pinnedKey, JSON.stringify(updated));
+    setPinnedFavourites(new Map(updated.map(f => [f.name.toLowerCase().trim(), f])));
   };
 
   async function handleAddSide() {
@@ -755,34 +803,44 @@ export default function LogPage() {
       {activeTab === 'feeds' ? <FeedsTab onArchiveChange={setFeedsIsArchive} /> : (<>
 
       {/* ── Meal favourites ── */}
-      {phase === 'chatting' && mealFavourites.filter(f => !dismissedFavourites.has(f.name)).length > 0 && (
-        <div className={styles.favouritesSection}>
-          <div className={styles.favouritesHeader}>
-            <p className={styles.favouritesLabel}><span className={styles.favouritesIcon}>😋</span> Favourites</p>
-            <button
-              className={`${styles.favouritesEditBtn}${favouritesEditMode ? ` ${styles.favouritesEditBtnActive}` : ''}`}
-              onClick={() => setFavouritesEditMode(m => !m)}
-            >
-              {favouritesEditMode ? 'Done' : 'Edit'}
-            </button>
+      {(() => {
+        const pinnedList = Array.from(pinnedFavourites.values()).filter(f => !dismissedFavourites.has(f.name));
+        const apiList = mealFavourites.filter(f => !dismissedFavourites.has(f.name) && !pinnedFavourites.has(f.name.toLowerCase().trim()));
+        const displayFavourites = [...pinnedList, ...apiList];
+        if (phase !== 'chatting' || displayFavourites.length === 0) return null;
+        return (
+          <div className={styles.favouritesSection}>
+            <div className={styles.favouritesHeader}>
+              <p className={styles.favouritesLabel}><span className={styles.favouritesIcon}>😋</span> Favourites</p>
+              <button
+                className={`${styles.favouritesEditBtn}${favouritesEditMode ? ` ${styles.favouritesEditBtnActive}` : ''}`}
+                onClick={() => setFavouritesEditMode(m => !m)}
+              >
+                {favouritesEditMode ? 'Done' : 'Edit'}
+              </button>
+            </div>
+            <div className={styles.favouritesChips}>
+              {displayFavourites.map((fav) => {
+                const isPinnedChip = pinnedFavourites.has(fav.name.toLowerCase().trim());
+                return (
+                  <div key={fav.name} className={styles.favouriteChipWrap}>
+                    {favouritesEditMode && (
+                      <button className={styles.favouriteDismiss} onClick={() => handleDismissFavourite(fav.name)} aria-label="Remove">✕</button>
+                    )}
+                    <button
+                      className={`${styles.favouriteChip}${isPinnedChip ? ` ${styles.favouriteChipPinned}` : ''}`}
+                      onClick={() => !favouritesEditMode && handleMealFavourite(fav)}
+                    >
+                      {isPinnedChip && <span className={styles.favouriteChipStar}>★</span>}
+                      {fav.name}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div className={styles.favouritesChips}>
-            {mealFavourites.filter(f => !dismissedFavourites.has(f.name)).map((fav) => (
-              <div key={fav.name} className={styles.favouriteChipWrap}>
-                {favouritesEditMode && (
-                  <button className={styles.favouriteDismiss} onClick={() => handleDismissFavourite(fav.name)} aria-label="Remove">✕</button>
-                )}
-                <button
-                  className={styles.favouriteChip}
-                  onClick={() => !favouritesEditMode && handleMealFavourite(fav)}
-                >
-                  {fav.name}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       <AIDisclosure />
 
@@ -1012,6 +1070,8 @@ export default function LogPage() {
                       });
                       setWinNote('');
                     }}
+                    isPinned={pinnedFavourites.has(item.food_name.toLowerCase().trim())}
+                    onPinToggle={() => handlePinToggle(item)}
                   />
                 ))}
               </div>
