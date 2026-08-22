@@ -852,7 +852,7 @@
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.35);
-  z-index: 100;
+  z-index: 10001;
 }
 
 .modal {
@@ -865,7 +865,7 @@
   background: var(--cream);
   border-radius: 24px 24px 0 0;
   padding: 12px 24px 40px;
-  z-index: 101;
+  z-index: 10002;
   box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
 }
 

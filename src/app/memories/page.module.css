@@ -669,7 +669,7 @@
   background: rgba(0, 0, 0, 0.55);
   display: flex;
   align-items: flex-end;
-  z-index: 200;
+  z-index: 10001;
 }
 
 .detailSheetWrap {
@@ -933,7 +933,7 @@
   background: rgba(0, 0, 0, 0.35);
   display: flex;
   align-items: flex-end;
-  z-index: 100;
+  z-index: 10001;
 }
 
 .winForm {
