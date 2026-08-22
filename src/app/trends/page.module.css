@@ -35,8 +35,7 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-top: 6px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .sectionLabel {
