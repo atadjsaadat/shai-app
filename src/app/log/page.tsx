@@ -279,6 +279,7 @@ export default function LogPage() {
   const [winNote, setWinNote] = useState('');
   const [showWinToast, setShowWinToast] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const confettiFiredRef = useRef(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -527,7 +528,7 @@ export default function LogPage() {
   };
 
   const resetReactions = () => {
-    setReactions([]); setNoReaction(false); setIsWin(false); setWinNote(''); setShowReactions(false);
+    setReactions([]); setNoReaction(false); setIsWin(false); setWinNote(''); setShowReactions(false); confettiFiredRef.current = false;
     setAllergyPromptActive(false); setAllergyDismissed(false); setAllergyContextFoods([]); setSelectedAllergyFood(null); setAllergyAdded(false);
   };
 
@@ -1063,7 +1064,10 @@ export default function LogPage() {
                       setIsWin(w => {
                         if (!w) {
                           setShowWinToast(true);
-                          setShowConfetti(true);
+                          if (!confettiFiredRef.current) {
+                            setShowConfetti(true);
+                            confettiFiredRef.current = true;
+                          }
                           setTimeout(() => setShowWinToast(false), 2200);
                         }
                         return !w;
