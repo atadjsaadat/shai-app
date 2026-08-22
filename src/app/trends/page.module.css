@@ -36,7 +36,7 @@
   justify-content: space-between;
   align-items: baseline;
   margin-top: 6px;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
 
 .sectionLabel {
@@ -45,6 +45,11 @@
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.sectionHeader .sectionLabel {
+  margin-bottom: 0;
 }
 
 .loggedCount {
