@@ -259,6 +259,8 @@
   flex-direction: column;
   gap: 4px;
   box-shadow: var(--card-shadow);
+  text-decoration: none;
+  color: inherit;
 }
 
 .mealGroupHeader {
@@ -276,12 +278,9 @@
   letter-spacing: 0.05em;
 }
 
-.addToMealBtn {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--terracotta);
-  text-decoration: none;
-  letter-spacing: 0.03em;
+.editIcon {
+  color: var(--text-muted);
+  flex-shrink: 0;
 }
 
 .mealItem {

@@ -444,30 +444,41 @@ export default function HomePage() {
         <section>
           <p className={styles.sectionLabel}>{fallbackDate ? 'Last logged meals' : "Today's meals"}</p>
           <div className={styles.mealList}>
-            {meals.map((meal) => (
-              <div key={meal.meal_type} className={styles.mealGroup}>
-                <div className={styles.mealGroupHeader}>
-                  <p className={styles.mealGroupLabel}>{MEAL_LABELS[meal.meal_type] ?? meal.meal_type}</p>
-                  {!fallbackDate && (
-                    <Link
-                      href={`/log?meal=${meal.meal_type}`}
-                      className={styles.addToMealBtn}
-                      onClick={() => sessionStorage.setItem('shai_edit_meal', JSON.stringify({ meal_type: meal.meal_type, items: meal.items }))}
-                    >
-                      + Add
-                    </Link>
-                  )}
-                </div>
-                {meal.items.map((item, i) => (
-                  <div key={i} className={styles.mealItem}>
-                    <span className={styles.mealItemName}>{item.food_name}</span>
-                    {item.calories_kcal != null && (
-                      <span className={styles.mealItemCal}>{Math.round(item.calories_kcal)} kcal</span>
+            {meals.map((meal) => {
+              const content = (
+                <>
+                  <div className={styles.mealGroupHeader}>
+                    <p className={styles.mealGroupLabel}>{MEAL_LABELS[meal.meal_type] ?? meal.meal_type}</p>
+                    {!fallbackDate && (
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={styles.editIcon}>
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
                     )}
                   </div>
-                ))}
-              </div>
-            ))}
+                  {meal.items.map((item, i) => (
+                    <div key={i} className={styles.mealItem}>
+                      <span className={styles.mealItemName}>{item.food_name}</span>
+                      {item.calories_kcal != null && (
+                        <span className={styles.mealItemCal}>{Math.round(item.calories_kcal)} kcal</span>
+                      )}
+                    </div>
+                  ))}
+                </>
+              );
+              return !fallbackDate ? (
+                <Link
+                  key={meal.meal_type}
+                  href={`/log?meal=${meal.meal_type}`}
+                  className={styles.mealGroup}
+                  onClick={() => sessionStorage.setItem('shai_edit_meal', JSON.stringify({ meal_type: meal.meal_type, items: meal.items }))}
+                >
+                  {content}
+                </Link>
+              ) : (
+                <div key={meal.meal_type} className={styles.mealGroup}>{content}</div>
+              );
+            })}
           </div>
         </section>
       )}
