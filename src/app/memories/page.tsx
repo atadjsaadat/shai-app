@@ -418,11 +418,9 @@ export default function JourneyPage() {
         setParentNote('');
         setPhotoFile(null);
         if (photoPreview) { URL.revokeObjectURL(photoPreview); setPhotoPreview(null); }
-        winsSavingRef.current = false;
-        return; // form unmounts with winsSaving=true — no flash back to "Save win"
       }
     } catch { /* network failure */ }
-    // only reached on failure — reset so button is available for retry
+    // overlay is display:none after success so this state change is never painted
     winsSavingRef.current = false;
     setWinsSaving(false);
   };
@@ -1017,8 +1015,8 @@ export default function JourneyPage() {
       })()}
 
       {/* ── Add win form overlay ── */}
-      {showForm && (
-        <div className={styles.overlay} onClick={() => setShowForm(false)}>
+      {/* Always in DOM — toggled via display:none so state changes while hidden are never painted */}
+      <div className={`${styles.overlay}${!showForm ? ` ${styles.overlayHidden}` : ''}`} onClick={() => setShowForm(false)}>
           <div className={styles.winForm} onClick={(e) => e.stopPropagation()}>
             <h2 className={styles.winFormTitle}>Add a win</h2>
             <div className={styles.winFormBody}>
@@ -1085,7 +1083,6 @@ export default function JourneyPage() {
             </div>
           </div>
         </div>
-      )}
 
       <BottomNav />
     </div>

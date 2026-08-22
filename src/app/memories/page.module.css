@@ -936,6 +936,10 @@
   z-index: 10001;
 }
 
+.overlayHidden {
+  display: none;
+}
+
 .winForm {
   width: 100%;
   background: var(--cream);
