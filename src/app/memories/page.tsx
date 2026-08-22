@@ -167,12 +167,11 @@ export default function JourneyPage() {
   // Wins state
   const [wins, setWins] = useState<Win[]>(_c?.wins ?? []);
   const [winsLoading, setWinsLoading] = useState<boolean>(!_c);
-  const [showForm, setShowForm] = useState(false);
+  const [formMode, setFormMode] = useState<'closed' | 'open' | 'saving'>('closed');
   const [selectedWin, setSelectedWin] = useState<Win | null>(null);
   const [winType, setWinType] = useState('new_food');
   const [foodInvolved, setFoodInvolved] = useState('');
   const [parentNote, setParentNote] = useState('');
-  const [winsSaving, setWinsSaving] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -250,13 +249,13 @@ export default function JourneyPage() {
   }, [selectedWin]);
 
   useEffect(() => {
-    if (selectedWin || showForm) {
+    if (selectedWin || formMode !== 'closed') {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
     }
     return () => { document.body.style.overflow = ''; };
-  }, [selectedWin, showForm]);
+  }, [selectedWin, formMode]);
 
   // ── Wins handlers ────────────────────────────────────
 
@@ -390,7 +389,8 @@ export default function JourneyPage() {
   const handleWinSave = async () => {
     if (winsSavingRef.current) return;
     winsSavingRef.current = true;
-    setWinsSaving(true);
+    setFormMode('saving');
+    let succeeded = false;
     try {
       let photo_url: string | null = null;
       if (photoFile) {
@@ -412,17 +412,16 @@ export default function JourneyPage() {
       const json = await res.json();
       if (json.win) {
         setWins((prev) => [json.win, ...prev]);
-        setShowForm(false);
         setWinType('new_food');
         setFoodInvolved('');
         setParentNote('');
         setPhotoFile(null);
         if (photoPreview) { URL.revokeObjectURL(photoPreview); setPhotoPreview(null); }
+        succeeded = true;
       }
     } catch { /* network failure */ }
-    // overlay is display:none after success so this state change is never painted
     winsSavingRef.current = false;
-    setWinsSaving(false);
+    setFormMode(succeeded ? 'closed' : 'open');
   };
 
   // ── Journal handlers ─────────────────────────────────
@@ -592,7 +591,7 @@ export default function JourneyPage() {
             </button>
           )}
           {activeTab === 'wins' && (
-            <button className={styles.addWinBtn} onClick={() => setShowForm(true)} aria-label="Add win">
+            <button className={styles.addWinBtn} onClick={() => setFormMode('open')} aria-label="Add win">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
@@ -1016,7 +1015,7 @@ export default function JourneyPage() {
 
       {/* ── Add win form overlay ── */}
       {/* Always in DOM — toggled via display:none so state changes while hidden are never painted */}
-      <div className={`${styles.overlay}${!showForm ? ` ${styles.overlayHidden}` : ''}`} onClick={() => setShowForm(false)}>
+      <div className={`${styles.overlay}${formMode === 'closed' ? ` ${styles.overlayHidden}` : ''}`} onClick={() => setFormMode('closed')}>
           <div className={styles.winForm} onClick={(e) => e.stopPropagation()}>
             <h2 className={styles.winFormTitle}>Add a win</h2>
             <div className={styles.winFormBody}>
@@ -1076,14 +1075,14 @@ export default function JourneyPage() {
               />
             </div>
             <div className={styles.winFormBtns}>
-              <button className={styles.winCancelBtn} onClick={() => setShowForm(false)}>Cancel</button>
+              <button className={styles.winCancelBtn} onClick={() => setFormMode('closed')}>Cancel</button>
               <button
                 className={styles.winSaveBtn}
                 onClick={handleWinSave}
-                aria-disabled={winsSaving}
-                style={winsSaving ? { pointerEvents: 'none' } : undefined}
+                aria-disabled={formMode === 'saving'}
+                style={formMode === 'saving' ? { pointerEvents: 'none' } : undefined}
               >
-                {winsSaving ? 'Saving…' : 'Save win'}
+                {formMode === 'saving' ? 'Saving…' : 'Save win'}
               </button>
             </div>
           </div>
