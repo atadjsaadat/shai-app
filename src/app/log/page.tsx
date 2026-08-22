@@ -673,6 +673,9 @@ export default function LogPage() {
         </button>
         {phase === 'chatting' && activeTab !== 'feeds' && (
           <button className={styles.hardDayBtn} onClick={handleHardFoodDay}>
+            <svg width="14" height="10" viewBox="0 0 20 14" fill="currentColor" style={{ flexShrink: 0 }}>
+              <path d="M16 12H5a4 4 0 1 1 .9-7.9A5 5 0 0 1 16.5 7 3.5 3.5 0 0 1 16 12z"/>
+            </svg>
             Hard day
           </button>
         )}

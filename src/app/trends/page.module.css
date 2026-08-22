@@ -119,6 +119,17 @@
   border-width: 2.5px;
 }
 
+.dotHardDay {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--terra-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--terracotta);
+}
+
 .dotFilledSelected {
   box-shadow: 0 0 0 3px var(--oat), 0 0 0 5px var(--terracotta);
 }

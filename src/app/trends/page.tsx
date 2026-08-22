@@ -22,6 +22,7 @@ interface DayData {
   date: string;
   dayLabel: string;
   hasLogs: boolean;
+  isHardDay: boolean;
   totals: Totals | null;
   locked: boolean;
 }
@@ -537,6 +538,12 @@ export default function TrendsPage() {
                         <div className={`${styles.dotFilled}${isToday ? ` ${styles.dotToday}` : ''}${isSelected ? ` ${styles.dotFilledSelected}` : ''}`}>
                           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="2 6 5 9 10 3" />
+                          </svg>
+                        </div>
+                      ) : day.isHardDay ? (
+                        <div className={`${styles.dotHardDay}${isSelected ? ` ${styles.dotFilledSelected}` : ''}`}>
+                          <svg width="14" height="10" viewBox="0 0 20 14" fill="currentColor">
+                            <path d="M16 12H5a4 4 0 1 1 .9-7.9A5 5 0 0 1 16.5 7 3.5 3.5 0 0 1 16 12z"/>
                           </svg>
                         </div>
                       ) : (

@@ -45,6 +45,9 @@
   cursor: pointer;
   padding: 6px 14px;
   box-shadow: var(--btn-shadow);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 /* ── Meal type tabs ──────────────────────────────────── */

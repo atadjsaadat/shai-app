@@ -92,6 +92,12 @@ export async function GET(request: Request) {
     return { date, dayLabel, breast, formula, expressed, count: breast + formula + expressed, totalMl: agg?.totalMl ?? 0, totalMinutes: agg?.totalMinutes ?? 0 }
   })
 
+  // Track hard food days
+  const hardDaySet = new Set<string>()
+  for (const log of (logs ?? [])) {
+    if (log.is_hard_food_day) hardDaySet.add(toLocalDateStr(new Date(log.logged_at).getTime(), offsetMinutes))
+  }
+
   // Group by local date and sum nutrients
   const dayTotalsMap = new Map<string, Targets>()
   let mealCount = 0
@@ -119,6 +125,7 @@ export async function GET(request: Request) {
     date,
     dayLabel,
     hasLogs: dayTotalsMap.has(date),
+    isHardDay: hardDaySet.has(date) && !dayTotalsMap.has(date),
     totals: idx < lockThreshold ? null : (dayTotalsMap.get(date) ?? null),
     locked: idx < lockThreshold,
   }))
