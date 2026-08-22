@@ -320,6 +320,24 @@ export default function HomePage() {
     return () => clearInterval(id);
   }, [feedAlarm]);
 
+  // Re-read alarm from localStorage whenever the home page becomes visible —
+  // needed because the alarm may have been set on the Feeds tab while the home
+  // component was mounted but off-screen (or the phone came back from lock screen).
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState !== 'visible') return;
+      const cId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
+      if (!cId) return;
+      try {
+        const stored = localStorage.getItem(STORAGE.feedAlarm(cId));
+        const parsed = stored ? (JSON.parse(stored) as { dueAt: number }) : null;
+        setFeedAlarm(parsed && parsed.dueAt > Date.now() ? parsed : null);
+      } catch { /* ignore */ }
+    }
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, []);
+
   const onRefresh = useCallback(async () => {
     _homeCache = null;
     localStorage.removeItem(STORAGE.dailyFeedback(localDate()));

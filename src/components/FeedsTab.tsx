@@ -238,6 +238,7 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
   const [pullY, setPullY] = useState(0);
   const [refreshCounter, setRefreshCounter] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const alarmFiredRef = useRef(false);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -272,11 +273,22 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
     function onVisible() {
       if (document.visibilityState === 'visible' && alarm && alarm.dueAt <= Date.now()) {
         fireNotification(childName, true);
+        _feedDueCallback?.();
       }
     }
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);
   }, [alarm, childName]);
+
+  // Detect alarm firing via the minute tick — catches it even if app stayed open.
+  useEffect(() => {
+    if (!alarm) { alarmFiredRef.current = false; return; }
+    if (alarm.dueAt > Date.now()) { alarmFiredRef.current = false; return; }
+    if (alarmFiredRef.current) return;
+    alarmFiredRef.current = true;
+    fireNotification(childName, true);
+    _feedDueCallback?.();
+  }, [tick, alarm, childName]);
 
   useEffect(() => {
     const lastAt = feeds[0]?.logged_at ?? null;

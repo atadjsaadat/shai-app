@@ -16,14 +16,15 @@ export async function GET(req: NextRequest) {
 
   const admin = createAdminClient();
   const now = new Date();
-  const windowEnd = new Date(now.getTime() + 5 * 60_000); // next 5 minutes
+  // Look 5 min back + 5 min forward — catches alarms if the cron fires slightly late
+  const windowStart = new Date(now.getTime() - 5 * 60_000);
+  const windowEnd = new Date(now.getTime() + 5 * 60_000);
 
-  // Find alarms due in the next 5-minute window
   const { data: alarms } = await admin
     .from('feed_alarms')
     .select('id, child_id, user_id, due_at, interval_mins')
     .eq('is_active', true)
-    .gte('due_at', now.toISOString())
+    .gte('due_at', windowStart.toISOString())
     .lte('due_at', windowEnd.toISOString());
 
   if (!alarms?.length) return NextResponse.json({ sent: 0 });
