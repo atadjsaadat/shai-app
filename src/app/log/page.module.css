@@ -245,9 +245,7 @@
 }
 
 .favouriteChipPinned {
-  border-color: var(--terracotta);
-  background: var(--terra-light);
-  color: var(--terra-dark);
+  font-weight: 800;
 }
 
 .favouriteChipStar {

@@ -83,6 +83,22 @@ const MEAL_COLOURS: Record<MealType, string> = {
   hydration: '#7AA5C4',
 };
 
+const MEAL_CHIP_BG: Record<MealType, string> = {
+  breakfast: '#FBF3DC',
+  lunch:     '#D4E8D6',
+  dinner:    '#F0D5C8',
+  snack:     '#E4D8F0',
+  hydration: '#D0E4F0',
+};
+
+const MEAL_CHIP_TEXT: Record<MealType, string> = {
+  breakfast: '#7A5810',
+  lunch:     '#4A7050',
+  dinner:    '#9E5035',
+  snack:     '#5A3F80',
+  hydration: '#2E5C7A',
+};
+
 const MEAL_EXAMPLES: Record<MealType, string[]> = {
   breakfast:  ['Porridge with milk', 'Weetabix with banana', 'Toast with butter'],
   lunch:      ['Cheese sandwich and cucumber', 'Pasta with tomato sauce', 'Chicken wrap'],
@@ -823,6 +839,9 @@ export default function LogPage() {
             <div className={styles.favouritesChips}>
               {displayFavourites.map((fav) => {
                 const isPinnedChip = pinnedFavourites.has(fav.name.toLowerCase().trim());
+                const chipBg = MEAL_CHIP_BG[mealType];
+                const chipText = MEAL_CHIP_TEXT[mealType];
+                const chipBorder = MEAL_COLOURS[mealType];
                 return (
                   <div key={fav.name} className={styles.favouriteChipWrap}>
                     {favouritesEditMode && (
@@ -830,6 +849,7 @@ export default function LogPage() {
                     )}
                     <button
                       className={`${styles.favouriteChip}${isPinnedChip ? ` ${styles.favouriteChipPinned}` : ''}`}
+                      style={{ background: chipBg, borderColor: chipBorder, color: chipText }}
                       onClick={() => !favouritesEditMode && handleMealFavourite(fav)}
                     >
                       {isPinnedChip && <span className={styles.favouriteChipStar}>♥</span>}
