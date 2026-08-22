@@ -15,6 +15,8 @@ interface Particle {
 
 export default function Confetti({ onDone }: { onDone?: () => void }) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
 
   useEffect(() => {
     const canvas = ref.current;
@@ -84,13 +86,13 @@ export default function Confetti({ onDone }: { onDone?: () => void }) {
       if (frame < totalFrames + 20) {
         rafId = requestAnimationFrame(draw);
       } else {
-        onDone?.();
+        onDoneRef.current?.();
       }
     };
 
     rafId = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(rafId);
-  }, [onDone]);
+  }, []);
 
   return (
     <canvas
