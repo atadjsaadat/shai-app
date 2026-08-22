@@ -894,7 +894,6 @@ export default function TrendsPage() {
               </ul>
             )}
           </div>
-          <AIDisclosure />
         </section>
       )}
 
@@ -907,6 +906,8 @@ export default function TrendsPage() {
           </p>
         </div>
       )}
+
+      <AIDisclosure />
 
         </div>
       )}
