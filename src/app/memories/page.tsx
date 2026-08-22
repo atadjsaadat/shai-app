@@ -160,6 +160,7 @@ export default function JourneyPage() {
   const speechRef = useRef<ReturnType<typeof createSpeechRecognition> | null>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const editRef = useRef<HTMLTextAreaElement>(null);
+  const pinEnabledRef = useRef(false);
 
   // Wins state
   const [wins, setWins] = useState<Win[]>(_c?.wins ?? []);
@@ -198,13 +199,20 @@ export default function JourneyPage() {
     fetch('/api/journal/pin')
       .then(r => r.json())
       .then(data => {
-        if (data.enabled && !sessionStorage.getItem('shai_journal_unlocked')) {
-          setLocked(true);
-        } else {
-          setLocked(false);
-        }
+        pinEnabledRef.current = !!data.enabled;
+        setLocked(!!data.enabled);
       })
       .catch(() => setLocked(false));
+  }, []);
+
+  useEffect(() => {
+    if (activeTab !== 'journal' && pinEnabledRef.current) setLocked(true);
+  }, [activeTab]);
+
+  useEffect(() => {
+    const onVisibility = () => { if (document.hidden && pinEnabledRef.current) setLocked(true); };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
   }, []);
 
   useEffect(() => {

@@ -24,7 +24,6 @@ export default function JournalLockScreen({ onUnlock }: Props) {
   const passwordRef = useRef<HTMLInputElement>(null);
 
   const unlock = useCallback(() => {
-    sessionStorage.setItem('shai_journal_unlocked', '1');
     onUnlock();
   }, [onUnlock]);
 
