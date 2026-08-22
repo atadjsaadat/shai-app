@@ -318,6 +318,7 @@ export default function LogPage() {
     setFavouritesEditMode(false);
     const pinnedRaw: MealFavourite[] = JSON.parse(localStorage.getItem(STORAGE.pinnedFavourites(meal)) ?? '[]');
     setPinnedFavourites(new Map(pinnedRaw.map(f => [f.name.toLowerCase().trim(), f])));
+    setMealFavourites([]);
     fetch(`/api/log/meal-favourites?mealType=${meal}`)
       .then((r) => r.json())
       .then((json) => setMealFavourites(json.meals ?? []))
