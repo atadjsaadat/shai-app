@@ -446,9 +446,18 @@ export default function HomePage() {
           <div className={styles.mealList}>
             {meals.map((meal) => (
               <div key={meal.meal_type} className={styles.mealGroup}>
-                <p className={styles.mealGroupLabel}>
-                  {MEAL_LABELS[meal.meal_type] ?? meal.meal_type}
-                </p>
+                <div className={styles.mealGroupHeader}>
+                  <p className={styles.mealGroupLabel}>{MEAL_LABELS[meal.meal_type] ?? meal.meal_type}</p>
+                  {!fallbackDate && (
+                    <Link
+                      href={`/log?meal=${meal.meal_type}`}
+                      className={styles.addToMealBtn}
+                      onClick={() => sessionStorage.setItem('shai_edit_meal', JSON.stringify({ meal_type: meal.meal_type, items: meal.items }))}
+                    >
+                      + Add
+                    </Link>
+                  )}
+                </div>
                 {meal.items.map((item, i) => (
                   <div key={i} className={styles.mealItem}>
                     <span className={styles.mealItemName}>{item.food_name}</span>

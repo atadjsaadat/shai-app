@@ -115,6 +115,12 @@ function generateId() {
   return Math.random().toString(36).slice(2);
 }
 
+function getMealParam(): MealType | null {
+  if (typeof window === 'undefined') return null;
+  const meal = new URLSearchParams(window.location.search).get('meal');
+  return meal && (MEAL_TYPES as readonly string[]).includes(meal) ? (meal as MealType) : null;
+}
+
 type Phase = 'chatting' | 'confirming' | 'saving' | 'saved';
 
 const HARD_DAY_ACK =
@@ -213,14 +219,17 @@ function FoodItemCard({ item, multiplier = 1, portionLabel, isWin, onWinToggle }
 
 export default function LogPage() {
   const router = useRouter();
-  const [mealType, setMealType] = useState<MealType>(detectMealType);
+  const [mealType, setMealType] = useState<MealType>(() => getMealParam() ?? detectMealType());
   const [activeTab, setActiveTab] = useState<MealType | 'feeds'>(() => {
+    const meal = getMealParam();
+    if (meal) return meal;
     if (typeof window !== 'undefined') {
       const tab = sessionStorage.getItem('shai_log_tab');
       if (tab === 'feeds') { sessionStorage.removeItem('shai_log_tab'); return 'feeds'; }
     }
     return detectMealType();
   });
+  const [editMealItems, setEditMealItems] = useState<Array<{ food_name: string; calories_kcal: number | null }> | null>(null);
   const [feedsIsArchive, setFeedsIsArchive] = useState(false);
   const [childAgeMonths, setChildAgeMonths] = useState<number | null>(null);
   const [messages, setMessages] = useState<LogMessage[]>([
@@ -403,6 +412,16 @@ export default function LogPage() {
         else router.replace('/onboarding');
       });
   }, [router]);
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem('shai_edit_meal');
+    if (!stored) return;
+    sessionStorage.removeItem('shai_edit_meal');
+    try {
+      const data = JSON.parse(stored);
+      if (Array.isArray(data.items) && data.items.length > 0) setEditMealItems(data.items);
+    } catch {}
+  }, []);
 
   useEffect(() => {
     if (childValidated) loadQuickPicks(mealType);
@@ -762,6 +781,19 @@ export default function LogPage() {
 
       {/* ── Messages ── */}
       <div className={`${styles.messages} ${messages.length <= 1 && phase === 'chatting' ? styles.messagesStart : ''} ${phase === 'chatting' ? styles.messagesChat : ''} ${distressLevel === 3 ? styles.messagesWithCard : ''}`}>
+
+        {editMealItems && phase === 'chatting' && (
+          <div className={styles.alreadyLogged}>
+            <p className={styles.alreadyLoggedLabel}>Already logged</p>
+            <div className={styles.alreadyLoggedItems}>
+              {editMealItems.map((item, i) => (
+                <span key={i} className={styles.alreadyLoggedItem}>{item.food_name}</span>
+              ))}
+            </div>
+            <button className={styles.alreadyLoggedDismiss} onClick={() => setEditMealItems(null)} aria-label="Dismiss">×</button>
+          </div>
+        )}
+
         {messages.map((msg, i) => (
           <div
             key={msg.id}
