@@ -751,8 +751,8 @@
 }
 
 @keyframes winPulse {
-  0%, 100% { transform: scale(1.2); }
-  50%       { transform: scale(1.45); }
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.2); }
 }
 
 .winInlineBtnActive {
