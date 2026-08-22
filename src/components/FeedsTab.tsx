@@ -16,6 +16,7 @@ const FEED_COLOURS: Record<FeedType, string> = {
 };
 
 const REMINDER_OPTIONS = [
+  { label: '1min', mins: 1   },
   { label: '1h',   mins: 60  },
   { label: '1.5h', mins: 90  },
   { label: '2h',   mins: 120 },
