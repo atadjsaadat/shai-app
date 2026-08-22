@@ -1077,7 +1077,12 @@ export default function JourneyPage() {
             </div>
             <div className={styles.winFormBtns}>
               <button className={styles.winCancelBtn} onClick={() => setShowForm(false)}>Cancel</button>
-              <button className={styles.winSaveBtn} onClick={handleWinSave} disabled={winsSaving}>
+              <button
+                className={styles.winSaveBtn}
+                onClick={handleWinSave}
+                aria-disabled={winsSaving}
+                style={winsSaving ? { pointerEvents: 'none' } : undefined}
+              >
                 {winsSaving ? 'Saving…' : 'Save win'}
               </button>
             </div>
