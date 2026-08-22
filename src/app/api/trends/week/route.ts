@@ -125,7 +125,7 @@ export async function GET(request: Request) {
     date,
     dayLabel,
     hasLogs: dayTotalsMap.has(date),
-    isHardDay: hardDaySet.has(date) && !dayTotalsMap.has(date),
+    isHardDay: hardDaySet.has(date),
     totals: idx < lockThreshold ? null : (dayTotalsMap.get(date) ?? null),
     locked: idx < lockThreshold,
   }))
