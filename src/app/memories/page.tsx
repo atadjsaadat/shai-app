@@ -130,7 +130,7 @@ let _memoriesCache: MemoriesCache | null = null;
 
 export default function JourneyPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'journal' | 'wins'>('journal');
+  const [activeTab, setActiveTab] = useState<'journal' | 'wins'>('wins');
 
   // Lock state: null = checking, true = locked, false = unlocked
   const [locked, setLocked] = useState<boolean | null>(null);
@@ -542,7 +542,6 @@ export default function JourneyPage() {
   // ── Render ───────────────────────────────────────────
 
   if (locked === null) return null;
-  if (locked) return <JournalLockScreen onUnlock={() => setLocked(false)} />;
 
   return (
     <div className={styles.page}>
@@ -571,10 +570,6 @@ export default function JourneyPage() {
       {/* Segmented control */}
       <div className={styles.segControl}>
         <button
-          className={`${styles.seg}${activeTab === 'journal' ? ` ${styles.segActiveJournal}` : ''}`}
-          onClick={() => setActiveTab('journal')}
-        >Journal</button>
-        <button
           className={`${styles.seg}${activeTab === 'wins' ? ` ${styles.segActiveWins}` : ''}`}
           onClick={() => setActiveTab('wins')}
         >
@@ -583,11 +578,21 @@ export default function JourneyPage() {
           </svg>
           Wins
         </button>
+        <button
+          className={`${styles.seg}${activeTab === 'journal' ? ` ${styles.segActiveJournal}` : ''}`}
+          onClick={() => setActiveTab('journal')}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 5, marginTop: -2 }}>
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+          </svg>
+          Journal
+        </button>
       </div>
 
       {/* ── Journal tab ── */}
-      {activeTab === 'journal' && (
-        <>
+      {activeTab === 'journal' && (locked
+        ? <JournalLockScreen onUnlock={() => setLocked(false)} />
+        : <>
           {!composing && entries.length > 0 && (
             <div className={styles.journalSearch}>
               <svg className={styles.searchIcon} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
