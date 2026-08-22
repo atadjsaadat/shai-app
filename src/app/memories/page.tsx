@@ -612,6 +612,7 @@ export default function JourneyPage() {
         </button>
       </div>
 
+      <div className={styles.tabScroll}>
       {/* ── Journal tab ── */}
       {activeTab === 'journal' && (locked
         ? <JournalLockScreen onUnlock={() => setLocked(false)} onCancel={() => switchTab('wins')} />
@@ -864,6 +865,7 @@ export default function JourneyPage() {
           )}
         </>
       )}
+      </div>
 
       {/* ── Win detail sheet ── */}
       {selectedWin && (() => {
