@@ -1007,60 +1007,62 @@ export default function JourneyPage() {
         <div className={styles.overlay} onClick={() => setShowForm(false)}>
           <div className={styles.winForm} onClick={(e) => e.stopPropagation()}>
             <h2 className={styles.winFormTitle}>Add a win</h2>
-            <div className={styles.typeGrid}>
-              {WIN_TYPES.map((t) => {
-                const c = WIN_COLOURS[t.value];
-                const isActive = winType === t.value;
-                return (
-                  <button
-                    key={t.value}
-                    className={`${styles.typeBtn}${isActive ? ` ${styles.typeBtnActive}` : ''}`}
-                    style={isActive ? { background: c.badge, borderColor: c.badge, color: '#fff' } : {}}
-                    onClick={() => setWinType(t.value)}
-                  >{t.label}</button>
-                );
-              })}
-            </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className={styles.fileInput}
-              onChange={handlePhotoSelect}
-            />
-            {photoPreview ? (
-              <div className={styles.previewWrap}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={photoPreview} alt="Food photo preview" className={styles.preview} />
-                <button className={styles.removePhoto} onClick={() => {
-                  setPhotoFile(null);
-                  if (photoPreview) URL.revokeObjectURL(photoPreview);
-                  setPhotoPreview(null);
-                }}>×</button>
+            <div className={styles.winFormBody}>
+              <div className={styles.typeGrid}>
+                {WIN_TYPES.map((t) => {
+                  const c = WIN_COLOURS[t.value];
+                  const isActive = winType === t.value;
+                  return (
+                    <button
+                      key={t.value}
+                      className={`${styles.typeBtn}${isActive ? ` ${styles.typeBtnActive}` : ''}`}
+                      style={isActive ? { background: c.badge, borderColor: c.badge, color: '#fff' } : {}}
+                      onClick={() => setWinType(t.value)}
+                    >{t.label}</button>
+                  );
+                })}
               </div>
-            ) : (
-              <button className={styles.photoBtn} onClick={() => fileInputRef.current?.click()}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2"/>
-                  <circle cx="8.5" cy="8.5" r="1.5"/>
-                  <polyline points="21 15 16 10 5 21"/>
-                </svg>
-                Add a photo of the food (optional)
-              </button>
-            )}
-            <input
-              className={styles.winInput}
-              placeholder="Food involved (optional)"
-              value={foodInvolved}
-              onChange={(e) => setFoodInvolved(e.target.value)}
-            />
-            <textarea
-              className={styles.winTextarea}
-              placeholder="What happened? (optional)"
-              rows={3}
-              value={parentNote}
-              onChange={(e) => setParentNote(e.target.value)}
-            />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className={styles.fileInput}
+                onChange={handlePhotoSelect}
+              />
+              {photoPreview ? (
+                <div className={styles.previewWrap}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={photoPreview} alt="Food photo preview" className={styles.preview} />
+                  <button className={styles.removePhoto} onClick={() => {
+                    setPhotoFile(null);
+                    if (photoPreview) URL.revokeObjectURL(photoPreview);
+                    setPhotoPreview(null);
+                  }}>×</button>
+                </div>
+              ) : (
+                <button className={styles.photoBtn} onClick={() => fileInputRef.current?.click()}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                  </svg>
+                  Add a photo of the food (optional)
+                </button>
+              )}
+              <input
+                className={styles.winInput}
+                placeholder="Food involved (optional)"
+                value={foodInvolved}
+                onChange={(e) => setFoodInvolved(e.target.value)}
+              />
+              <textarea
+                className={styles.winTextarea}
+                placeholder="What happened? (optional)"
+                rows={3}
+                value={parentNote}
+                onChange={(e) => setParentNote(e.target.value)}
+              />
+            </div>
             <div className={styles.winFormBtns}>
               <button className={styles.winCancelBtn} onClick={() => setShowForm(false)}>Cancel</button>
               <button className={styles.winSaveBtn} onClick={handleWinSave} disabled={winsSaving}>
