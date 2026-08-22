@@ -91,8 +91,40 @@ export async function GET(request: Request) {
 
   if (!childRow) childRow = (childDetailsResult as { data: ChildRow | null }).data
 
-  // Nutrition totals
-  const realLogs = (logsResult.data ?? []).filter((l) => !l.is_hard_food_day && l.food_name)
+  // Nutrition totals — fall back to most recent logged day if nothing today
+  const todayLogs = (logsResult.data ?? []).filter((l) => !l.is_hard_food_day && l.food_name)
+
+  let fallbackDate: string | null = null
+  let realLogs = todayLogs
+
+  if (todayLogs.length === 0) {
+    const { data: lastLog } = await admin
+      .from('food_logs')
+      .select('logged_at')
+      .eq('child_id', childId)
+      .lt('logged_at', utcStart)
+      .order('logged_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (lastLog) {
+      const localLast = new Date(new Date(lastLog.logged_at).getTime() + offsetMinutes * 60_000)
+      const ly = localLast.getUTCFullYear()
+      const lm = localLast.getUTCMonth() + 1
+      const ld = localLast.getUTCDate()
+      fallbackDate = `${ly}-${String(lm).padStart(2, '0')}-${String(ld).padStart(2, '0')}`
+      const fbStart = new Date(Date.UTC(ly, lm - 1, ld, 0, 0, 0) - offsetMinutes * 60_000).toISOString()
+      const fbEnd   = new Date(Date.UTC(ly, lm - 1, ld, 23, 59, 59) - offsetMinutes * 60_000).toISOString()
+      const { data: fbLogs } = await admin
+        .from('food_logs')
+        .select('meal_type, food_name, calories_kcal, protein_g, carbs_g, fat_g, fibre_g, sugar_g, sodium_mg, iron_mg, is_hard_food_day')
+        .eq('child_id', childId)
+        .gte('logged_at', fbStart)
+        .lte('logged_at', fbEnd)
+        .order('logged_at', { ascending: true })
+      realLogs = (fbLogs ?? []).filter((l) => !l.is_hard_food_day && l.food_name)
+    }
+  }
 
   let ageMonths = 24
   const dob = parseDob(childRow?.date_of_birth)
@@ -166,5 +198,6 @@ export async function GET(request: Request) {
     wins: winsResult.data ?? [],
     leap,
     lastFeed: lastFeedResult.data?.[0] ?? null,
+    fallbackDate,
   })
 }

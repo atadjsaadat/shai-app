@@ -101,6 +101,7 @@ interface HomeApiResponse {
   wins: Array<{ id: string; win_type: string; food_involved: string | null }>;
   leap: { id: number; name: string; type: string; shaiMessage: string; daysUntil: number } | null;
   lastFeed: LastFeed | null;
+  fallbackDate: string | null;
 }
 
 let _homeCache: { cacheKey: string; data: HomeApiResponse } | null = null;
@@ -156,6 +157,11 @@ function getMondayDate(): string {
 
 function formatApptTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatFallbackDate(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
 function timeSinceFeed(iso: string): string {
@@ -248,6 +254,7 @@ export default function HomePage() {
   const ageMonths         = homeData?.ageMonths ?? 24;
   const weeklyWins        = homeData?.wins ?? [];
   const upcomingLeap      = homeData?.leap ?? null;
+  const fallbackDate      = homeData?.fallbackDate ?? null;
   const todayAppointments = (homeData?.appointments ?? []).filter(
     (a) => a.scheduled_at.startsWith(localDate())
   );
@@ -279,7 +286,7 @@ export default function HomePage() {
   useEffect(() => {
     const cached = localStorage.getItem(STORAGE.dailyFeedback(localDate()));
     if (cached) { setDailyFeedback(cached); return; }
-    if (!homeData || !hasMeals || !totals || !targets) return;
+    if (!homeData || !hasMeals || !totals || !targets || fallbackDate) return;
     setFeedbackLoading(true);
     const nutrients = buildNutrientLines(totals, targets);
     fetch('/api/home/daily-feedback', {
@@ -301,6 +308,7 @@ export default function HomePage() {
   function buildStatusMessage(): string {
     const name = childName ?? 'your little one';
     if (!hasMeals) return `Ready when you are — tap Log below to start tracking ${name}'s meals.`;
+    if (fallbackDate) return `Nothing logged today yet — here's how ${name}'s last meal day looked.`;
     if (!totals || !targets) return `${name}'s day is coming together.`;
     const sugarPct = targets.sugar_g       > 0 ? totals.sugar_g       / targets.sugar_g       : 0;
     const saltPct  = targets.sodium_mg     > 0 ? totals.sodium_mg     / targets.sodium_mg     : 0;
@@ -418,7 +426,9 @@ export default function HomePage() {
       {hasMeals && (
       <section>
         <div className={styles.sectionHeader}>
-          <p className={styles.sectionLabel}>Today&apos;s nutrition</p>
+          <p className={styles.sectionLabel}>
+            {fallbackDate ? `Last logged · ${formatFallbackDate(fallbackDate)}` : "Today's nutrition"}
+          </p>
           <p className={styles.rdaHint}>bar fills to daily target</p>
         </div>
         <div className={styles.nutrientCard}>
@@ -430,7 +440,7 @@ export default function HomePage() {
 
       {hasMeals && (
         <section>
-          <p className={styles.sectionLabel}>Today&apos;s meals</p>
+          <p className={styles.sectionLabel}>{fallbackDate ? 'Last logged meals' : "Today's meals"}</p>
           <div className={styles.mealList}>
             {meals.map((meal) => (
               <div key={meal.meal_type} className={styles.mealGroup}>
@@ -478,7 +488,7 @@ export default function HomePage() {
         </section>
       )}
 
-      {hasMeals && (feedbackLoading || dailyFeedback) && (
+      {hasMeals && !fallbackDate && (feedbackLoading || dailyFeedback) && (
         <section>
           <p className={styles.sectionLabel}>Today at a glance</p>
           <div className={styles.insightCard}>
