@@ -423,6 +423,7 @@ export default function LogPage() {
       if (Array.isArray(data.items) && data.items.length > 0) {
         setEditMealItems(data.items);
         setEditLogIds(data.items.map((i: { id?: string }) => i.id).filter(Boolean));
+        setInput(data.items.map((i: { food_name: string }) => i.food_name).join(', '));
       }
     } catch {}
   }, []);
