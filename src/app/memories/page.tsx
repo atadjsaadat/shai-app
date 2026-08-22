@@ -247,6 +247,15 @@ export default function JourneyPage() {
     setNoteText(selectedWin?.parent_note ?? '');
   }, [selectedWin]);
 
+  useEffect(() => {
+    if (selectedWin || showForm) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [selectedWin, showForm]);
+
   // ── Wins handlers ────────────────────────────────────
 
   const filteredWins = useMemo(() => {
