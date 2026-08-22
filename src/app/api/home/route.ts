@@ -91,6 +91,20 @@ export async function GET(request: Request) {
 
   if (!childRow) childRow = (childDetailsResult as { data: ChildRow | null }).data
 
+  // If no wins this week, fall back to the 3 most recent wins regardless of date
+  let wins = winsResult.data ?? []
+  let winsRecentOnly = false
+  if (wins.length === 0 && weekSince) {
+    const { data: recentWins } = await admin
+      .from('wins')
+      .select('id, logged_at, win_type, food_involved, parent_note, child_age_days, photo_url')
+      .eq('child_id', childId)
+      .order('logged_at', { ascending: false })
+      .limit(3)
+    wins = recentWins ?? []
+    winsRecentOnly = wins.length > 0
+  }
+
   // Nutrition totals — fall back to most recent logged day if nothing today
   const todayLogs = (logsResult.data ?? []).filter((l) => !l.is_hard_food_day && l.food_name)
 
@@ -195,7 +209,8 @@ export async function GET(request: Request) {
     meals,
     ageMonths,
     appointments: appointmentsResult.data ?? [],
-    wins: winsResult.data ?? [],
+    wins,
+    winsRecentOnly,
     leap,
     lastFeed: lastFeedResult.data?.[0] ?? null,
     fallbackDate,

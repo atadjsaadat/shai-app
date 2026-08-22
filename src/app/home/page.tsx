@@ -102,6 +102,7 @@ interface HomeApiResponse {
   leap: { id: number; name: string; type: string; shaiMessage: string; daysUntil: number } | null;
   lastFeed: LastFeed | null;
   fallbackDate: string | null;
+  winsRecentOnly: boolean;
 }
 
 let _homeCache: { cacheKey: string; data: HomeApiResponse } | null = null;
@@ -255,6 +256,7 @@ export default function HomePage() {
   const weeklyWins        = homeData?.wins ?? [];
   const upcomingLeap      = homeData?.leap ?? null;
   const fallbackDate      = homeData?.fallbackDate ?? null;
+  const winsRecentOnly    = homeData?.winsRecentOnly ?? false;
   const todayAppointments = (homeData?.appointments ?? []).filter(
     (a) => a.scheduled_at.startsWith(localDate())
   );
@@ -464,7 +466,7 @@ export default function HomePage() {
       {weeklyWins.length > 0 && (
         <section>
           <div className={styles.sectionHeader}>
-            <p className={styles.sectionLabel}>This week&apos;s wins</p>
+            <p className={styles.sectionLabel}>{winsRecentOnly ? 'Recent wins' : "This week's wins"}</p>
             {weeklyWins.length > 3 && (
               <Link href="/wins" className={styles.seeAllLink}>See all {weeklyWins.length} →</Link>
             )}
