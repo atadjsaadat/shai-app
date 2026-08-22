@@ -1,9 +1,12 @@
 import type { MealType, NutrientLine } from './types';
 
-export function buildParserSystemPrompt(mealType: MealType): string {
+export function buildParserSystemPrompt(mealType: MealType, alreadyLogged?: { food_name: string }[]): string {
+  const alreadyLoggedSection = alreadyLogged && alreadyLogged.length > 0
+    ? `\nALREADY LOGGED FOR THIS MEAL:\n${alreadyLogged.map(i => `- ${i.food_name}`).join('\n')}\nWhen the parent's message is a short addition or modification (e.g. "with olives", "also some cheese", "and a bit of bread"), treat it as an addition to the already-logged items above — do not ask what the main dish is. You already know it.\n`
+    : '';
   return `You are SHAI's food log parser for a child nutrition companion app. Convert a parent's natural description into structured food data.
 
-MEAL TYPE: ${mealType}
+MEAL TYPE: ${mealType}${alreadyLoggedSection}
 
 RULES:
 - Use realistic CHILD/TODDLER portions — never adult portions. A toddler bowl of pasta ≈ 100g, not 200g.

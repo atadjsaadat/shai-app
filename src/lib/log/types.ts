@@ -54,6 +54,7 @@ export interface ParseApiRequest {
   messages: { role: 'user' | 'assistant'; content: string }[];
   mealType: MealType;
   distressActive?: boolean;
+  alreadyLogged?: { food_name: string }[];
 }
 
 export interface ParseApiResponse {

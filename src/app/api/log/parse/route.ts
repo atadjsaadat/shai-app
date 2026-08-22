@@ -8,7 +8,7 @@ import { logDistressFlag } from '@/lib/distress/log';
 import type { ParseApiRequest, ParseApiResponse } from '@/lib/log/types';
 
 export async function POST(req: NextRequest) {
-  const { messages, mealType, distressActive }: ParseApiRequest = await req.json();
+  const { messages, mealType, distressActive, alreadyLogged }: ParseApiRequest = await req.json();
 
   // Soft auth — needed for distress logging; food parse works without it
   let userId: string | null = null;
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 2048,
-    system: buildParserSystemPrompt(mealType),
+    system: buildParserSystemPrompt(mealType, alreadyLogged),
     messages,
   });
 

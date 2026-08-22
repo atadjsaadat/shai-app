@@ -530,6 +530,7 @@ export default function LogPage() {
           messages: nextMessages.map((m) => ({ role: m.role, content: m.content })),
           mealType,
           ...(distressLevel === 3 && { distressActive: true }),
+          ...(editMealItems && { alreadyLogged: editMealItems }),
         }),
       });
 
