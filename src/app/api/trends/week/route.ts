@@ -151,7 +151,7 @@ export async function GET(request: Request) {
     if (existing) existing.count++
     else foodCounts.set(key, { name: log.food_name, count: 1, category: log.product_category ?? null })
   }
-  const topFoods = [...foodCounts.values()].filter((f) => f.count > 2).sort((a, b) => b.count - a.count).slice(0, 5)
+  const topFoods = [...foodCounts.values()].filter((f) => f.count > 1).sort((a, b) => b.count - a.count).slice(0, 5)
 
   return NextResponse.json({ days, targets, ageMonths, loggedCount, mealCount, averages, tier, topFoods, feedDays })
 }
