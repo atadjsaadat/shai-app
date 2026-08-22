@@ -418,9 +418,13 @@ export default function JourneyPage() {
         setParentNote('');
         setPhotoFile(null);
         if (photoPreview) { URL.revokeObjectURL(photoPreview); setPhotoPreview(null); }
+        winsSavingRef.current = false;
+        return; // form unmounts with winsSaving=true — no flash back to "Save win"
       }
-    } catch { /* network failure — button resets, form stays open */ }
-    finally { winsSavingRef.current = false; setWinsSaving(false); }
+    } catch { /* network failure */ }
+    // only reached on failure — reset so button is available for retry
+    winsSavingRef.current = false;
+    setWinsSaving(false);
   };
 
   // ── Journal handlers ─────────────────────────────────
