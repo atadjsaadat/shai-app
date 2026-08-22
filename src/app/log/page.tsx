@@ -797,6 +797,23 @@ export default function LogPage() {
               ))}
             </div>
             <button className={styles.alreadyLoggedDismiss} onClick={() => setEditMealItems(null)} aria-label="Dismiss">×</button>
+            {editLogIds.length > 0 && (
+              <button
+                className={styles.deleteEntryBtn}
+                onClick={async () => {
+                  const childId = localStorage.getItem('shai_active_child_id');
+                  if (!childId) return;
+                  await fetch('/api/log/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ logIds: editLogIds, childId }),
+                  });
+                  router.push('/home');
+                }}
+              >
+                Delete this entry
+              </button>
+            )}
           </div>
         )}
 

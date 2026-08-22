@@ -259,8 +259,6 @@
   flex-direction: column;
   gap: 4px;
   box-shadow: var(--card-shadow);
-  text-decoration: none;
-  color: inherit;
 }
 
 .mealGroupHeader {
@@ -268,6 +266,8 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 4px;
+  text-decoration: none;
+  color: inherit;
 }
 
 .mealGroupLabel {
@@ -281,6 +281,28 @@
 .editIcon {
   color: var(--text-muted);
   flex-shrink: 0;
+}
+
+.mealItemWrap {
+  position: relative;
+  overflow: hidden;
+}
+
+.swipeDeleteBtn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 64px;
+  background: #E05A5A;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  border-radius: 0 8px 8px 0;
+  transition: opacity 0.15s ease;
 }
 
 .mealItem {

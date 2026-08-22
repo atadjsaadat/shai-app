@@ -318,6 +318,19 @@
   line-height: 1;
 }
 
+.deleteEntryBtn {
+  align-self: flex-start;
+  margin-top: 2px;
+  background: none;
+  border: none;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #E05A5A;
+  cursor: pointer;
+  padding: 0;
+}
+
 .exampleHint {
   display: flex;
   flex-direction: column;

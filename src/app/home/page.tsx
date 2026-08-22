@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import SHAiBrand from '@/components/SHAiBrand';
 import BottomNav from '@/components/BottomNav';
@@ -248,6 +248,22 @@ export default function HomePage() {
   const [leapDismissed, setLeapDismissed] = useState(false);
   const [dailyFeedback, setDailyFeedback] = useState<string | null>(null);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [swipedItemId, setSwipedItemId] = useState<string | null>(null);
+  const [deletedLogIds, setDeletedLogIds] = useState<Set<string>>(new Set());
+  const touchStartX = useRef(0);
+
+  const handleDeleteItem = useCallback(async (logId: string) => {
+    const childId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
+    if (!childId) return;
+    setDeletedLogIds(prev => new Set([...prev, logId]));
+    setSwipedItemId(null);
+    const res = await fetch('/api/log/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ logIds: [logId], childId }),
+    });
+    if (!res.ok) setDeletedLogIds(prev => { const n = new Set(prev); n.delete(logId); return n; });
+  }, []);
 
   const childName         = homeData?.childName ?? cachedName;
   const totals            = homeData?.totals ?? null;
@@ -446,38 +462,59 @@ export default function HomePage() {
           <p className={styles.sectionLabel}>{fallbackDate ? 'Last logged meals' : "Today's meals"}</p>
           <div className={styles.mealList}>
             {meals.map((meal) => {
-              const content = (
-                <>
-                  <div className={styles.mealGroupHeader}>
-                    <p className={styles.mealGroupLabel}>{MEAL_LABELS[meal.meal_type] ?? meal.meal_type}</p>
-                    {!fallbackDate && (
+              const visibleItems = meal.items.filter(item => !deletedLogIds.has(item.id));
+              if (visibleItems.length === 0) return null;
+              return (
+                <div key={meal.meal_type} className={styles.mealGroup}>
+                  {!fallbackDate ? (
+                    <Link
+                      href={`/log?meal=${meal.meal_type}`}
+                      className={styles.mealGroupHeader}
+                      onClick={() => sessionStorage.setItem('shai_edit_meal', JSON.stringify({ meal_type: meal.meal_type, items: visibleItems }))}
+                    >
+                      <p className={styles.mealGroupLabel}>{MEAL_LABELS[meal.meal_type] ?? meal.meal_type}</p>
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={styles.editIcon}>
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                       </svg>
-                    )}
-                  </div>
-                  {meal.items.map((item, i) => (
-                    <div key={i} className={styles.mealItem}>
-                      <span className={styles.mealItemName}>{item.food_name}</span>
-                      {item.calories_kcal != null && (
-                        <span className={styles.mealItemCal}>{Math.round(item.calories_kcal)} kcal</span>
+                    </Link>
+                  ) : (
+                    <div className={styles.mealGroupHeader}>
+                      <p className={styles.mealGroupLabel}>{MEAL_LABELS[meal.meal_type] ?? meal.meal_type}</p>
+                    </div>
+                  )}
+                  {visibleItems.map((item) => (
+                    <div key={item.id} className={styles.mealItemWrap}>
+                      <div
+                        className={styles.mealItem}
+                        style={{ transform: swipedItemId === item.id ? 'translateX(-72px)' : 'translateX(0)', transition: 'transform 0.2s ease' }}
+                        onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+                        onTouchEnd={(e) => {
+                          const dx = e.changedTouches[0].clientX - touchStartX.current;
+                          if (dx < -40) { setSwipedItemId(item.id); e.preventDefault(); }
+                          else if (dx > 10 && swipedItemId === item.id) setSwipedItemId(null);
+                        }}
+                      >
+                        <span className={styles.mealItemName}>{item.food_name}</span>
+                        {item.calories_kcal != null && (
+                          <span className={styles.mealItemCal}>{Math.round(item.calories_kcal)} kcal</span>
+                        )}
+                      </div>
+                      {!fallbackDate && (
+                        <button
+                          className={styles.swipeDeleteBtn}
+                          style={{ opacity: swipedItemId === item.id ? 1 : 0, pointerEvents: swipedItemId === item.id ? 'auto' : 'none' }}
+                          onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }}
+                          aria-label="Delete"
+                        >
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                          </svg>
+                        </button>
                       )}
                     </div>
                   ))}
-                </>
-              );
-              return !fallbackDate ? (
-                <Link
-                  key={meal.meal_type}
-                  href={`/log?meal=${meal.meal_type}`}
-                  className={styles.mealGroup}
-                  onClick={() => sessionStorage.setItem('shai_edit_meal', JSON.stringify({ meal_type: meal.meal_type, items: meal.items }))}
-                >
-                  {content}
-                </Link>
-              ) : (
-                <div key={meal.meal_type} className={styles.mealGroup}>{content}</div>
+                </div>
               );
             })}
           </div>
