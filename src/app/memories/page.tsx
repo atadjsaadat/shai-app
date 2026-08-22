@@ -161,6 +161,8 @@ export default function JourneyPage() {
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const editRef = useRef<HTMLTextAreaElement>(null);
   const pinEnabledRef = useRef(false);
+  const winsSavingRef = useRef(false);
+  const winEditSavingRef = useRef(false);
 
   // Wins state
   const [wins, setWins] = useState<Win[]>(_c?.wins ?? []);
@@ -335,7 +337,8 @@ export default function JourneyPage() {
   };
 
   const handleWinEditSave = async () => {
-    if (!selectedWin || savingWinEdit) return;
+    if (!selectedWin || winEditSavingRef.current) return;
+    winEditSavingRef.current = true;
     setSavingWinEdit(true);
     try {
       let photo_url = selectedWin.photo_url;
@@ -367,7 +370,7 @@ export default function JourneyPage() {
         closeWinEdit();
       }
     } catch { /* network failure */ }
-    finally { setSavingWinEdit(false); }
+    finally { winEditSavingRef.current = false; setSavingWinEdit(false); }
   };
 
   const handleEditPhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -385,7 +388,8 @@ export default function JourneyPage() {
   };
 
   const handleWinSave = async () => {
-    if (winsSaving) return;
+    if (winsSavingRef.current) return;
+    winsSavingRef.current = true;
     setWinsSaving(true);
     try {
       let photo_url: string | null = null;
@@ -416,7 +420,7 @@ export default function JourneyPage() {
         if (photoPreview) { URL.revokeObjectURL(photoPreview); setPhotoPreview(null); }
       }
     } catch { /* network failure — button resets, form stays open */ }
-    finally { setWinsSaving(false); }
+    finally { winsSavingRef.current = false; setWinsSaving(false); }
   };
 
   // ── Journal handlers ─────────────────────────────────

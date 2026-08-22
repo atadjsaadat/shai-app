@@ -1111,8 +1111,9 @@
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.2s;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .winSaveBtn:disabled {
