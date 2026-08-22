@@ -605,7 +605,7 @@ export default function JourneyPage() {
 
       {/* ── Journal tab ── */}
       {activeTab === 'journal' && (locked
-        ? <JournalLockScreen onUnlock={() => setLocked(false)} />
+        ? <JournalLockScreen onUnlock={() => setLocked(false)} onCancel={() => switchTab('wins')} />
         : <>
           {!composing && entries.length > 0 && (
             <div className={styles.journalSearch}>

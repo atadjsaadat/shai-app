@@ -5,9 +5,10 @@ import styles from './JournalLockScreen.module.css';
 
 interface Props {
   onUnlock: () => void;
+  onCancel?: () => void;
 }
 
-export default function JournalLockScreen({ onUnlock }: Props) {
+export default function JournalLockScreen({ onUnlock, onCancel }: Props) {
   const [view, setView] = useState<'pin' | 'password'>('pin');
 
   // PIN view
@@ -151,6 +152,11 @@ export default function JournalLockScreen({ onUnlock }: Props) {
           <button className={styles.backLink} onClick={() => setView('pin')}>
             ← Back to PIN
           </button>
+          {onCancel && (
+            <button className={styles.backLink} onClick={onCancel}>
+              ← Back to wins
+            </button>
+          )}
         </div>
       </div>
     );
@@ -202,6 +208,11 @@ export default function JournalLockScreen({ onUnlock }: Props) {
         <button className={styles.forgotLink} onClick={showPasswordView}>
           Forgot PIN?
         </button>
+        {onCancel && (
+          <button className={styles.backLink} onClick={onCancel}>
+            ← Back to wins
+          </button>
+        )}
       </div>
     </div>
   );
