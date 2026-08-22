@@ -1061,18 +1061,15 @@ export default function LogPage() {
                     portionLabel={selectedPortion?.label}
                     isWin={isWin}
                     onWinToggle={() => {
-                      setIsWin(w => {
-                        if (!w) {
-                          setShowWinToast(true);
-                          if (!confettiFiredRef.current) {
-                            setShowConfetti(true);
-                            confettiFiredRef.current = true;
-                          }
-                          setTimeout(() => setShowWinToast(false), 2200);
-                        }
-                        return !w;
-                      });
+                      const next = !isWin;
+                      setIsWin(next);
                       setWinNote('');
+                      if (next && !confettiFiredRef.current) {
+                        confettiFiredRef.current = true;
+                        setShowWinToast(true);
+                        setShowConfetti(true);
+                        setTimeout(() => setShowWinToast(false), 2200);
+                      }
                     }}
                     isPinned={pinnedFavourites.has(item.food_name.toLowerCase().trim())}
                     onPinToggle={() => handlePinToggle(item)}
