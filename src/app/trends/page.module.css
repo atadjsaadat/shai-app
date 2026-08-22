@@ -538,11 +538,11 @@
 /* ── Premium upsell ──────────────────────────────────── */
 .premiumCard {
   background: var(--terra-light);
-  border-radius: 16px;
-  padding: 12px 16px;
+  border-radius: 14px;
+  padding: 10px 14px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   box-shadow: var(--card-shadow);
 }
 

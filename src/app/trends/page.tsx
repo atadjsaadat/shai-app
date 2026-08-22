@@ -827,17 +827,6 @@ export default function TrendsPage() {
         </>
       )}
 
-      {/* ── Premium upsell ── */}
-      {data?.tier === 'free' && (
-        <div className={styles.premiumCard}>
-          <p className={styles.premiumTitle}>See your full week</p>
-          <p className={styles.premiumText}>
-            SHAi Premium unlocks 7-day history, detailed trends, and pattern insights across weeks.
-          </p>
-          <div className={styles.premiumBadge}>Coming soon</div>
-        </div>
-      )}
-
       {/* ── Top foods ── */}
       {data?.topFoods && data.topFoods.length > 0 && (
         <section>
@@ -907,6 +896,16 @@ export default function TrendsPage() {
           </div>
           <AIDisclosure />
         </section>
+      )}
+
+      {/* ── Premium upsell ── */}
+      {data?.tier === 'free' && (
+        <div className={styles.premiumCard}>
+          <p className={styles.premiumTitle}>See your full week</p>
+          <p className={styles.premiumText}>
+            SHAi Premium is coming soon — unlock 7-day history, detailed trends, and pattern insights across weeks.
+          </p>
+        </div>
       )}
 
         </div>
