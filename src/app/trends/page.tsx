@@ -551,6 +551,11 @@ export default function TrendsPage() {
 
               {snapshotDate && data.days.some(d => d.date === snapshotDate) && (
                 <div className={styles.weekSnapshotPanel}>
+                  <button
+                    className={styles.weekSnapshotClose}
+                    onClick={() => { setSnapshotDate(null); setSnapshotEntries([]); setSnapshotIsHardDay(false); }}
+                    aria-label="Close"
+                  >×</button>
                   {snapshotLoading ? (
                     <p className={styles.snapshotLoading}>Loading…</p>
                   ) : snapshotIsHardDay ? (
