@@ -15,94 +15,6 @@ const FEED_COLOURS: Record<FeedType, string> = {
   expressed:'#7A9E7E',
 };
 
-const REMINDER_OPTIONS = [
-  { label: '1h',   mins: 60  },
-  { label: '1.5h', mins: 90  },
-  { label: '2h',   mins: 120 },
-  { label: '2.5h', mins: 150 },
-  { label: '3h',   mins: 180 },
-  { label: '3.5h', mins: 210 },
-  { label: '4h',   mins: 240 },
-];
-
-interface Alarm { dueAt: number; intervalMins: number }
-
-let _notifTimer: ReturnType<typeof setTimeout> | null = null;
-let _feedDueCallback: (() => void) | null = null;
-
-// Must be called from a user-gesture handler (button click) — browsers block
-// permission prompts from non-gesture contexts.
-async function requestNotificationPermission(): Promise<boolean> {
-  if (typeof window === 'undefined' || !('Notification' in window)) return false;
-  if (Notification.permission === 'granted') return true;
-  if (Notification.permission === 'denied') return false;
-  const result = await Notification.requestPermission();
-  return result === 'granted';
-}
-
-async function getPushSubscription(): Promise<PushSubscription | null> {
-  if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) return null;
-  if (Notification.permission !== 'granted') return null;
-  const reg = await navigator.serviceWorker.register('/sw.js');
-  await navigator.serviceWorker.ready;
-  const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
-  const existing = await reg.pushManager.getSubscription();
-  if (existing) return existing;
-  return reg.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: vapidKey,
-  });
-}
-
-async function syncAlarmServer(childId: string, alarm: { dueAt: number; intervalMins: number } | null): Promise<void> {
-  if (alarm) {
-    await fetch('/api/push/alarm', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ childId, dueAt: new Date(alarm.dueAt).toISOString(), intervalMins: alarm.intervalMins }),
-    });
-  } else {
-    await fetch('/api/push/alarm', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ childId }),
-    });
-  }
-}
-
-async function fireNotification(name: string | null, overdue = false): Promise<void> {
-  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
-  const title = 'Feed reminder';
-  const body = overdue
-    ? `Feed time passed for ${name ?? 'your little one'} — logging one now?`
-    : `Time for ${name ?? 'your little one'}'s next feed`;
-  const opts = { body, icon: '/icons/icon-192.png', badge: '/icons/icon-192.png', tag: 'feed-reminder', renotify: true };
-  // Mobile Chrome requires SW showNotification — new Notification() is desktop-only
-  if ('serviceWorker' in navigator) {
-    try {
-      const reg = await navigator.serviceWorker.ready;
-      await reg.showNotification(title, opts);
-      return;
-    } catch { /* fall through to desktop path */ }
-  }
-  new Notification(title, { body, icon: '/icons/icon-192.png' });
-}
-
-function scheduleNotification(dueAt: number, name: string | null): void {
-  if (_notifTimer != null) clearTimeout(_notifTimer);
-  const delay = dueAt - Date.now();
-  if (delay <= 0) {
-    fireNotification(name, true);
-    _feedDueCallback?.();
-    return;
-  }
-  _notifTimer = setTimeout(() => {
-    fireNotification(name);
-    _feedDueCallback?.();
-    _notifTimer = null;
-  }, delay);
-}
-
 interface FeedRecord {
   id: string;
   logged_at: string;
@@ -148,15 +60,6 @@ function timeSince(iso: string): string {
   const h = Math.floor(mins / 60);
   const m = mins % 60;
   return `${h}h${m > 0 ? ` ${m}m` : ''} ago`;
-}
-
-function timeUntil(ts: number): string {
-  const mins = Math.ceil((ts - Date.now()) / 60_000);
-  if (mins <= 0) return 'overdue';
-  if (mins < 90) return `in ${mins} min`;
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return `in ${h}h${m > 0 ? ` ${m}m` : ''}`;
 }
 
 function formatMins(mins: number): string {
@@ -231,14 +134,9 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
   const [totalBreastMinutes, setTotalBreastMinutes] = useState<number>(_feedsCache?.totalBreastMinutes ?? 0);
   const [totalAmountMl, setTotalAmountMl] = useState<number>(_feedsCache?.totalAmountMl ?? 0);
   const [loading, setLoading] = useState(true);
-  const [alarm, setAlarm] = useState<Alarm | null>(null);
-  const [reminderMins, setReminderMins] = useState<number | null>(null);
-  const [feedDue, setFeedDue] = useState(false);
-  const [tick, setTick] = useState(0);
   const [pullY, setPullY] = useState(0);
   const [refreshCounter, setRefreshCounter] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const alarmFiredRef = useRef(false);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -255,48 +153,11 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
   const [allergyContextFeed, setAllergyContextFeed] = useState<string | null>(null);
 
   useEffect(() => {
-    _feedDueCallback = () => setFeedDue(true);
-    return () => { _feedDueCallback = null; };
-  }, []);
-
-  useEffect(() => {
-    const id = setInterval(() => setTick(t => t + 1), 60_000);
-    return () => clearInterval(id);
-  }, []);
-
-  useEffect(() => {
-    if (alarm && alarm.dueAt > Date.now()) scheduleNotification(alarm.dueAt, childName);
-  }, [alarm, childName]);
-
-  useEffect(() => {
-    if (!alarm) return;
-    function onVisible() {
-      if (document.visibilityState === 'visible' && alarm && alarm.dueAt <= Date.now()) {
-        fireNotification(childName, true);
-        _feedDueCallback?.();
-      }
-    }
-    document.addEventListener('visibilitychange', onVisible);
-    return () => document.removeEventListener('visibilitychange', onVisible);
-  }, [alarm, childName]);
-
-  // Detect alarm firing via the minute tick — catches it even if app stayed open.
-  useEffect(() => {
-    if (!alarm) { alarmFiredRef.current = false; return; }
-    if (alarm.dueAt > Date.now()) { alarmFiredRef.current = false; return; }
-    if (alarmFiredRef.current) return;
-    alarmFiredRef.current = true;
-    fireNotification(childName, true);
-    _feedDueCallback?.();
-  }, [tick, alarm, childName]);
-
-  useEffect(() => {
     const lastAt = feeds[0]?.logged_at ?? null;
     const days = lastAt ? Math.floor((Date.now() - new Date(lastAt).getTime()) / 86_400_000) : null;
     onArchiveChange?.(totalCount > 0 && days !== null && days >= 14);
   }, [totalCount, feeds, onArchiveChange]);
 
-  // Pull-to-refresh — uses the container's own scrollTop, not document scroll
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -350,34 +211,6 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
     if (!cId) return;
     setChildId(cId);
 
-    const storedAlarmRaw = localStorage.getItem(STORAGE.feedAlarm(cId));
-    let loadedAlarm: Alarm | null = null;
-    try { if (storedAlarmRaw) loadedAlarm = JSON.parse(storedAlarmRaw); } catch { /* ignore */ }
-
-    const storedMinsRaw = localStorage.getItem(STORAGE.feedReminderMins(cId));
-    const loadedMins = storedMinsRaw ? Number(storedMinsRaw) : null;
-
-    if (loadedMins != null) {
-      setReminderMins(loadedMins);
-      const activeAlarm = (loadedAlarm && loadedAlarm.dueAt > Date.now())
-        ? loadedAlarm
-        : { dueAt: Date.now() + loadedMins * 60_000, intervalMins: loadedMins };
-      localStorage.setItem(STORAGE.feedAlarm(cId), JSON.stringify(activeAlarm));
-      setAlarm(activeAlarm);
-      // Re-sync server alarm and push subscription on every app open
-      syncAlarmServer(cId, activeAlarm).catch(() => {});
-      getPushSubscription()
-        .then(sub => {
-          if (!sub) return;
-          return fetch('/api/push/subscribe', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(sub),
-          });
-        })
-        .catch(() => {});
-    }
-
     fetch(`/api/newborn?childId=${cId}`)
       .then(r => r.json())
       .then(json => {
@@ -398,59 +231,11 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
           setNightFeedCount(nightFeedCount);
           setTotalBreastMinutes(totalBreastMinutes);
           setTotalAmountMl(totalAmountMl);
-
-          // If reminder is on and the alarm we set from now can be improved using
-          // the actual last feed time, update it — but only if last-feed-based
-          // dueAt is in the future and sooner than our current alarm.
-          if (loadedMins != null && feeds[0]?.logged_at) {
-            const fromFeed = new Date(feeds[0].logged_at).getTime() + loadedMins * 60_000;
-            const currentAlarmRaw = localStorage.getItem(STORAGE.feedAlarm(cId));
-            let currentDueAt = 0;
-            try { if (currentAlarmRaw) currentDueAt = JSON.parse(currentAlarmRaw).dueAt; } catch { /* ignore */ }
-            if (fromFeed > Date.now() && fromFeed < currentDueAt) {
-              const refined: Alarm = { dueAt: fromFeed, intervalMins: loadedMins };
-              localStorage.setItem(STORAGE.feedAlarm(cId), JSON.stringify(refined));
-              setAlarm(refined);
-            }
-          }
         }
         setLoading(false);
       })
       .catch(() => { setLoading(false); });
   }, [refreshCounter]);
-
-  async function applyReminder(mins: number | null) {
-    const cId = childId ?? localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
-    if (!cId) return;
-    setReminderMins(mins);
-    if (mins == null) {
-      localStorage.removeItem(STORAGE.feedReminderMins(cId));
-      localStorage.removeItem(STORAGE.feedAlarm(cId));
-      setAlarm(null);
-      syncAlarmServer(cId, null).catch(() => {});
-    } else {
-      localStorage.setItem(STORAGE.feedReminderMins(cId), String(mins));
-      const lastFeedAt = feeds[0]?.logged_at;
-      const fromFeed = lastFeedAt ? new Date(lastFeedAt).getTime() + mins * 60_000 : 0;
-      const dueAt = fromFeed > Date.now() ? fromFeed : Date.now() + mins * 60_000;
-      const newAlarm: Alarm = { dueAt, intervalMins: mins };
-      localStorage.setItem(STORAGE.feedAlarm(cId), JSON.stringify(newAlarm));
-      setAlarm(newAlarm);
-      // Request permission first (must be in click-handler context), then try push
-      requestNotificationPermission()
-        .then(() => getPushSubscription())
-        .then(sub => {
-          if (!sub) return;
-          return fetch('/api/push/subscribe', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(sub),
-          });
-        })
-        .catch(() => {});
-      syncAlarmServer(cId, newAlarm).catch(() => {});
-    }
-  }
 
   function toggleReaction(r: string) {
     setNoReaction(false);
@@ -512,31 +297,18 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
       if (!isNaN(ml)) setTotalAmountMl(prev => prev + ml);
     }
 
-    const alarmKey = STORAGE.feedAlarm(cId);
-    if (reminderMins != null) {
-      const newAlarm: Alarm = { dueAt: new Date(loggedAt).getTime() + reminderMins * 60_000, intervalMins: reminderMins };
-      localStorage.setItem(alarmKey, JSON.stringify(newAlarm));
-      setAlarm(newAlarm);
-      syncAlarmServer(cId, newAlarm).catch(() => {});
-    } else {
-      localStorage.removeItem(alarmKey);
-      setAlarm(null);
-    }
-
     if (ALLERGY_TRIGGER_REACTIONS.some(r => reactions.includes(r))) {
       const label = feedType === 'breast' ? 'Breast feed' : feedType === 'formula' ? 'Formula feed' : 'Expressed milk feed';
       setAllergyContextFeed(label);
       setAllergyPromptActive(true);
     }
 
-    setFeedDue(false);
     setShowForm(false);
     setSaving(false);
   }
 
   const lastFeed = feeds[0] ?? null;
   const todayFeeds = feeds.filter(f => isToday(f.logged_at));
-  const alarmOverdue = alarm ? alarm.dueAt <= Date.now() : false;
 
   const todayBreastMins = todayFeeds
     .filter(f => f.feed_type === 'breast' && f.duration_minutes != null)
@@ -752,17 +524,6 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
       {pullSpinner}
       <div style={contentStyle}>
 
-      {feedDue && (
-        <div className={styles.feedDueBanner}>
-          <span className={styles.feedDueBannerText}>
-            Time for {childName ?? 'your little one'}&apos;s feed!
-          </span>
-          <button className={styles.feedDueBannerDismiss} onClick={() => setFeedDue(false)}>
-            Got it
-          </button>
-        </div>
-      )}
-
       {(childName || ageDays != null) && (
         <div className={styles.header}>
           {childName && <p className={styles.headerName}>{childName}</p>}
@@ -770,7 +531,7 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
         </div>
       )}
 
-      <div className={`${styles.timerCard}${alarmOverdue ? ` ${styles.timerCardOverdue}` : ''}`}>
+      <div className={styles.timerCard}>
         <div className={styles.timerMain}>
           <p className={styles.timerLabel}>Last feed</p>
           <p className={styles.timerValue} suppressHydrationWarning>
@@ -797,64 +558,6 @@ export default function FeedsTab({ onArchiveChange }: { onArchiveChange?: (isArc
             <p className={styles.feedCounter}>{formatMl(totalAmountMl)} of milk logged in SHAi</p>
           )}
         </div>
-
-        {alarm && (
-          <div className={styles.alarmBox}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-            </svg>
-            <span suppressHydrationWarning>Next feed {timeUntil(alarm.dueAt)}</span>
-            <button
-              className={styles.alarmDismiss}
-              onClick={() => {
-                if (!childId) return;
-                localStorage.removeItem(STORAGE.feedAlarm(childId));
-                setAlarm(null);
-              }}
-              aria-label="Dismiss alarm"
-            >×</button>
-          </div>
-        )}
-
-        <div className={styles.reminderRow}>
-          <div className={styles.reminderLabelRow}>
-            <svg
-              className={`${styles.bellIcon}${reminderMins == null ? ` ${styles.bellRing}` : ''}`}
-              width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            >
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-            </svg>
-            <span className={styles.reminderLabel}>
-              {reminderMins != null
-                ? <><span className={styles.alarmSet}>Alarm set</span>{` · every ${REMINDER_OPTIONS.find(o => o.mins === reminderMins)?.label ?? `${reminderMins / 60}h`}`}</>
-                : 'Feed reminders'}
-            </span>
-          </div>
-          <button
-            className={`${styles.toggle}${reminderMins != null ? ` ${styles.toggleOn}` : ''}`}
-            onClick={() => applyReminder(reminderMins != null ? null : 180)}
-            aria-label="Toggle feed reminders"
-          >
-            <span className={styles.toggleThumb} />
-          </button>
-        </div>
-
-        {reminderMins != null && (
-          <div className={styles.intervalRow}>
-            {REMINDER_OPTIONS.map(o => (
-              <button
-                key={o.mins}
-                className={`${styles.intervalBtn}${reminderMins === o.mins ? ` ${styles.intervalBtnActive}` : ''}`}
-                onClick={() => applyReminder(o.mins)}
-              >
-                {o.label}
-              </button>
-            ))}
-          </div>
-        )}
-
       </div>
 
       {!showForm ? (

@@ -103,15 +103,6 @@ interface HomeApiResponse {
   lastFeed: LastFeed | null;
 }
 
-// Module-level cache — lives outside React, survives component unmounts.
-// On re-navigation the component remounts and reads from this synchronously
-// in useState initialisers, so the first render already has data. No spinner.
-//
-// cacheKey is date-only (stable within a day) and intentionally excludes
-// childId. The API URL includes childId when available, but on first visit
-// childId isn't in localStorage yet — it arrives in the response. If the
-// cacheKey were the full URL, the key would change between first and second
-// visit (no childId → has childId), causing a cache miss every time.
 let _homeCache: { cacheKey: string; data: HomeApiResponse } | null = null;
 
 function getCacheKey(): string {
@@ -165,15 +156,6 @@ function getMondayDate(): string {
 
 function formatApptTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-}
-
-function timeUntilAlarm(dueAt: number): string {
-  const mins = Math.ceil((dueAt - Date.now()) / 60_000);
-  if (mins <= 0) return 'overdue';
-  if (mins < 90) return `in ${mins} min`;
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return `in ${h}h${m > 0 ? ` ${m}m` : ''}`;
 }
 
 function timeSinceFeed(iso: string): string {
@@ -246,11 +228,8 @@ export default function HomePage() {
   const greeting = useMemo(getGreeting, []);
   const date = useMemo(getDate, []);
 
-  // Read from module-level cache synchronously — on re-navigation this is
-  // already populated so the very first render has data and loading = false.
   const [homeData, setHomeData] = useState<HomeApiResponse | null>(readCache);
 
-  // Seed name and avatar from localStorage for the header during first load.
   const [cachedName] = useState<string | null>(() =>
     typeof window !== 'undefined' ? localStorage.getItem(STORAGE.CHILD_NAME) : null
   );
@@ -261,21 +240,7 @@ export default function HomePage() {
   const [leapDismissed, setLeapDismissed] = useState(false);
   const [dailyFeedback, setDailyFeedback] = useState<string | null>(null);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
-  // Initialise synchronously so the card appears on the very first render
-  // without waiting for homeData or a useEffect cycle.
-  const [feedAlarm, setFeedAlarm] = useState<{ dueAt: number } | null>(() => {
-    if (typeof window === 'undefined') return null;
-    const cId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
-    if (!cId) return null;
-    try {
-      const stored = localStorage.getItem(STORAGE.feedAlarm(cId));
-      const parsed = stored ? (JSON.parse(stored) as { dueAt: number }) : null;
-      return parsed && parsed.dueAt > Date.now() ? parsed : null;
-    } catch { return null; }
-  });
-  const [, setAlarmTick] = useState(0);
 
-  // Derive everything from homeData — no intermediate state to go stale.
   const childName         = homeData?.childName ?? cachedName;
   const totals            = homeData?.totals ?? null;
   const targets           = homeData?.targets ?? null;
@@ -304,56 +269,13 @@ export default function HomePage() {
 
   useEffect(() => { fetchHomeData().catch(() => {}); }, [fetchHomeData]);
 
-  useEffect(() => {
-    const cId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID) ?? homeData?.childId;
-    if (!cId) return;
-    try {
-      const stored = localStorage.getItem(STORAGE.feedAlarm(cId));
-      const parsed = stored ? (JSON.parse(stored) as { dueAt: number }) : null;
-      setFeedAlarm(parsed && parsed.dueAt > Date.now() ? parsed : null);
-    } catch { /* ignore */ }
-  }, [homeData?.childId]);
-
-  useEffect(() => {
-    if (!feedAlarm) return;
-    const id = setInterval(() => setAlarmTick(t => t + 1), 60_000);
-    return () => clearInterval(id);
-  }, [feedAlarm]);
-
-  // Re-read alarm from localStorage whenever the home page becomes visible —
-  // needed because the alarm may have been set on the Feeds tab while the home
-  // component was mounted but off-screen (or the phone came back from lock screen).
-  useEffect(() => {
-    function onVisible() {
-      if (document.visibilityState !== 'visible') return;
-      const cId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
-      if (!cId) return;
-      try {
-        const stored = localStorage.getItem(STORAGE.feedAlarm(cId));
-        const parsed = stored ? (JSON.parse(stored) as { dueAt: number }) : null;
-        setFeedAlarm(parsed && parsed.dueAt > Date.now() ? parsed : null);
-      } catch { /* ignore */ }
-    }
-    document.addEventListener('visibilitychange', onVisible);
-    return () => document.removeEventListener('visibilitychange', onVisible);
-  }, []);
-
   const onRefresh = useCallback(async () => {
     _homeCache = null;
     localStorage.removeItem(STORAGE.dailyFeedback(localDate()));
     setDailyFeedback(null);
-    const cId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
-    if (cId) {
-      try {
-        const stored = localStorage.getItem(STORAGE.feedAlarm(cId));
-        const parsed = stored ? (JSON.parse(stored) as { dueAt: number }) : null;
-        setFeedAlarm(parsed && parsed.dueAt > Date.now() ? parsed : null);
-      } catch { setFeedAlarm(null); }
-    }
     await fetchHomeData();
   }, [fetchHomeData]);
 
-  // Daily feedback — auto-fetches when meals are logged, cached per day.
   useEffect(() => {
     const cached = localStorage.getItem(STORAGE.dailyFeedback(localDate()));
     if (cached) { setDailyFeedback(cached); return; }
@@ -423,20 +345,6 @@ export default function HomePage() {
         <SHAiBrand expression={hasMeals ? 'celebrating' : 'default'} width={88} />
         <p className={styles.shaiMessage}>{shaiMessage}</p>
       </div>
-
-      {feedAlarm && feedAlarm.dueAt > Date.now() && (
-        <Link href="/log" className={styles.feedAlarmCard} onClick={() => sessionStorage.setItem('shai_log_tab', 'feeds')}>
-          <div className={styles.feedAlarmLeft}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-            </svg>
-            <span className={styles.feedAlarmLabel} suppressHydrationWarning>Next feed {timeUntilAlarm(feedAlarm.dueAt)}</span>
-          </div>
-          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M8 5l5 5-5 5"/>
-          </svg>
-        </Link>
-      )}
 
       {homeData?.lastFeed && (
         <Link
