@@ -126,9 +126,9 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Only include foods logged on more than 2 distinct days; sort by frequency
+  // Only include foods logged on 2+ distinct days; sort by frequency
   const meals: MealFavourite[] = Array.from(foodDays.entries())
-    .filter(([, days]) => days.size > 2)
+    .filter(([, days]) => days.size > 1)
     .sort((a, b) => b[1].size - a[1].size)
     .slice(0, 5)
     .map(([norm, days]) => {
