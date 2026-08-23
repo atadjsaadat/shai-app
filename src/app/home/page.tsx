@@ -497,7 +497,7 @@ export default function HomePage() {
                           else if (dx > 10 && swipedItemId === item.id) setSwipedItemId(null);
                         }}
                       >
-                        <span className={styles.mealItemName}>{item.food_name}</span>
+                        <span className={styles.mealItemName} style={{ color: '#7A6255' }}>{item.food_name}</span>
                         <div className={styles.mealItemRight}>
                           {item.calories_kcal != null && (
                             <span className={styles.mealItemCal}>{Math.round(item.calories_kcal)} kcal</span>
