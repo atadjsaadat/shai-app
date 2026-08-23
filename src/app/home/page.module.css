@@ -490,6 +490,18 @@
   margin-top: 1px;
 }
 
+.comingUpApptIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #D0E4F0;
+  color: #2E5C7A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 .comingUpContent {
   flex: 1;
   display: flex;
