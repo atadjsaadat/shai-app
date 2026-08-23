@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import Link from 'next/link';
 import BottomNav from '@/components/BottomNav';
 import { STORAGE } from '@/lib/storage/keys';
 import AIDisclosure from '@/components/AIDisclosure';
@@ -59,14 +58,6 @@ interface WeekData {
   tier: string;
   topFoods: { name: string; count: number; category: string | null }[];
   feedDays: FeedDayData[];
-}
-
-interface WinEntry {
-  id: string;
-  logged_at: string;
-  win_type: string;
-  food_involved: string | null;
-  parent_note: string | null;
 }
 
 interface DayEntry {
@@ -205,29 +196,6 @@ function getMacroConfig(ageMonths: number): MacroConfig {
   };
 }
 
-const WIN_TYPE_LABELS: Record<string, string> = {
-  new_food:    'New food tried',
-  ate_well:    'Ate really well',
-  new_texture: 'New texture',
-  self_fed:    'Ate independently',
-  family_meal: 'Family meal',
-  other:       'Something else',
-};
-
-function formatWinDate(iso: string): string {
-  if (!iso) return '';
-  return new Date(iso).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
-}
-
-const WIN_CHIP_COLOURS: Record<string, { bg: string; text: string }> = {
-  new_food:    { bg: '#D4E8D6', text: '#4A7050' },
-  ate_well:    { bg: '#F0D5C8', text: '#9E5035' },
-  new_texture: { bg: '#D0E4F0', text: '#2E5C7A' },
-  self_fed:    { bg: '#F5E8C0', text: '#7A5810' },
-  family_meal: { bg: '#E4D8F0', text: '#5A3F80' },
-  other:       { bg: '#F0D8E4', text: '#803050' },
-};
-
 const MEAL_TYPE_LABELS: Record<string, string> = {
   breakfast: 'Breakfast',
   lunch: 'Lunch',
@@ -277,7 +245,6 @@ function getMondayDate(): string {
 interface TrendsCache {
   cacheKey: string;
   data: WeekData;
-  weekWins: WinEntry[];
   childId: string;
   childName: string | null;
 }
@@ -339,7 +306,6 @@ export default function TrendsPage() {
   const [data, setData] = useState<WeekData | null>(_c?.data ?? null);
   const [loading, setLoading] = useState<boolean>(!_c);
   const [noChild, setNoChild] = useState(false);
-  const [weekWins, setWeekWins] = useState<WinEntry[]>(_c?.weekWins ?? []);
   const [insight, setInsight] = useState<string | null>(null);
   const [insightLoading, setInsightLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -380,26 +346,17 @@ export default function TrendsPage() {
       const date = localDate();
       const monday = getMondayDate();
 
-      const [weekRes, winsRes] = await Promise.all([
-        fetch(`/api/trends/week?childId=${childId}&date=${date}&utcOffset=${offset}`),
-        fetch(`/api/wins?since=${monday}`),
-      ]);
+      const weekRes = await fetch(`/api/trends/week?childId=${childId}&date=${date}&utcOffset=${offset}`);
 
       let freshData: WeekData | null = null;
-      let freshWins: WinEntry[] = [];
 
       try {
         const json = await weekRes.json();
         if (!json.error) { freshData = json; setData(json); }
       } catch { /* silently fail */ }
 
-      try {
-        const winsJson = await winsRes.json();
-        if (winsJson.wins) { freshWins = winsJson.wins; setWeekWins(winsJson.wins); }
-      } catch { /* silently fail */ }
-
       if (freshData) {
-        _trendsCache = { cacheKey: getTrendsCacheKey(), data: freshData, weekWins: freshWins, childId, childName: name };
+        _trendsCache = { cacheKey: getTrendsCacheKey(), data: freshData, childId, childName: name };
       }
 
       setLoading(false);
@@ -500,9 +457,7 @@ export default function TrendsPage() {
 
   const displayMacroSplit = macroSplit;
   const displayBestDay = bestDay;
-  const displayWins = weekWins;
-
-  const onRefresh = useCallback(() => {
+const onRefresh = useCallback(() => {
     _trendsCache = null;
     localStorage.removeItem(STORAGE.weeklySummary(getMondayDate()));
     setInsight(null);
@@ -849,43 +804,7 @@ export default function TrendsPage() {
         </section>
       )}
 
-      {/* ── Wins ── */}
-      {displayWins.length > 0 && (
-        <section>
-          <p className={styles.sectionLabel}>
-            This week&apos;s wins <span className={styles.winsCount}>· {displayWins.length}</span>
-          </p>
-          <div className={styles.winsRow}>
-            {displayWins.slice(0, 3).map((w) => {
-              const c = WIN_CHIP_COLOURS[w.win_type] ?? WIN_CHIP_COLOURS['other'];
-              return (
-                <div key={w.id} className={styles.winChip} style={{ borderLeftColor: c.text }}>
-                  <div className={styles.winChipHeader}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill={c.text} stroke={c.text} strokeWidth="1" strokeLinejoin="round" className={styles.winStar} style={{ flexShrink: 0 }}>
-                      <polygon points="12,2 15.82,6.74 21.51,8.91 18.18,14.01 17.88,20.09 12,18.5 6.12,20.09 5.82,14.01 2.49,8.91 8.18,6.74"/>
-                    </svg>
-                    <span className={styles.winChipLabel}>{WIN_TYPE_LABELS[w.win_type] ?? w.win_type}</span>
-                    {w.logged_at && <span className={styles.winChipDate}>{formatWinDate(w.logged_at)}</span>}
-                  </div>
-                  {w.food_involved && (
-                    <p className={styles.winChipFood}>{w.food_involved}</p>
-                  )}
-                  {w.parent_note && (
-                    <p className={styles.winChipNote}>&ldquo;{w.parent_note}&rdquo;</p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          {displayWins.length > 3 && (
-            <Link href="/wins" className={styles.winsViewAll}>
-              View all {displayWins.length} wins →
-            </Link>
-          )}
-        </section>
-      )}
-
-      {/* ── SHAi's take ── */}
+{/* ── SHAi's take ── */}
       {(insightLoading || insight) && (
         <section>
           <p className={styles.sectionLabel}>SHAi&apos;s take</p>
