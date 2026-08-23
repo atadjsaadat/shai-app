@@ -30,8 +30,8 @@ const ACCENT_BOY     = '#C4714A'
 const ACCENT_GIRL    = '#E07A8F'
 const ACCENT_DEFAULT = '#C4714A'
 
-const WEIGHT_COLOR = '#C4714A'
-const HEIGHT_COLOR = '#D4A72C'
+const WEIGHT_COLOR = '#D4A72C'
+const HEIGHT_COLOR = '#C4714A'
 const HEAD_COLOR   = '#7A9E7E'
 
 function accentForSex(sex: string | null): string {
@@ -509,7 +509,7 @@ export default function GrowthPage() {
             </button>
             <button
               className={styles.saveBtn}
-              style={{ boxShadow: `0 4px 16px ${hexToRgba(tabAccent, 0.3)}` }}
+              style={{ background: tabAccent, boxShadow: `0 4px 16px ${hexToRgba(tabAccent, 0.3)}` }}
               onClick={handleSave}
               disabled={saving || deleting}
             >
@@ -525,7 +525,7 @@ export default function GrowthPage() {
       ) : (
         <button
           className={styles.addBtn}
-          style={{ boxShadow: `0 6px 20px ${hexToRgba(tabAccent, 0.35)}` }}
+          style={{ background: tabAccent, boxShadow: `0 6px 20px ${hexToRgba(tabAccent, 0.35)}` }}
           onClick={() => setShowForm(true)}
         >
           Record a measurement

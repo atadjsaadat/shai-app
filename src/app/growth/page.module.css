@@ -83,8 +83,8 @@
   margin-top: 4px;
 }
 
-.statCardWeight { background: #F5EAE4; }
-.statCardHeight { background: #FBF5E0; }
+.statCardWeight { background: #FBF5E0; }
+.statCardHeight { background: #F5EAE4; }
 .statCardHead   { background: #E8F2E9; }
 .statCardBmi    { background: var(--oat); }
 
