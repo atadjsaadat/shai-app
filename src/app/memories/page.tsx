@@ -633,6 +633,46 @@ export default function JourneyPage() {
         </button>
       </div>
 
+      {activeTab === 'wins' && (
+        <div className={styles.winsControls}>
+          <div className={styles.searchWrap}>
+            <svg className={styles.searchIcon} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input
+              className={styles.searchInput}
+              placeholder="Search wins…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {search && (
+              <button className={styles.searchClear} onClick={() => setSearch('')}>×</button>
+            )}
+          </div>
+          <div className={styles.filterRow}>
+            <button
+              className={styles.filterChip}
+              style={!activeFilter ? { background: '#3D2B1F', color: '#fff', borderColor: '#3D2B1F' } : {}}
+              onClick={() => setActiveFilter('')}
+            >All</button>
+            {WIN_TYPES.map((t) => {
+              const c = WIN_COLOURS[t.value];
+              const isActive = activeFilter === t.value;
+              return (
+                <button
+                  key={t.value}
+                  className={styles.filterChip}
+                  style={isActive
+                    ? { background: c.badge, color: '#fff', borderColor: c.badge }
+                    : { borderColor: c.badge, color: c.text }}
+                  onClick={() => setActiveFilter(isActive ? '' : t.value)}
+                >{t.label}</button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className={styles.tabScroll}>
       {/* ── Journal tab ── */}
       {activeTab === 'journal' && (locked
@@ -810,44 +850,6 @@ export default function JourneyPage() {
       {/* ── Wins tab ── */}
       {activeTab === 'wins' && (
         <>
-          <div className={styles.winsControls}>
-            <div className={styles.searchWrap}>
-              <svg className={styles.searchIcon} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-              </svg>
-              <input
-                className={styles.searchInput}
-                placeholder="Search wins…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              {search && (
-                <button className={styles.searchClear} onClick={() => setSearch('')}>×</button>
-              )}
-            </div>
-            <div className={styles.filterRow}>
-              <button
-                className={styles.filterChip}
-                style={!activeFilter ? { background: '#3D2B1F', color: '#fff', borderColor: '#3D2B1F' } : {}}
-                onClick={() => setActiveFilter('')}
-              >All</button>
-              {WIN_TYPES.map((t) => {
-                const c = WIN_COLOURS[t.value];
-                const isActive = activeFilter === t.value;
-                return (
-                  <button
-                    key={t.value}
-                    className={styles.filterChip}
-                    style={isActive
-                      ? { background: c.badge, color: '#fff', borderColor: c.badge }
-                      : { borderColor: c.badge, color: c.text }}
-                    onClick={() => setActiveFilter(isActive ? '' : t.value)}
-                  >{t.label}</button>
-                );
-              })}
-            </div>
-          </div>
-
           {winsLoading ? null : filteredWins.length === 0 ? (
             <div className={styles.winsEmpty}>
               <SHAiPresence expression="default" size={48} />
