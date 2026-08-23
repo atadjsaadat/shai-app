@@ -470,7 +470,7 @@ const onRefresh = useCallback(() => {
     <PullToRefresh onRefresh={onRefresh}>
     <div className={styles.page}>
       <header className={styles.topBar}>
-        <p className={styles.title}>Trends ✓</p>
+        <p className={styles.title}>Trends</p>
         {childName && <p className={styles.subtitle}>{childName}&apos;s week</p>}
       </header>
 
