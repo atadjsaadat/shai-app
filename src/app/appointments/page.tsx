@@ -7,7 +7,6 @@ import styles from './page.module.css'
 import type { Appointment, AppointmentType } from '@/lib/appointments/types'
 import { TYPE_LABELS, APPOINTMENT_COLOR } from '@/lib/appointments/types'
 import { VACCINE_SCHEDULE } from '@/lib/health-record/types'
-import type { VaccineGroup } from '@/lib/health-record/types'
 
 const APPOINTMENT_TYPES: AppointmentType[] = [
   'gp', 'paediatrician', 'health_visitor', 'dentist', 'hospital', 'specialist', 'vaccination', 'other',
@@ -31,23 +30,6 @@ const EMPTY_FORM: FormState = {
   location: '',
   notes: '',
   vaccine_keys: [],
-}
-
-function childAgeInMonthsAt(dobStr: string, atDateStr: string): number {
-  const dobFull = dobStr.length === 7 ? dobStr + '-01' : dobStr
-  const dob = new Date(dobFull)
-  const at = new Date(atDateStr + 'T12:00:00')
-  return (at.getFullYear() - dob.getFullYear()) * 12 + (at.getMonth() - dob.getMonth())
-}
-
-function getVaccineGroupForAge(ageMonths: number): VaccineGroup | null {
-  let best: VaccineGroup | null = null
-  let bestDiff = Infinity
-  for (const g of VACCINE_SCHEDULE) {
-    const diff = Math.abs(g.month - ageMonths)
-    if (diff < bestDiff) { bestDiff = diff; best = g }
-  }
-  return best
 }
 
 function vaccineDefByKey(key: string) {
@@ -153,7 +135,6 @@ export default function AppointmentsPage() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
-  const [childDob, setChildDob] = useState<string | null>(null)
 
   const today = todayString()
   const [calYear, setCalYear] = useState(() => new Date().getFullYear())
@@ -177,13 +158,6 @@ export default function AppointmentsPage() {
   }, [router])
 
   useEffect(() => { load() }, [load])
-
-  useEffect(() => {
-    fetch('/api/children')
-      .then(r => r.json())
-      .then(d => { if (d.childDob) setChildDob(d.childDob) })
-      .catch(() => {})
-  }, [])
 
   const now = new Date()
   const upcoming = appointments.filter(a => new Date(a.scheduled_at) >= now)
@@ -470,14 +444,7 @@ export default function AppointmentsPage() {
                 value={form.appointment_type}
                 onChange={e => {
                   const newType = e.target.value as AppointmentType | ''
-                  const update: Partial<FormState> = { appointment_type: newType }
-                  if (newType === 'vaccination' && !editingId && form.date && childDob) {
-                    const group = getVaccineGroupForAge(childAgeInMonthsAt(childDob, form.date))
-                    if (group) update.vaccine_keys = group.vaccines.map(v => v.key)
-                  } else if (newType !== 'vaccination') {
-                    update.vaccine_keys = []
-                  }
-                  setForm(f => ({ ...f, ...update }))
+                  setForm(f => ({ ...f, appointment_type: newType, vaccine_keys: newType !== 'vaccination' ? [] : f.vaccine_keys }))
                 }}
               >
                 <option value="">Select type</option>
@@ -487,21 +454,14 @@ export default function AppointmentsPage() {
               </select>
             </div>
 
-            {form.appointment_type === 'vaccination' && (() => {
-              const vaccineGroup = form.date && childDob
-                ? getVaccineGroupForAge(childAgeInMonthsAt(childDob, form.date))
-                : null
-              return (
-                <div className={styles.field}>
-                  <label className={styles.label}>Vaccines <span className={styles.optional}>(optional)</span></label>
-                  {!form.date ? (
-                    <p className={styles.vaccineHint}>Set a date above to see vaccine suggestions.</p>
-                  ) : !childDob ? (
-                    <p className={styles.vaccineHint}>Loading child profile…</p>
-                  ) : vaccineGroup ? (
-                    <div className={styles.vaccineList}>
-                      <p className={styles.vaccineGroupLabel}>{vaccineGroup.label}</p>
-                      {vaccineGroup.vaccines.map(v => (
+            {form.appointment_type === 'vaccination' && (
+              <div className={styles.field}>
+                <label className={styles.label}>Vaccines <span className={styles.optional}>(optional)</span></label>
+                <div className={styles.vaccineList}>
+                  {VACCINE_SCHEDULE.map(group => (
+                    <div key={group.label}>
+                      <p className={styles.vaccineGroupLabel}>{group.label}</p>
+                      {group.vaccines.map(v => (
                         <label key={v.key} className={styles.vaccineCheck}>
                           <input
                             type="checkbox"
@@ -520,10 +480,10 @@ export default function AppointmentsPage() {
                         </label>
                       ))}
                     </div>
-                  ) : null}
+                  ))}
                 </div>
-              )
-            })()}
+              </div>
+            )}
 
             <div className={styles.fieldRow}>
               <div className={styles.field}>
