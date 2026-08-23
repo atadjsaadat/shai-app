@@ -102,9 +102,9 @@
 }
 
 .segActiveJournal {
-  background: var(--terracotta);
-  color: #fff;
-  box-shadow: var(--btn-shadow-primary);
+  background: #D4A72C;
+  color: #3D2B1F;
+  box-shadow: 0 4px 12px rgba(212, 167, 44, 0.35);
 }
 
 .segActiveWins {
@@ -279,8 +279,8 @@
   gap: 8px;
   overflow: hidden;
   background:
-    linear-gradient(to right, rgba(190, 80, 60, 0.18) 1px, transparent 1px) 36px 0 / 1px 100% no-repeat,
-    var(--note-bg, #FDF8F5);
+    linear-gradient(to right, rgba(212, 167, 44, 0.4) 1px, transparent 1px) 36px 0 / 1px 100% no-repeat,
+    #FDFBF2;
   box-shadow: var(--card-shadow);
 }
 

@@ -13,14 +13,6 @@ import styles from './page.module.css';
 
 // ── Journal note colours (cycling per entry) ──────────
 
-const NOTE_COLOURS = [
-  '#FDF8F5', // whisper of terra
-  '#F5FAF6', // whisper of sage
-  '#F4F8FB', // whisper of blue
-  '#FDFBF2', // whisper of yellow
-  '#F8F5FC', // whisper of purple
-  '#FDF5F8', // whisper of pink
-];
 
 // ── Types ──────────────────────────────────────────────
 
@@ -270,13 +262,13 @@ export default function JourneyPage() {
   }, [wins, search, activeFilter]);
 
   const groupedEntries = useMemo(() => {
-    const groups = new Map<string, { dateLabel: string; items: { entry: JournalEntry; colourIdx: number }[] }>();
-    entries.forEach((entry, idx) => {
+    const groups = new Map<string, { dateLabel: string; items: { entry: JournalEntry }[] }>();
+    entries.forEach((entry) => {
       const d = new Date(entry.created_at);
       const dateKey = d.toISOString().slice(0, 10);
       const dateLabel = d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
       if (!groups.has(dateKey)) groups.set(dateKey, { dateLabel, items: [] });
-      groups.get(dateKey)!.items.push({ entry, colourIdx: idx });
+      groups.get(dateKey)!.items.push({ entry });
     });
     return Array.from(groups.entries()).map(([dateKey, val]) => ({ dateKey, ...val }));
   }, [entries]);
@@ -728,11 +720,10 @@ export default function JourneyPage() {
               {filteredGroupedEntries.map(group => (
                 <div key={group.dateKey} className={styles.entryGroup}>
                   <div className={styles.dateGroupHeader}>{group.dateLabel}</div>
-                  {group.items.map(({ entry, colourIdx }) => (
+                  {group.items.map(({ entry }) => (
                     <div
                       key={entry.id}
                       className={styles.entryCard}
-                      style={{ '--note-bg': NOTE_COLOURS[colourIdx % NOTE_COLOURS.length] } as React.CSSProperties}
                     >
                       {editingId === entry.id ? (
                         <>
