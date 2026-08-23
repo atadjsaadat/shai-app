@@ -519,20 +519,8 @@
 
 .filterRow {
   display: flex;
+  flex-wrap: wrap;
   gap: 7px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  padding-bottom: 2px;
-}
-
-.filterRow::-webkit-scrollbar { display: none; }
-
-@media (hover: hover) {
-  .filterRow {
-    flex-wrap: wrap;
-    overflow-x: visible;
-  }
 }
 
 .filterChip {
