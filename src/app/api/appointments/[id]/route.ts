@@ -20,10 +20,11 @@ export async function PATCH(
       const admin = createAdminClient()
       const { data: current } = await admin
         .from('appointments')
-        .select('child_id, vaccine_keys, scheduled_at')
+        .select('child_id, vaccine_keys, scheduled_at, attended')
         .eq('id', id)
         .single()
-      if (current?.vaccine_keys?.length) {
+      // Only tick vaccinations when transitioning from not-attended → attended
+      if (current && !current.attended && current.vaccine_keys?.length) {
         const givenDate = current.scheduled_at.slice(0, 10)
         await Promise.all(
           current.vaccine_keys.map((vk: string) =>
