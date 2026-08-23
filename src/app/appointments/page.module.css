@@ -147,7 +147,7 @@
 .input:focus,
 .select:focus,
 .textarea:focus {
-  border-color: var(--terracotta);
+  border-color: #7AA5C4;
 }
 
 .textarea {
