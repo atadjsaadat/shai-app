@@ -196,101 +196,101 @@ export default function WinsPage() {
         </button>
       </div>
 
-      {loading ? (
-        <div className="pageSpinner" />
-      ) : (
-        <div className="pageReady">
-      <div className={styles.controls}>
-        <div className={styles.searchWrap}>
-          <svg className={styles.searchIcon} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input
-            className={styles.searchInput}
-            placeholder="Search wins…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          {search && (
-            <button className={styles.searchClear} onClick={() => setSearch('')}>×</button>
-          )}
-        </div>
-
-        <div className={styles.filterRow}>
-          <button
-            className={styles.filterChip}
-            style={!activeFilter ? { background: '#3D2B1F', color: '#fff', borderColor: '#3D2B1F' } : {}}
-            onClick={() => setActiveFilter('')}
-          >
-            All
-          </button>
-          {WIN_TYPES.map((t) => {
-            const c = WIN_COLOURS[t.value];
-            const isActive = activeFilter === t.value;
-            return (
-              <button
-                key={t.value}
-                className={styles.filterChip}
-                style={isActive
-                  ? { background: c.badge, color: '#fff', borderColor: c.badge }
-                  : { borderColor: c.badge, color: c.text }}
-                onClick={() => setActiveFilter(isActive ? '' : t.value)}
-              >
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className={styles.content}>
-        {filteredWins.length === 0 ? (
-          <div className={styles.empty}>
-            <SHAiBrand expression="default" width={120} />
-            <p className={styles.emptyText}>
-              {wins.length === 0
-                ? 'Every little win belongs here — first tastes, brave bites, happy meals. Tap + to add your first one.'
-                : 'No wins match that search.'}
-            </p>
+      {!loading && (
+        <div className={styles.controls}>
+          <div className={styles.searchWrap}>
+            <svg className={styles.searchIcon} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input
+              className={styles.searchInput}
+              placeholder="Search wins…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {search && (
+              <button className={styles.searchClear} onClick={() => setSearch('')}>×</button>
+            )}
           </div>
-        ) : (
-          <div className={styles.list}>
-            {filteredWins.map((win) => {
-              const c = winColour(win.win_type);
+
+          <div className={styles.filterRow}>
+            <button
+              className={styles.filterChip}
+              style={!activeFilter ? { background: '#3D2B1F', color: '#fff', borderColor: '#3D2B1F' } : {}}
+              onClick={() => setActiveFilter('')}
+            >
+              All
+            </button>
+            {WIN_TYPES.map((t) => {
+              const c = WIN_COLOURS[t.value];
+              const isActive = activeFilter === t.value;
               return (
-                <div
-                  key={win.id}
-                  className={styles.card}
-                  style={!win.photo_url ? { background: c.bg } : {}}
-                  onClick={() => setSelectedWin(win)}
+                <button
+                  key={t.value}
+                  className={styles.filterChip}
+                  style={isActive
+                    ? { background: c.badge, color: '#fff', borderColor: c.badge }
+                    : { borderColor: c.badge, color: c.text }}
+                  onClick={() => setActiveFilter(isActive ? '' : t.value)}
                 >
-                  {win.photo_url ? (
-                    <>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={win.photo_url} alt="Food photo" className={styles.cardPhoto} />
-                      <span className={styles.badge} style={{ background: c.badge }}>
-                        {winTypeLabel(win.win_type)}
-                      </span>
-                      {win.food_involved && (
-                        <div className={styles.cardOverlay}>
-                          <span className={styles.overlayFood}>{win.food_involved}</span>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className={styles.cardText}>
-                      <span className={styles.tileType} style={{ color: c.badge }}>{winTypeLabel(win.win_type)}</span>
-                      {win.food_involved && <span className={styles.tileFood} style={{ color: c.text }}>{win.food_involved}</span>}
-                      <span className={styles.tileDate} style={{ color: c.text, opacity: 0.65 }}>{formatDateMedium(win.logged_at)}</span>
-                    </div>
-                  )}
-                </div>
+                  {t.label}
+                </button>
               );
             })}
           </div>
-        )}
-      </div>
-      </div>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="pageSpinner" />
+      ) : (
+        <div className={`pageReady ${styles.content}`}>
+          {filteredWins.length === 0 ? (
+            <div className={styles.empty}>
+              <SHAiBrand expression="default" width={120} />
+              <p className={styles.emptyText}>
+                {wins.length === 0
+                  ? 'Every little win belongs here — first tastes, brave bites, happy meals. Tap + to add your first one.'
+                  : 'No wins match that search.'}
+              </p>
+            </div>
+          ) : (
+            <div className={styles.list}>
+              {filteredWins.map((win) => {
+                const c = winColour(win.win_type);
+                return (
+                  <div
+                    key={win.id}
+                    className={styles.card}
+                    style={!win.photo_url ? { background: c.bg } : {}}
+                    onClick={() => setSelectedWin(win)}
+                  >
+                    {win.photo_url ? (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={win.photo_url} alt="Food photo" className={styles.cardPhoto} />
+                        <span className={styles.badge} style={{ background: c.badge }}>
+                          {winTypeLabel(win.win_type)}
+                        </span>
+                        {win.food_involved && (
+                          <div className={styles.cardOverlay}>
+                            <span className={styles.overlayFood}>{win.food_involved}</span>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className={styles.cardText}>
+                        <span className={styles.tileType} style={{ color: c.badge }}>{winTypeLabel(win.win_type)}</span>
+                        {win.food_involved && <span className={styles.tileFood} style={{ color: c.text }}>{win.food_involved}</span>}
+                        <span className={styles.tileDate} style={{ color: c.text, opacity: 0.65 }}>{formatDateMedium(win.logged_at)}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       )}
 
       {/* ── Win detail sheet ── */}
