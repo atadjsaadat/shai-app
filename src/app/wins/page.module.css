@@ -285,9 +285,10 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(0,0,0,0.45);
+  background: var(--cream);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.14);
   border: none;
-  color: #fff;
+  color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -302,9 +303,10 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(0,0,0,0.45);
+  background: var(--cream);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.14);
   border: none;
-  color: #fff;
+  color: #C0392B;
   cursor: pointer;
   display: flex;
   align-items: center;
