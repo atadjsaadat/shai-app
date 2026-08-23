@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { updateAppointment, deleteAppointment } from '@/lib/appointments/queries'
+import { upsertVaccination } from '@/lib/health-record/queries'
 import type { UpdateAppointmentInput } from '@/lib/appointments/types'
 
 export async function PATCH(
@@ -15,6 +16,23 @@ export async function PATCH(
   const body = await req.json() as UpdateAppointmentInput
 
   try {
+    if (body.attended === true) {
+      const admin = createAdminClient()
+      const { data: current } = await admin
+        .from('appointments')
+        .select('child_id, vaccine_keys, scheduled_at')
+        .eq('id', id)
+        .single()
+      if (current?.vaccine_keys?.length) {
+        const givenDate = current.scheduled_at.slice(0, 10)
+        await Promise.all(
+          current.vaccine_keys.map((vk: string) =>
+            upsertVaccination(current.child_id, user.id, vk, givenDate, null)
+          )
+        )
+      }
+    }
+
     const appointment = await updateAppointment(id, user.id, body)
     return NextResponse.json({ appointment })
   } catch {

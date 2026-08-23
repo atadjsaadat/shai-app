@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
       scheduled_at: body.scheduled_at,
       location: body.location?.trim() || undefined,
       notes: body.notes?.trim() || undefined,
+      vaccine_keys: body.vaccine_keys?.length ? body.vaccine_keys : undefined,
     })
     return NextResponse.json({ appointment })
   } catch {

@@ -353,6 +353,90 @@
   margin-left: auto;
 }
 
+/* ── Vaccine picker ── */
+.vaccineHint {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.vaccineGroupLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.vaccineList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vaccineCheck {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.vaccineCheck input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  accent-color: #7AA5C4;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.vaccineCheckText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.vaccineCheckName {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.vaccineCheckCovers {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* ── Card vaccines display ── */
+.cardVaccines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  background: #D0E4F0;
+  border-radius: 10px;
+}
+
+.cardVaccineItem {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.cardVaccineName {
+  font-size: 13px;
+  font-weight: 700;
+  color: #2E5C7A;
+}
+
+.cardVaccineCovers {
+  font-size: 12px;
+  color: #4A7A9B;
+  font-weight: 500;
+}
+
 /* ── Calendar ── */
 .calendar {
   background: var(--oat);

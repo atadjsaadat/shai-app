@@ -6,6 +6,8 @@ import BottomNav from '@/components/BottomNav'
 import styles from './page.module.css'
 import type { Appointment, AppointmentType } from '@/lib/appointments/types'
 import { TYPE_LABELS, APPOINTMENT_COLOR } from '@/lib/appointments/types'
+import { VACCINE_SCHEDULE } from '@/lib/health-record/types'
+import type { VaccineGroup } from '@/lib/health-record/types'
 
 const APPOINTMENT_TYPES: AppointmentType[] = [
   'gp', 'paediatrician', 'health_visitor', 'dentist', 'hospital', 'specialist', 'vaccination', 'other',
@@ -18,6 +20,7 @@ interface FormState {
   time: string
   location: string
   notes: string
+  vaccine_keys: string[]
 }
 
 const EMPTY_FORM: FormState = {
@@ -27,6 +30,32 @@ const EMPTY_FORM: FormState = {
   time: '',
   location: '',
   notes: '',
+  vaccine_keys: [],
+}
+
+function childAgeInMonthsAt(dobStr: string, atDateStr: string): number {
+  const dobFull = dobStr.length === 7 ? dobStr + '-01' : dobStr
+  const dob = new Date(dobFull)
+  const at = new Date(atDateStr + 'T12:00:00')
+  return (at.getFullYear() - dob.getFullYear()) * 12 + (at.getMonth() - dob.getMonth())
+}
+
+function getVaccineGroupForAge(ageMonths: number): VaccineGroup | null {
+  let best: VaccineGroup | null = null
+  let bestDiff = Infinity
+  for (const g of VACCINE_SCHEDULE) {
+    const diff = Math.abs(g.month - ageMonths)
+    if (diff < bestDiff) { bestDiff = diff; best = g }
+  }
+  return best
+}
+
+function vaccineDefByKey(key: string) {
+  for (const g of VACCINE_SCHEDULE) {
+    const v = g.vaccines.find(v => v.key === key)
+    if (v) return v
+  }
+  return null
 }
 
 const MONTH_NAMES = [
@@ -124,6 +153,7 @@ export default function AppointmentsPage() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [childDob, setChildDob] = useState<string | null>(null)
 
   const today = todayString()
   const [calYear, setCalYear] = useState(() => new Date().getFullYear())
@@ -147,6 +177,13 @@ export default function AppointmentsPage() {
   }, [router])
 
   useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    fetch('/api/children')
+      .then(r => r.json())
+      .then(d => { if (d.childDob) setChildDob(d.childDob) })
+      .catch(() => {})
+  }, [])
 
   const now = new Date()
   const upcoming = appointments.filter(a => new Date(a.scheduled_at) >= now)
@@ -183,6 +220,7 @@ export default function AppointmentsPage() {
       time,
       location: appt.location ?? '',
       notes: appt.notes ?? '',
+      vaccine_keys: appt.vaccine_keys ?? [],
     })
     setEditingId(appt.id)
     setFormError(null)
@@ -207,6 +245,7 @@ export default function AppointmentsPage() {
       scheduled_at: localToISO(form.date, form.time),
       location: form.location.trim() || undefined,
       notes: form.notes.trim() || undefined,
+      vaccine_keys: form.vaccine_keys.length ? form.vaccine_keys : undefined,
     }
     try {
       if (editingId) {
@@ -293,6 +332,19 @@ export default function AppointmentsPage() {
         {expanded && (
           <div className={styles.cardExpanded}>
             {appt.notes && <p className={styles.cardNotes}>{appt.notes}</p>}
+            {(appt.vaccine_keys?.length ?? 0) > 0 && (
+              <div className={styles.cardVaccines}>
+                {appt.vaccine_keys!.map(k => {
+                  const v = vaccineDefByKey(k)
+                  return v ? (
+                    <div key={k} className={styles.cardVaccineItem}>
+                      <span className={styles.cardVaccineName}>{v.name}</span>
+                      <span className={styles.cardVaccineCovers}>{v.covers}</span>
+                    </div>
+                  ) : null
+                })}
+              </div>
+            )}
             <div className={styles.cardActions}>
               <button
                 className={`${styles.attendBtn}${appt.attended ? ` ${styles.attendBtnActive}` : ''}`}
@@ -416,7 +468,17 @@ export default function AppointmentsPage() {
               <select
                 className={styles.select}
                 value={form.appointment_type}
-                onChange={e => setForm(f => ({ ...f, appointment_type: e.target.value as AppointmentType | '' }))}
+                onChange={e => {
+                  const newType = e.target.value as AppointmentType | ''
+                  const update: Partial<FormState> = { appointment_type: newType }
+                  if (newType === 'vaccination' && !editingId && form.date && childDob) {
+                    const group = getVaccineGroupForAge(childAgeInMonthsAt(childDob, form.date))
+                    if (group) update.vaccine_keys = group.vaccines.map(v => v.key)
+                  } else if (newType !== 'vaccination') {
+                    update.vaccine_keys = []
+                  }
+                  setForm(f => ({ ...f, ...update }))
+                }}
               >
                 <option value="">Select type</option>
                 {APPOINTMENT_TYPES.map(t => (
@@ -424,6 +486,44 @@ export default function AppointmentsPage() {
                 ))}
               </select>
             </div>
+
+            {form.appointment_type === 'vaccination' && (() => {
+              const vaccineGroup = form.date && childDob
+                ? getVaccineGroupForAge(childAgeInMonthsAt(childDob, form.date))
+                : null
+              return (
+                <div className={styles.field}>
+                  <label className={styles.label}>Vaccines <span className={styles.optional}>(optional)</span></label>
+                  {!form.date ? (
+                    <p className={styles.vaccineHint}>Set a date above to see vaccine suggestions.</p>
+                  ) : !childDob ? (
+                    <p className={styles.vaccineHint}>Loading child profile…</p>
+                  ) : vaccineGroup ? (
+                    <div className={styles.vaccineList}>
+                      <p className={styles.vaccineGroupLabel}>{vaccineGroup.label}</p>
+                      {vaccineGroup.vaccines.map(v => (
+                        <label key={v.key} className={styles.vaccineCheck}>
+                          <input
+                            type="checkbox"
+                            checked={form.vaccine_keys.includes(v.key)}
+                            onChange={e => setForm(f => ({
+                              ...f,
+                              vaccine_keys: e.target.checked
+                                ? [...f.vaccine_keys, v.key]
+                                : f.vaccine_keys.filter(k => k !== v.key)
+                            }))}
+                          />
+                          <span className={styles.vaccineCheckText}>
+                            <span className={styles.vaccineCheckName}>{v.name}</span>
+                            <span className={styles.vaccineCheckCovers}>{v.covers}</span>
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              )
+            })()}
 
             <div className={styles.fieldRow}>
               <div className={styles.field}>

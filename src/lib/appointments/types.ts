@@ -18,6 +18,7 @@ export interface Appointment {
   location: string | null
   notes: string | null
   attended: boolean | null
+  vaccine_keys: string[] | null
   created_at: string
   updated_at: string
 }
@@ -28,6 +29,7 @@ export interface CreateAppointmentInput {
   scheduled_at: string
   location?: string
   notes?: string
+  vaccine_keys?: string[]
 }
 
 export interface UpdateAppointmentInput {
@@ -37,6 +39,7 @@ export interface UpdateAppointmentInput {
   location?: string | null
   notes?: string | null
   attended?: boolean | null
+  vaccine_keys?: string[]
 }
 
 export const TYPE_LABELS: Record<AppointmentType, string> = {
