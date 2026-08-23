@@ -55,12 +55,12 @@ export default function WinsPage() {
   const router = useRouter();
   const [wins, setWins] = useState<Win[]>(_winsCache ?? []);
   const [loading, setLoading] = useState(_winsCache === null);
-  const [showForm, setShowForm] = useState(false);
+  const [formMode, setFormMode] = useState<'closed' | 'open' | 'saving'>('closed');
+  const savingRef = useRef(false);
   const [selectedWin, setSelectedWin] = useState<Win | null>(null);
   const [winType, setWinType] = useState('new_food');
   const [foodInvolved, setFoodInvolved] = useState('');
   const [parentNote, setParentNote] = useState('');
-  const [saving, setSaving] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -131,36 +131,40 @@ export default function WinsPage() {
   };
 
   const handleSave = async () => {
-    if (saving) return;
-    setSaving(true);
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setFormMode('saving');
+    let succeeded = false;
+    try {
+      let photo_url: string | null = null;
+      if (photoFile) {
+        const compressed = await compressPhoto(photoFile);
+        const form = new FormData();
+        form.append('photo', compressed, 'photo.jpg');
+        const uploadRes = await fetch('/api/wins/upload', { method: 'POST', body: form });
+        const uploadJson = await uploadRes.json();
+        photo_url = uploadJson.url ?? null;
+      }
 
-    let photo_url: string | null = null;
-    if (photoFile) {
-      const compressed = await compressPhoto(photoFile);
-      const form = new FormData();
-      form.append('photo', compressed, 'photo.jpg');
-      const uploadRes = await fetch('/api/wins/upload', { method: 'POST', body: form });
-      const uploadJson = await uploadRes.json();
-      photo_url = uploadJson.url ?? null;
-    }
-
-    const res = await fetch('/api/wins', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ win_type: winType, food_involved: foodInvolved, parent_note: parentNote, photo_url }),
-    });
-    const json = await res.json();
-    if (json.win) {
-      setWins((prev) => [json.win, ...prev]);
-      setShowConfetti(true);
-      setShowForm(false);
-      setWinType('new_food');
-      setFoodInvolved('');
-      setParentNote('');
-      setPhotoFile(null);
-      if (photoPreview) { URL.revokeObjectURL(photoPreview); setPhotoPreview(null); }
-    }
-    setSaving(false);
+      const res = await fetch('/api/wins', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ win_type: winType, food_involved: foodInvolved, parent_note: parentNote, photo_url }),
+      });
+      const json = await res.json();
+      if (json.win) {
+        setWins((prev) => [json.win, ...prev]);
+        setShowConfetti(true);
+        setWinType('new_food');
+        setFoodInvolved('');
+        setParentNote('');
+        setPhotoFile(null);
+        if (photoPreview) { URL.revokeObjectURL(photoPreview); setPhotoPreview(null); }
+        succeeded = true;
+      }
+    } catch { /* network failure */ }
+    savingRef.current = false;
+    setFormMode(succeeded ? 'closed' : 'open');
   };
 
   return (
@@ -170,7 +174,7 @@ export default function WinsPage() {
       {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
       <div className={styles.header}>
         <h1 className={styles.title}>Win Jar</h1>
-        <button className={styles.addBtn} onClick={() => setShowForm(true)} aria-label="Add win">
+        <button className={styles.addBtn} onClick={() => setFormMode('open')} aria-label="Add win">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
@@ -377,8 +381,8 @@ export default function WinsPage() {
       })()}
 
       {/* ── Add form overlay ── */}
-      {showForm && (
-        <div className={styles.overlay} onClick={() => setShowForm(false)}>
+      {formMode !== 'closed' && (
+        <div className={styles.overlay} onClick={() => { if (formMode !== 'saving') setFormMode('closed'); }}>
           <div className={styles.form} onClick={(e) => e.stopPropagation()}>
             <h2 className={styles.formTitle}>Add a win</h2>
 
@@ -443,9 +447,9 @@ export default function WinsPage() {
             />
 
             <div className={styles.formBtns}>
-              <button className={styles.cancelBtn} onClick={() => setShowForm(false)}>Cancel</button>
-              <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
-                {saving ? 'Saving…' : 'Save win'}
+              <button className={styles.cancelBtn} onClick={() => setFormMode('closed')} disabled={formMode === 'saving'}>Cancel</button>
+              <button className={styles.saveBtn} onClick={handleSave} disabled={formMode === 'saving'}>
+                {formMode === 'saving' ? 'Saving…' : 'Save win'}
               </button>
             </div>
           </div>

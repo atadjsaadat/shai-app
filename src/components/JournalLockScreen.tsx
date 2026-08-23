@@ -36,6 +36,7 @@ export default function JournalLockScreen({ onUnlock, onCancel }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pin: fullPin }),
       });
+      if (res.status === 401) { window.location.href = '/login'; return; }
       const { valid } = await res.json();
       if (valid) {
         unlock();
