@@ -49,15 +49,15 @@
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: var(--terracotta);
+  background: #D4A72C;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: #3D2B1F;
   flex-shrink: 0;
-  box-shadow: var(--btn-shadow-primary);
+  box-shadow: 0 4px 12px rgba(212, 167, 44, 0.35);
 }
 
 .addWinBtn {
@@ -307,8 +307,8 @@
 .entryAgeChip {
   font-size: 10px;
   font-weight: 700;
-  color: var(--terra-dark);
-  background: var(--terra-light);
+  color: #7A5810;
+  background: #F5E8C0;
   padding: 2px 8px;
   border-radius: 20px;
 }
