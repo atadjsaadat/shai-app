@@ -548,7 +548,7 @@ export default function HomePage() {
 
       {hasMeals && !fallbackDate && (feedbackLoading || dailyFeedback) && (
         <section>
-          <p className={styles.sectionLabel}>Today at a glance</p>
+          <p className={styles.sectionLabel}>Today in real time</p>
           <div className={styles.insightCard}>
             {feedbackLoading ? (
               <p className={styles.insightLoading}>SHAi is thinking…</p>
