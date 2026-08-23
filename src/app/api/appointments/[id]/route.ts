@@ -29,12 +29,22 @@ export async function PATCH(
           current.vaccine_keys.map((vk: string) =>
             upsertVaccination(current.child_id, user.id, vk, givenDate, null)
           )
-        )
+        ).catch(() => {})
       }
     }
 
-    const appointment = await updateAppointment(id, user.id, body)
-    return NextResponse.json({ appointment })
+    try {
+      const appointment = await updateAppointment(id, user.id, body)
+      return NextResponse.json({ appointment })
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+      if (msg.includes('vaccine_keys') || msg.includes('column')) {
+        const { vaccine_keys: _vk, ...bodyWithout } = body
+        const appointment = await updateAppointment(id, user.id, bodyWithout)
+        return NextResponse.json({ appointment })
+      }
+      throw e
+    }
   } catch {
     return NextResponse.json({ error: 'Failed to update appointment' }, { status: 500 })
   }

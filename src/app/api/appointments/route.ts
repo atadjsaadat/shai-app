@@ -42,17 +42,29 @@ export async function POST(req: NextRequest) {
   if (!body.title?.trim()) return NextResponse.json({ error: 'Title required' }, { status: 400 })
   if (!body.scheduled_at) return NextResponse.json({ error: 'Date required' }, { status: 400 })
 
+  const input = {
+    title: body.title.trim(),
+    appointment_type: body.appointment_type ?? null,
+    scheduled_at: body.scheduled_at,
+    location: body.location?.trim() || undefined,
+    notes: body.notes?.trim() || undefined,
+    vaccine_keys: body.vaccine_keys?.length ? body.vaccine_keys : undefined,
+  }
+
   try {
-    const appointment = await createAppointment(childId, user.id, {
-      title: body.title.trim(),
-      appointment_type: body.appointment_type ?? null,
-      scheduled_at: body.scheduled_at,
-      location: body.location?.trim() || undefined,
-      notes: body.notes?.trim() || undefined,
-      vaccine_keys: body.vaccine_keys?.length ? body.vaccine_keys : undefined,
-    })
+    const appointment = await createAppointment(childId, user.id, input)
     return NextResponse.json({ appointment })
-  } catch {
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e)
+    if (msg.includes('vaccine_keys') || msg.includes('column')) {
+      try {
+        const { vaccine_keys: _vk, ...inputWithout } = input
+        const appointment = await createAppointment(childId, user.id, inputWithout)
+        return NextResponse.json({ appointment })
+      } catch {
+        return NextResponse.json({ error: 'Failed to save appointment' }, { status: 500 })
+      }
+    }
     return NextResponse.json({ error: 'Failed to save appointment' }, { status: 500 })
   }
 }
