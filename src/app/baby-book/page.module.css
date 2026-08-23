@@ -12,10 +12,10 @@
 }
 
 .title {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 800;
   color: var(--text-primary);
-  margin: 0 0 4px;
+  margin: 0;
 }
 
 .subtitle {
