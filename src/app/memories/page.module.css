@@ -277,6 +277,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  position: relative;
   overflow: hidden;
   background:
     linear-gradient(to right, rgba(212, 167, 44, 0.4) 1px, transparent 1px) 36px 0 / 1px 100% no-repeat,
@@ -325,21 +326,10 @@
   gap: 6px;
 }
 
-.iconBtn {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
+.entryControlsRow {
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.iconBtn:hover {
-  background: var(--oat-dark);
+  gap: 8px;
 }
 
 .entryContent {
