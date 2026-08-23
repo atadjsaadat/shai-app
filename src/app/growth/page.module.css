@@ -447,10 +447,17 @@
   flex-shrink: 0;
 }
 
-.measurementClose {
+.measurementControls {
   position: absolute;
   top: 14px;
   right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+}
+
+.measurementClose {
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -462,13 +469,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10;
 }
 
 .measurementDelete {
-  position: absolute;
-  top: 14px;
-  left: 14px;
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -480,7 +483,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10;
 }
 
 .measurementBody {
@@ -602,16 +604,15 @@
 .measurementEditBtn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: var(--oat);
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: var(--cream);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.14);
   border: none;
-  border-radius: 14px;
-  padding: 14px 16px;
+  color: var(--terracotta);
   font-family: inherit;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--text-secondary);
   cursor: pointer;
-  width: 100%;
-  box-shadow: var(--card-shadow);
 }
