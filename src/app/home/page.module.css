@@ -69,18 +69,14 @@
 
 .lastFeedDismiss {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--cream);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.14);
+  top: 12px;
+  right: 14px;
+  background: none;
   border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary);
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0;
   z-index: 1;
