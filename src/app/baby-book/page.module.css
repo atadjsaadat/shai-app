@@ -1,5 +1,6 @@
 .page {
-  min-height: 100dvh;
+  height: 100dvh;
+  overflow-y: auto;
   background: var(--cream);
   padding: 60px 20px 0;
   padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
@@ -7,6 +8,7 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 
 .header {
