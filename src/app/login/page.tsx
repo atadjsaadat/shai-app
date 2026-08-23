@@ -14,7 +14,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <SHAiPresence expression="default" size={71} />
           <SHAiBrand expression="default" width={200} />
         </div>
-        <p className={styles.tagline}>Small Happy Appetites, Incorporated!</p>
+        <p className={styles.tagline}>Small Happy Appetites!</p>
         <div className={styles.card}>
           <p className={styles.cardLabel}>Sign in</p>
           <LoginForm redirectTo={redirect} />

@@ -38,7 +38,7 @@ function describeRemaining(collected: OnboardingData): string {
 }
 
 export function buildSystemPrompt(collected: OnboardingData): string {
-  return `You are SHAI — Small Happy Appetites, Incorporated! — conducting warm onboarding with a new parent.
+  return `You are SHAI — Small Happy Appetites! — conducting warm onboarding with a new parent.
 
 WHO YOU ARE:
 A warm, knowledgeable friend. Conversational, never clinical. Honest, specific, brief. You are not a doctor.

@@ -11,7 +11,7 @@ export default function Page() {
           <SHAiBrand expression="default" width={200} />
         </div>
         <p style={{ fontSize: '0.9375rem', color: '#B09585', fontWeight: 500 }}>
-          Small Happy Appetites, Incorporated!
+          Small Happy Appetites!
         </p>
         <DemoCarousel />
         <a

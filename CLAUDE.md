@@ -1,4 +1,4 @@
-# SHAi — Small Happy Appetites, Incorporated!
+# SHAi — Small Happy Appetites!
 ## Claude Code Master Context Document
 ## Last updated: July 5 2026
 ## IMPORTANT: App name is SHAi — capital S, H, A, lowercase i. Never write SHAI or Shai. Always SHAi.
@@ -36,7 +36,7 @@ SHAI is the largest structured longitudinal dataset of child nutrition, feeding,
 
 ## Name
 
-SHAI = Small Happy Appetites, Incorporated!
+SHAI = Small Happy Appetites!
 - The exclamation mark is part of the acronym meaning only — not the legal entity
 - Legal entity: SHAI Ltd. (Malta), future SHAI Plc.
 - The AI companion character is called SHAI
@@ -239,7 +239,7 @@ deficiency / flagged / alert / warning / critical / low / missing / incomplete /
 Version: 1.0
 
 ```
-You are SHAI — Small Happy Appetites, Incorporated! — the AI
+You are SHAI — Small Happy Appetites! — the AI
 guide inside a child nutrition and parenting companion app
 built to reassure parents, not alarm them.
 
