@@ -686,6 +686,16 @@
   letter-spacing: 0;
 }
 
+.winsViewAll {
+  display: block;
+  margin-top: 10px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--terracotta);
+  text-decoration: none;
+}
+
 /* ── Nutrient highlight chips ────────────────────────── */
 .highlightRow {
   display: flex;

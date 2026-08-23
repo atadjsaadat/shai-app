@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Link from 'next/link';
 import BottomNav from '@/components/BottomNav';
 import { STORAGE } from '@/lib/storage/keys';
 import AIDisclosure from '@/components/AIDisclosure';
@@ -855,7 +856,7 @@ export default function TrendsPage() {
             This week&apos;s wins <span className={styles.winsCount}>· {displayWins.length}</span>
           </p>
           <div className={styles.winsRow}>
-            {displayWins.map((w) => {
+            {displayWins.slice(0, 3).map((w) => {
               const c = WIN_CHIP_COLOURS[w.win_type] ?? WIN_CHIP_COLOURS['other'];
               return (
                 <div key={w.id} className={styles.winChip} style={{ borderLeftColor: c.text }}>
@@ -876,6 +877,11 @@ export default function TrendsPage() {
               );
             })}
           </div>
+          {displayWins.length > 3 && (
+            <Link href="/wins" className={styles.winsViewAll}>
+              View all {displayWins.length} wins →
+            </Link>
+          )}
         </section>
       )}
 
