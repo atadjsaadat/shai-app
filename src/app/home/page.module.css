@@ -338,7 +338,7 @@
 .mealItemName {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   text-transform: capitalize;
 }
 
