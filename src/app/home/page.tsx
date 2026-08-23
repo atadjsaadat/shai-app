@@ -62,6 +62,13 @@ const MEAL_LABELS: Record<string, string> = {
   snack: 'Snack',
 };
 
+const MEAL_COLOURS: Record<string, string> = {
+  breakfast: '#D4A72C',
+  lunch:     '#7A9E7E',
+  dinner:    '#C4714A',
+  snack:     '#A67BC4',
+};
+
 const WIN_LABELS: Record<string, string> = {
   new_food:    'New food tried',
   ate_well:    'Ate really well',
@@ -459,7 +466,7 @@ export default function HomePage() {
               return (
                 <div key={meal.meal_type} className={styles.mealGroup}>
                   <div className={styles.mealGroupHeader}>
-                    <p className={styles.mealGroupLabel}>{MEAL_LABELS[meal.meal_type] ?? meal.meal_type}</p>
+                    <p className={styles.mealGroupLabel} style={{ color: MEAL_COLOURS[meal.meal_type] ?? 'var(--text-muted)' }}>{MEAL_LABELS[meal.meal_type] ?? meal.meal_type}</p>
                   </div>
                   {visibleItems.map((item) => (
                     <div key={item.id} className={styles.mealItemWrap}>
