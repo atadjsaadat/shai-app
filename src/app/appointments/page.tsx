@@ -135,6 +135,7 @@ export default function AppointmentsPage() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [titleAutoFilled, setTitleAutoFilled] = useState(false)
 
   const today = todayString()
   const [calYear, setCalYear] = useState(() => new Date().getFullYear())
@@ -182,6 +183,7 @@ export default function AppointmentsPage() {
     setForm({ ...EMPTY_FORM, date: selectedDay ?? today })
     setEditingId(null)
     setFormError(null)
+    setTitleAutoFilled(false)
     setShowForm(true)
   }
 
@@ -198,6 +200,7 @@ export default function AppointmentsPage() {
     })
     setEditingId(appt.id)
     setFormError(null)
+    setTitleAutoFilled(false)
     setShowForm(true)
     setExpandedId(null)
   }
@@ -206,6 +209,7 @@ export default function AppointmentsPage() {
     setShowForm(false)
     setEditingId(null)
     setFormError(null)
+    setTitleAutoFilled(false)
   }
 
   async function handleSave() {
@@ -433,7 +437,7 @@ export default function AppointmentsPage() {
                 className={styles.input}
                 placeholder="e.g. 6-month check"
                 value={form.title}
-                onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                onChange={e => { setTitleAutoFilled(false); setForm(f => ({ ...f, title: e.target.value })) }}
               />
             </div>
 
@@ -466,12 +470,19 @@ export default function AppointmentsPage() {
                           <input
                             type="checkbox"
                             checked={form.vaccine_keys.includes(v.key)}
-                            onChange={e => setForm(f => ({
-                              ...f,
-                              vaccine_keys: e.target.checked
-                                ? [...f.vaccine_keys, v.key]
-                                : f.vaccine_keys.filter(k => k !== v.key)
-                            }))}
+                            onChange={e => {
+                              setForm(f => {
+                                const newKeys = e.target.checked
+                                  ? [...f.vaccine_keys, v.key]
+                                  : f.vaccine_keys.filter(k => k !== v.key)
+                                if (titleAutoFilled || !f.title.trim()) {
+                                  setTitleAutoFilled(newKeys.length > 0)
+                                  const names = newKeys.map(k => vaccineDefByKey(k)?.name).filter(Boolean).join(', ')
+                                  return { ...f, vaccine_keys: newKeys, title: names }
+                                }
+                                return { ...f, vaccine_keys: newKeys }
+                              })
+                            }}
                           />
                           <span className={styles.vaccineCheckText}>
                             <span className={styles.vaccineCheckName}>{v.name}</span>
