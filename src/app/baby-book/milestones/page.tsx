@@ -17,7 +17,6 @@ import { STORAGE } from '@/lib/storage/keys';
 import { formatAge, formatDateLong } from '@/lib/format/dates';
 import styles from './page.module.css';
 
-const FREE_LIMIT = 3;
 
 function hexToRgba(hex: string, alpha: number): string {
   const r = parseInt(hex.slice(1, 3), 16)
@@ -108,7 +107,6 @@ const MILESTONE_TYPE_PATHS: Record<string, React.JSX.Element> = {
 
 interface MilestonesCache {
   entries: BabyBookEntry[];
-  tier: string;
   childDob: string | null;
 }
 let _milestonesCache: MilestonesCache | null = null;
@@ -134,7 +132,6 @@ export default function BabyBookPage() {
   const _c = _milestonesCache;
   const [entries, setEntries] = useState<BabyBookEntry[]>(_c?.entries ?? []);
   const [loading, setLoading] = useState<boolean>(!_c);
-  const [tier, setTier] = useState<string>(_c?.tier ?? 'free');
   const [childName, setChildName] = useState<string | null>(() =>
     typeof window !== 'undefined' ? localStorage.getItem(STORAGE.CHILD_NAME) : null
   );
@@ -155,11 +152,9 @@ export default function BabyBookPage() {
       fetch('/api/children').then(r => r.json()),
     ]).then(([bookData, childData]) => {
       if (bookData.entries) setEntries(bookData.entries);
-      if (childData.tier) setTier(childData.tier);
       if (childData.childDob) setChildDob(childData.childDob);
       _milestonesCache = {
         entries: bookData.entries ?? [],
-        tier: childData.tier ?? 'free',
         childDob: childData.childDob ?? null,
       };
     }).catch(() => {}).finally(() => setLoading(false));
@@ -272,8 +267,7 @@ export default function BabyBookPage() {
   const domainFilteredEntries = activeFilter
     ? filteredEntries.filter(e => (MILESTONE_TO_DOMAIN[e.milestone_type] ?? 'social_emotional') === activeFilter)
     : filteredEntries;
-  const allEntries = tier === 'free' ? domainFilteredEntries.slice(0, FREE_LIMIT) : domainFilteredEntries;
-  const lockedCount = tier === 'free' ? Math.max(0, entries.length - FREE_LIMIT) : 0;
+  const allEntries = domainFilteredEntries;
 
   function renderEntryContents(entry: BabyBookEntry, entryColor: { bg: string; text: string }) {
     return (
@@ -622,17 +616,6 @@ export default function BabyBookPage() {
             })
           )}
 
-          {lockedCount > 0 && (
-            <div className={styles.lockedCard}>
-              <p className={styles.lockedTitle}>
-                {lockedCount} more milestone{lockedCount > 1 ? 's' : ''} in your book
-              </p>
-              <p className={styles.lockedText}>
-                SHAi Premium unlocks your full baby book history.
-              </p>
-              <div className={styles.lockedBadge}>Coming soon</div>
-            </div>
-          )}
         </div>
       )}
 

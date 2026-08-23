@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
     .order('logged_at', { ascending: false })
 
   if (since) query = query.gte('logged_at', since)
+  query = query.neq('win_type', 'milestone')
 
   const { data: wins, error } = await query
 
