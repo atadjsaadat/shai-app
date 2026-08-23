@@ -188,6 +188,8 @@ export default function JourneyPage() {
   const [editPhotoPreview, setEditPhotoPreview] = useState<string | null>(null);
   const [savingWinEdit, setSavingWinEdit] = useState(false);
   const editPhotoInputRef = useRef<HTMLInputElement>(null);
+  const [deleteWinConfirm, setDeleteWinConfirm] = useState(false);
+  const [deletingWin, setDeletingWin] = useState(false);
 
   // ── Effects ─────────────────────────────────────────
 
@@ -246,6 +248,7 @@ export default function JourneyPage() {
   useEffect(() => {
     setEditingNote(false);
     setNoteText(selectedWin?.parent_note ?? '');
+    setDeleteWinConfirm(false);
   }, [selectedWin]);
 
   useEffect(() => {
@@ -370,6 +373,17 @@ export default function JourneyPage() {
       }
     } catch { /* network failure */ }
     finally { winEditSavingRef.current = false; setSavingWinEdit(false); }
+  };
+
+  const handleDeleteWin = async () => {
+    if (!selectedWin || deletingWin) return;
+    setDeletingWin(true);
+    const res = await fetch(`/api/wins/${selectedWin.id}`, { method: 'DELETE' });
+    if (res.ok) {
+      setWins(prev => prev.filter(w => w.id !== selectedWin.id));
+      setSelectedWin(null);
+    }
+    setDeletingWin(false);
   };
 
   const handleEditPhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1005,6 +1019,18 @@ export default function JourneyPage() {
                       </p>
                     </div>
                   )}
+                  <div className={styles.deleteWrap}>
+                    {deleteWinConfirm ? (
+                      <>
+                        <button className={styles.deleteConfirmBtn} onClick={handleDeleteWin} disabled={deletingWin}>
+                          {deletingWin ? 'Deleting…' : 'Yes, delete'}
+                        </button>
+                        <button className={styles.deleteCancelBtn} onClick={() => setDeleteWinConfirm(false)}>Cancel</button>
+                      </>
+                    ) : (
+                      <button className={styles.deleteBtn} onClick={() => setDeleteWinConfirm(true)}>Delete win</button>
+                    )}
+                  </div>
                 </div>
               )}
               </div>

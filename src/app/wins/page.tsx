@@ -70,6 +70,8 @@ export default function WinsPage() {
   const [editingNote, setEditingNote] = useState(false);
   const [noteText, setNoteText] = useState('');
   const [savingNote, setSavingNote] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const refreshResolveRef = useRef<(() => void) | null>(null);
 
@@ -96,6 +98,7 @@ export default function WinsPage() {
   useEffect(() => {
     setEditingNote(false);
     setNoteText(selectedWin?.parent_note ?? '');
+    setDeleteConfirm(false);
   }, [selectedWin]);
 
   const handleSaveNote = async () => {
@@ -114,6 +117,17 @@ export default function WinsPage() {
       setEditingNote(false);
     }
     setSavingNote(false);
+  };
+
+  const handleDeleteWin = async () => {
+    if (!selectedWin || deleting) return;
+    setDeleting(true);
+    const res = await fetch(`/api/wins/${selectedWin.id}`, { method: 'DELETE' });
+    if (res.ok) {
+      setWins(prev => prev.filter(w => w.id !== selectedWin.id));
+      setSelectedWin(null);
+    }
+    setDeleting(false);
   };
 
   const filteredWins = useMemo(() => {
@@ -374,6 +388,19 @@ export default function WinsPage() {
                     </p>
                   </div>
                 )}
+
+                <div className={styles.deleteWrap}>
+                  {deleteConfirm ? (
+                    <>
+                      <button className={styles.deleteConfirmBtn} onClick={handleDeleteWin} disabled={deleting}>
+                        {deleting ? 'Deleting…' : 'Yes, delete'}
+                      </button>
+                      <button className={styles.deleteCancelBtn} onClick={() => setDeleteConfirm(false)}>Cancel</button>
+                    </>
+                  ) : (
+                    <button className={styles.deleteBtn} onClick={() => setDeleteConfirm(true)}>Delete win</button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

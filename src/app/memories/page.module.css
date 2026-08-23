@@ -1112,3 +1112,53 @@
   opacity: 0.5;
   cursor: default;
 }
+
+.deleteWrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding-top: 8px;
+  margin-top: 4px;
+  border-top: 1px solid var(--oat-dark);
+}
+
+.deleteBtn {
+  background: none;
+  border: none;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px 4px;
+}
+
+.deleteConfirmBtn {
+  background: #C0392B;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  padding: 8px 16px;
+}
+
+.deleteConfirmBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.deleteCancelBtn {
+  background: var(--oat);
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 10px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 8px 16px;
+}
