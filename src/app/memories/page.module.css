@@ -392,8 +392,6 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  display: flex;
-  align-items: center;
   background: var(--cream);
   margin: 0 -20px;
   padding: 0 20px 8px;
