@@ -63,6 +63,28 @@
 }
 
 /* ── Last feed card ──────────────────────────────────── */
+.lastFeedWrap {
+  position: relative;
+}
+
+.lastFeedDismiss {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--oat-dark);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  z-index: 1;
+}
+
 .lastFeedCard {
   background: var(--oat);
   border-radius: 20px;
