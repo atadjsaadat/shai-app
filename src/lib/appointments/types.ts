@@ -50,13 +50,4 @@ export const TYPE_LABELS: Record<AppointmentType, string> = {
   other: 'Other',
 }
 
-export const TYPE_COLORS: Record<AppointmentType, string> = {
-  gp: '#C4714A',
-  paediatrician: '#7AA5C4',
-  health_visitor: '#7AA5C4',
-  dentist: '#D4A72C',
-  hospital: '#A67BC4',
-  specialist: '#B87333',
-  vaccination: '#7AA5C4',
-  other: '#B09585',
-}
+export const APPOINTMENT_COLOR = '#7AA5C4'

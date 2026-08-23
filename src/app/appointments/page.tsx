@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import BottomNav from '@/components/BottomNav'
 import styles from './page.module.css'
 import type { Appointment, AppointmentType } from '@/lib/appointments/types'
-import { TYPE_LABELS, TYPE_COLORS } from '@/lib/appointments/types'
+import { TYPE_LABELS, APPOINTMENT_COLOR } from '@/lib/appointments/types'
 
 const APPOINTMENT_TYPES: AppointmentType[] = [
   'gp', 'paediatrician', 'health_visitor', 'dentist', 'hospital', 'specialist', 'vaccination', 'other',
@@ -99,7 +99,7 @@ function TypeBadge({ type }: { type: AppointmentType | null }) {
   return (
     <span
       className={styles.typeBadge}
-      style={{ background: `${TYPE_COLORS[type]}22`, color: TYPE_COLORS[type], borderColor: `${TYPE_COLORS[type]}44` }}
+      style={{ background: `${APPOINTMENT_COLOR}22`, color: APPOINTMENT_COLOR, borderColor: `${APPOINTMENT_COLOR}44` }}
     >
       {TYPE_LABELS[type]}
     </span>
