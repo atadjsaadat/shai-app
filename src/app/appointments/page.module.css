@@ -168,7 +168,7 @@
 
 .saveBtn {
   flex: 1;
-  background: var(--terracotta);
+  background: #7AA5C4;
   color: white;
   border: none;
   border-radius: 14px;
@@ -299,47 +299,56 @@
 }
 
 .attendBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 20px;
   background: var(--cream);
-  border: 1.5px solid var(--oat-dark);
-  border-radius: 12px;
-  padding: 8px 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.14);
+  border: none;
+  color: #7AA5C4;
   font-family: var(--font-nunito), sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--text-secondary);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
-  box-shadow: var(--btn-shadow);
+  transition: background 0.15s, color 0.15s;
 }
 
 .attendBtnActive {
-  background: var(--sage-light);
-  border-color: var(--sage);
-  color: var(--sage-dark);
+  background: #D0E4F0;
+  color: #2E5C7A;
 }
 
 .editBtn {
-  background: none;
-  border: 1.5px solid var(--oat-dark);
-  border-radius: 12px;
-  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: var(--cream);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.14);
+  border: none;
+  color: var(--terracotta);
   font-family: var(--font-nunito), sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--text-secondary);
   cursor: pointer;
-  box-shadow: var(--btn-shadow);
 }
 
 .deleteBtn {
-  background: none;
-  border: 1.5px solid transparent;
-  border-radius: 12px;
-  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: var(--cream);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.14);
+  border: none;
+  color: #C0392B;
   font-family: var(--font-nunito), sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  color: #c0392b;
   cursor: pointer;
   margin-left: auto;
 }
