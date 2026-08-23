@@ -739,13 +739,13 @@
   flex-shrink: 0;
   background: none;
   border: none;
-  font-size: 22px;
   cursor: pointer;
   opacity: 0.4;
   color: var(--sage-dark);
   transition: opacity 0.15s;
   padding: 4px;
-  line-height: 1;
+  display: flex;
+  align-items: center;
 }
 
 @keyframes winPulse {
