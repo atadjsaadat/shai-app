@@ -5,10 +5,13 @@
   padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
   max-width: 480px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .header {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+  flex-shrink: 0;
 }
 
 .title {
@@ -26,42 +29,79 @@
 }
 
 .grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
 }
 
 .card {
+  flex: 1;
   border-radius: 20px;
-  padding: 20px 16px;
+  padding: 16px;
   text-decoration: none;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  min-height: 130px;
   transition: transform 0.12s;
   box-shadow: var(--card-shadow);
+  min-height: 80px;
 }
 
 .card:active {
   transform: scale(0.97);
 }
 
+.cardTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .iconWrap {
-  margin-bottom: 4px;
+  flex-shrink: 0;
 }
 
 .cardLabel {
+  flex: 1;
   font-size: 15px;
   font-weight: 800;
   margin: 0;
   line-height: 1.2;
 }
 
-.cardStat {
-  font-size: 12px;
+.cardChevron {
+  flex-shrink: 0;
+  opacity: 0.55;
+}
+
+.cardDivider {
+  border: none;
+  border-top: 1px solid;
+  opacity: 0.25;
+  margin: 12px 0 0;
+}
+
+.cardPreview {
+  margin-top: 10px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+}
+
+.cardPreviewMain {
+  font-size: 14px;
   font-weight: 700;
   margin: 0;
-  line-height: 1.4;
-  opacity: 0.85;
+  line-height: 1.3;
+}
+
+.cardPreviewSub {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0;
+  opacity: 0.75;
+  line-height: 1.3;
 }
