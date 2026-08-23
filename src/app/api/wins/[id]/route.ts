@@ -11,11 +11,22 @@ export async function DELETE(
 
   const { id } = await params
   const admin = createAdminClient()
+
+  // Verify ownership via child (same pattern as GET)
+  const { data: child } = await admin
+    .from('children')
+    .select('id')
+    .or(`user_id.eq.${user.id},linked_user_ids.cs.{${user.id}}`)
+    .limit(1)
+    .single()
+
+  if (!child) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
   const { error } = await admin
     .from('wins')
     .delete()
     .eq('id', id)
-    .eq('logged_by_user_id', user.id)
+    .eq('child_id', child.id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
