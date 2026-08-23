@@ -147,6 +147,9 @@ export default function GrowthPage() {
   const [formHead, setFormHead] = useState('')
   const [formNotes, setFormNotes] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [selectedMeasurement, setSelectedMeasurement] = useState<GrowthRecord | null>(null)
+  const [deleteMeasurementConfirm, setDeleteMeasurementConfirm] = useState(false)
+  const [deletingDirect, setDeletingDirect] = useState(false)
 
   useEffect(() => {
     async function init() {
@@ -254,6 +257,23 @@ export default function GrowthPage() {
       closeForm()
     }
     setDeleting(false)
+  }
+
+  async function handleDeleteDirect() {
+    if (!selectedMeasurement || deletingDirect) return
+    setDeletingDirect(true)
+    const res = await fetch('/api/growth', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: selectedMeasurement.id }),
+    })
+    const json = await res.json()
+    if (!json.error) {
+      setRecords(prev => prev.filter(r => r.id !== selectedMeasurement.id))
+      setSelectedMeasurement(null)
+      setDeleteMeasurementConfirm(false)
+    }
+    setDeletingDirect(false)
   }
 
   const latest = records.length > 0 ? records[records.length - 1] : null
@@ -518,15 +538,9 @@ export default function GrowthPage() {
           <p className={styles.historyLabel}>Measurements</p>
           <div className={styles.historyList}>
             {[...records].reverse().map(r => (
-              <div key={r.id} className={styles.historyRow}>
+              <div key={r.id} className={styles.historyRow} onClick={() => { setSelectedMeasurement(r); setDeleteMeasurementConfirm(false); }}>
                 <div className={styles.historyRowTop}>
                   <div className={styles.historyDate}>{formatDate(r.recorded_at)}</div>
-                  <button className={styles.historyEditBtn} onClick={() => openEdit(r)} aria-label="Edit">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                    </svg>
-                  </button>
                 </div>
                 <div className={styles.historyVals}>
                   {r.weight_kg != null && (
@@ -561,6 +575,87 @@ export default function GrowthPage() {
         </section>
       )}
 
+        </div>
+      )}
+
+      {selectedMeasurement && (
+        <div className={styles.measurementOverlay} onClick={() => { setSelectedMeasurement(null); setDeleteMeasurementConfirm(false); }}>
+          <div className={styles.measurementSheet} onClick={e => e.stopPropagation()}>
+            <div className={styles.measurementBand} style={{ background: hexToRgba(accent, 0.15) }} />
+
+            <button className={styles.measurementClose} onClick={() => { setSelectedMeasurement(null); setDeleteMeasurementConfirm(false); }} aria-label="Close">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+
+            <button className={styles.measurementDelete} onClick={() => setDeleteMeasurementConfirm(v => !v)} aria-label="Delete measurement">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+              </svg>
+            </button>
+
+            <div className={styles.measurementBody}>
+              {deleteMeasurementConfirm && (
+                <div className={styles.deleteConfirmBanner}>
+                  <p className={styles.deleteConfirmText}>Delete this measurement?</p>
+                  <div className={styles.deleteConfirmBtns}>
+                    <button className={styles.deleteConfirmBtn} onClick={handleDeleteDirect} disabled={deletingDirect}>
+                      {deletingDirect ? 'Deleting…' : 'Yes, delete'}
+                    </button>
+                    <button className={styles.deleteCancelBtn} onClick={() => setDeleteMeasurementConfirm(false)}>Cancel</button>
+                  </div>
+                </div>
+              )}
+
+              <p className={styles.measurementDetailDate}>{formatDate(selectedMeasurement.recorded_at)}</p>
+
+              <div className={styles.measurementVals}>
+                {selectedMeasurement.weight_kg != null && (
+                  <div className={styles.measurementVal}>
+                    <p className={styles.measurementValNum}>{selectedMeasurement.weight_kg.toFixed(1)}<span className={styles.measurementValUnit}>kg</span></p>
+                    <p className={styles.measurementValLabel}>Weight</p>
+                    {selectedMeasurement.who_weight_percentile != null && (
+                      <p className={styles.measurementValPct} style={{ color: WEIGHT_COLOR }}>{ordinal(selectedMeasurement.who_weight_percentile)} percentile</p>
+                    )}
+                  </div>
+                )}
+                {selectedMeasurement.height_cm != null && (
+                  <div className={styles.measurementVal}>
+                    <p className={styles.measurementValNum}>{selectedMeasurement.height_cm.toFixed(1)}<span className={styles.measurementValUnit}>cm</span></p>
+                    <p className={styles.measurementValLabel}>Height</p>
+                    {selectedMeasurement.who_height_percentile != null && (
+                      <p className={styles.measurementValPct} style={{ color: HEIGHT_COLOR }}>{ordinal(selectedMeasurement.who_height_percentile)} percentile</p>
+                    )}
+                  </div>
+                )}
+                {selectedMeasurement.head_cm != null && (
+                  <div className={styles.measurementVal}>
+                    <p className={styles.measurementValNum}>{selectedMeasurement.head_cm.toFixed(1)}<span className={styles.measurementValUnit}>cm</span></p>
+                    <p className={styles.measurementValLabel}>Head</p>
+                    {selectedMeasurement.who_head_percentile != null && (
+                      <p className={styles.measurementValPct} style={{ color: HEAD_COLOR }}>{ordinal(selectedMeasurement.who_head_percentile)} percentile</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {selectedMeasurement.notes && (
+                <p className={styles.measurementNote}>{selectedMeasurement.notes}</p>
+              )}
+
+              <button
+                className={styles.measurementEditBtn}
+                onClick={() => { openEdit(selectedMeasurement); setSelectedMeasurement(null); setDeleteMeasurementConfirm(false); }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Edit measurement
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

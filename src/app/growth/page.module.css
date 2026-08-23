@@ -340,6 +340,7 @@
   gap: 4px;
   margin-bottom: 6px;
   box-shadow: var(--card-shadow);
+  cursor: pointer;
 }
 
 .historyDate {
@@ -419,4 +420,198 @@
   text-align: center;
   padding: 4px 16px 8px;
   font-weight: 500;
+}
+
+/* ── Measurement detail sheet ─────────────────────────── */
+.measurementOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: flex-end;
+  z-index: 10001;
+}
+
+.measurementSheet {
+  position: relative;
+  width: 100%;
+  background: var(--cream);
+  border-radius: 24px 24px 0 0;
+  max-height: 88dvh;
+  overflow-y: auto;
+}
+
+.measurementBand {
+  height: 80px;
+  border-radius: 24px 24px 0 0;
+  flex-shrink: 0;
+}
+
+.measurementClose {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--cream);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.14);
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.measurementDelete {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--cream);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.14);
+  border: none;
+  color: #C0392B;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.measurementBody {
+  padding: 20px 20px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.deleteConfirmBanner {
+  background: #fdf0ef;
+  border: 1.5px solid #e8b4b0;
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.deleteConfirmText {
+  font-size: 14px;
+  font-weight: 700;
+  color: #C0392B;
+  margin: 0 0 10px;
+}
+
+.deleteConfirmBtns {
+  display: flex;
+  gap: 10px;
+}
+
+.deleteConfirmBtn {
+  background: #C0392B;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.deleteConfirmBtn:disabled {
+  opacity: 0.5;
+}
+
+.deleteCancelBtn {
+  background: var(--oat);
+  color: var(--text-secondary);
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.measurementDetailDate {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.measurementVals {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.measurementVal {
+  background: var(--oat);
+  border-radius: 14px;
+  padding: 14px 16px;
+  flex: 1;
+  min-width: 80px;
+  box-shadow: var(--card-shadow);
+}
+
+.measurementValNum {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 2px;
+  line-height: 1.1;
+}
+
+.measurementValUnit {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-left: 2px;
+}
+
+.measurementValLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 0 0 4px;
+}
+
+.measurementValPct {
+  font-size: 12px;
+  font-weight: 700;
+  margin: 4px 0 0;
+}
+
+.measurementNote {
+  font-size: 13px;
+  color: var(--text-secondary);
+  background: var(--oat);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 0;
+  box-shadow: var(--card-shadow);
+}
+
+.measurementEditBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--oat);
+  border: none;
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  width: 100%;
+  box-shadow: var(--card-shadow);
 }
