@@ -175,7 +175,12 @@ export async function GET(request: Request) {
   for (const log of realLogs) {
     const type = log.meal_type ?? 'snack'
     if (!mealMap.has(type)) mealMap.set(type, [])
-    mealMap.get(type)!.push({ id: log.id, food_name: log.food_name, calories_kcal: log.calories_kcal })
+    mealMap.get(type)!.push({
+      id: log.id, food_name: log.food_name,
+      calories_kcal: log.calories_kcal, protein_g: log.protein_g,
+      carbs_g: log.carbs_g, fat_g: log.fat_g, fibre_g: log.fibre_g,
+      sugar_g: log.sugar_g, sodium_mg: log.sodium_mg, iron_mg: log.iron_mg,
+    })
   }
   const meals = ORDER.filter((t) => mealMap.has(t)).map((t) => ({ meal_type: t, items: mealMap.get(t)! }))
   for (const [type, items] of mealMap) {

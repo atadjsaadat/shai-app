@@ -28,6 +28,13 @@ interface MealItem {
   id: string;
   food_name: string;
   calories_kcal: number | null;
+  protein_g: number | null;
+  carbs_g: number | null;
+  fat_g: number | null;
+  fibre_g: number | null;
+  sugar_g: number | null;
+  sodium_mg: number | null;
+  iron_mg: number | null;
 }
 
 interface Meal {
@@ -263,6 +270,7 @@ export default function HomePage() {
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [swipedItemId, setSwipedItemId] = useState<string | null>(null);
   const [deletedLogIds, setDeletedLogIds] = useState<Set<string>>(new Set());
+  const [nutrientItem, setNutrientItem] = useState<MealItem | null>(null);
   const touchStartX = useRef(0);
 
   const handleDeleteItem = useCallback(async (logId: string) => {
@@ -514,6 +522,11 @@ export default function HomePage() {
                           {item.calories_kcal != null && (
                             <span className={styles.mealItemCal}>{Math.round(item.calories_kcal)} kcal</span>
                           )}
+                          <button className={styles.mealItemInfoBtn} onClick={() => setNutrientItem(item)} aria-label="Nutrients">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                            </svg>
+                          </button>
                           {!fallbackDate && (
                             <Link
                               href={`/log?meal=${meal.meal_type}`}
@@ -592,6 +605,37 @@ export default function HomePage() {
       <AIDisclosure />
     </div>
     </PullToRefresh>
+
+    {nutrientItem && (
+      <div className={styles.nutrientOverlay} onClick={() => setNutrientItem(null)}>
+        <div className={styles.nutrientSheet} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.nutrientSheetHeader}>
+            <p className={styles.nutrientSheetTitle}>{nutrientItem.food_name}</p>
+            <button className={styles.nutrientSheetClose} onClick={() => setNutrientItem(null)}>×</button>
+          </div>
+          <div className={styles.nutrientGrid}>
+            {([
+              { label: 'Cals',  value: nutrientItem.calories_kcal, unit: 'kcal', color: '#C4714A' },
+              { label: 'Pro',   value: nutrientItem.protein_g,     unit: 'g',    color: '#D4A72C' },
+              { label: 'Carbs', value: nutrientItem.carbs_g,       unit: 'g',    color: '#B09585' },
+              { label: 'Fat',   value: nutrientItem.fat_g,         unit: 'g',    color: '#A67BC4' },
+              { label: 'Fibre', value: nutrientItem.fibre_g,       unit: 'g',    color: '#7A9E7E' },
+              { label: 'Sugar', value: nutrientItem.sugar_g,       unit: 'g',    color: '#E8874A' },
+              { label: 'Salt',  value: nutrientItem.sodium_mg,     unit: 'mg',   color: '#7AA5C4' },
+              { label: 'Iron',  value: nutrientItem.iron_mg,       unit: 'mg',   color: '#B87333' },
+            ] as { label: string; value: number | null; unit: string; color: string }[]).map(({ label, value, unit, color }) => (
+              <div key={label} className={styles.nutrientSheetRow}>
+                <span className={styles.nutrientSheetLabel}>{label}</span>
+                <span className={styles.nutrientSheetValue} style={{ color }}>
+                  {value != null && value > 0 ? `${label === 'Cals' ? Math.round(value) : value % 1 === 0 ? value : value.toFixed(1)}${unit}` : '—'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )}
+
     <BottomNav />
     </>
   );
