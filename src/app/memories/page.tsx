@@ -162,7 +162,13 @@ export default function JourneyPage() {
   const [wins, setWins] = useState<Win[]>(_c?.wins ?? []);
   const [winsLoading, setWinsLoading] = useState<boolean>(!_c);
   const [formMode, setFormMode] = useState<'closed' | 'open' | 'saving'>('closed');
-  const [selectedWin, setSelectedWin] = useState<Win | null>(null);
+  const [selectedWin, setSelectedWin] = useState<Win | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const raw = sessionStorage.getItem('shai_prefetch_win');
+    if (!raw) return null;
+    sessionStorage.removeItem('shai_prefetch_win');
+    try { return JSON.parse(raw) as Win; } catch { return null; }
+  });
   const [winType, setWinType] = useState('new_food');
   const [foodInvolved, setFoodInvolved] = useState('');
   const [parentNote, setParentNote] = useState('');
