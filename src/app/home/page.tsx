@@ -558,7 +558,7 @@ export default function HomePage() {
           <div className={styles.winsRow}>
             {weeklyWins.slice(0, 3).map((w) => {
               return (
-                <div key={w.id} className={styles.winChip} style={{ background: '#D4E8D6', color: '#4A7050' }}>
+                <Link key={w.id} href={`/wins?winId=${w.id}`} className={styles.winChip} style={{ background: '#D4E8D6', color: '#4A7050', textDecoration: 'none' }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" className={styles.winStar} style={{ flexShrink: 0 }}>
                     <polygon points="12,2 15.82,6.74 21.51,8.91 18.18,14.01 17.88,20.09 12,18.5 6.12,20.09 5.82,14.01 2.49,8.91 8.18,6.74"/>
                   </svg>
@@ -566,7 +566,7 @@ export default function HomePage() {
                   {w.food_involved && (
                     <span className={styles.winChipFood}>{w.food_involved}</span>
                   )}
-                </div>
+                </Link>
               );
             })}
           </div>
