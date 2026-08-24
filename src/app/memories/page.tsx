@@ -741,6 +741,7 @@ export default function JourneyPage() {
                 placeholder="What's on your mind today…"
                 value={composerText}
                 rows={4}
+                spellCheck
                 onChange={e => { setComposerText(e.target.value); autoResize(e.target); }}
               />
               {(listening && listenTarget === 'composer') && (
@@ -795,6 +796,7 @@ export default function JourneyPage() {
                             className={styles.editTextarea}
                             value={editText}
                             rows={4}
+                            spellCheck
                             onChange={e => { setEditText(e.target.value); autoResize(e.target); }}
                           />
                           {(listening && listenTarget === 'edit') && (
@@ -1006,6 +1008,7 @@ export default function JourneyPage() {
                     className={styles.winTextarea}
                     placeholder="What happened? (optional)"
                     rows={3}
+                    spellCheck
                     value={editNote}
                     onChange={(e) => setEditNote(e.target.value)}
                   />
@@ -1124,6 +1127,7 @@ export default function JourneyPage() {
                 className={styles.winTextarea}
                 placeholder="What happened? (optional)"
                 rows={3}
+                spellCheck
                 value={parentNote}
                 onChange={(e) => setParentNote(e.target.value)}
               />

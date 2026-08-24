@@ -206,6 +206,7 @@ export default function OnboardingPage() {
           placeholder="Type a message…"
           value={input}
           rows={1}
+          spellCheck
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
         />

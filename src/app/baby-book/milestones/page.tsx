@@ -532,6 +532,7 @@ export default function BabyBookPage() {
                   placeholder="Anything you want to remember about this moment…"
                   value={form.note}
                   rows={3}
+                  spellCheck
                   onChange={e => setForm(f => ({ ...f, note: e.target.value }))}
                 />
               </div>

@@ -535,6 +535,7 @@ export default function AppointmentsPage() {
                 className={styles.textarea}
                 placeholder="Any questions to ask, things to bring…"
                 rows={3}
+                spellCheck
                 value={form.notes}
                 onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
               />

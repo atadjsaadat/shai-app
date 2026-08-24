@@ -381,6 +381,7 @@ export default function WinsPage() {
                         onChange={(e) => setNoteText(e.target.value)}
                         placeholder="Add a note…"
                         rows={3}
+                        spellCheck
                         autoFocus
                       />
                       <div className={styles.noteBtns}>
@@ -476,6 +477,7 @@ export default function WinsPage() {
               className={styles.textarea}
               placeholder="What happened? (optional)"
               rows={3}
+              spellCheck
               value={parentNote}
               onChange={(e) => setParentNote(e.target.value)}
             />

@@ -1002,9 +1002,7 @@ export default function LogPage() {
             onKeyDown={handleKeyDown}
             disabled={logCleaning}
             autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="off"
-            spellCheck={false}
+            spellCheck
           />
           <button
             className={styles.barcodeBtn}
