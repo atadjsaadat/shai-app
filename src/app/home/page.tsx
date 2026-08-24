@@ -258,6 +258,7 @@ export default function HomePage() {
 
   const [leapDismissed, setLeapDismissed] = useState(false);
   const [feedDismissed, setFeedDismissed] = useState(false);
+  const [apptDismissed, setApptDismissed] = useState(false);
   const [dailyFeedback, setDailyFeedback] = useState<string | null>(null);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [swipedItemId, setSwipedItemId] = useState<string | null>(null);
@@ -420,11 +421,11 @@ export default function HomePage() {
 
       <InstallBanner />
 
-      {(todayAppointments.length > 0 || (upcomingLeap && !leapDismissed)) && (
+      {((todayAppointments.length > 0 && !apptDismissed) || (upcomingLeap && !leapDismissed)) && (
         <div className={styles.comingUpCard}>
           <p className={styles.comingUpTitle}>Coming up</p>
 
-          {todayAppointments.length > 0 && (
+          {todayAppointments.length > 0 && !apptDismissed && (
             <Link href="/appointments" className={styles.comingUpRow}>
               <span className={styles.comingUpApptIcon}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -444,9 +445,11 @@ export default function HomePage() {
                     : 'Tap to view details'}
                 </p>
               </div>
-              <svg className={styles.comingUpChevron} width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M8 5l5 5-5 5"/>
-              </svg>
+              <button
+                className={styles.comingUpDismiss}
+                onClick={(e) => { e.preventDefault(); setApptDismissed(true); }}
+                aria-label="Dismiss"
+              >×</button>
             </Link>
           )}
 
