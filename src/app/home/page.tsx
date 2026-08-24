@@ -24,9 +24,7 @@ interface Totals {
 
 interface Targets extends Totals {}
 
-interface MealItem {
-  id: string;
-  food_name: string;
+interface NutrientData {
   calories_kcal: number | null;
   protein_g: number | null;
   carbs_g: number | null;
@@ -35,6 +33,16 @@ interface MealItem {
   sugar_g: number | null;
   sodium_mg: number | null;
   iron_mg: number | null;
+}
+
+interface MealItem extends NutrientData {
+  id: string;
+  food_name: string;
+}
+
+interface NutrientSheet extends NutrientData {
+  title: string;
+  color: string;
 }
 
 interface Meal {
@@ -270,7 +278,7 @@ export default function HomePage() {
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [swipedItemId, setSwipedItemId] = useState<string | null>(null);
   const [deletedLogIds, setDeletedLogIds] = useState<Set<string>>(new Set());
-  const [nutrientItem, setNutrientItem] = useState<MealItem | null>(null);
+  const [nutrientSheet, setNutrientSheet] = useState<NutrientSheet | null>(null);
   const touchStartX = useRef(0);
 
   const handleDeleteItem = useCallback(async (logId: string) => {
@@ -504,6 +512,30 @@ export default function HomePage() {
                 <div key={meal.meal_type} className={styles.mealGroup}>
                   <div className={styles.mealGroupHeader}>
                     <p className={styles.mealGroupLabel} style={{ color: MEAL_COLOURS[meal.meal_type] ?? 'var(--text-muted)' }}>{MEAL_LABELS[meal.meal_type] ?? meal.meal_type}</p>
+                    <button
+                      className={styles.mealItemInfoBtn}
+                      style={{ color: MEAL_COLOURS[meal.meal_type] ?? 'var(--text-muted)' }}
+                      aria-label="Meal nutrients"
+                      onClick={() => {
+                        const color = MEAL_COLOURS[meal.meal_type] ?? 'var(--text-muted)';
+                        const title = MEAL_LABELS[meal.meal_type] ?? meal.meal_type;
+                        const sum = visibleItems.reduce<NutrientData>((acc, item) => ({
+                          calories_kcal: (acc.calories_kcal ?? 0) + (item.calories_kcal ?? 0),
+                          protein_g:     (acc.protein_g     ?? 0) + (item.protein_g     ?? 0),
+                          carbs_g:       (acc.carbs_g       ?? 0) + (item.carbs_g       ?? 0),
+                          fat_g:         (acc.fat_g         ?? 0) + (item.fat_g         ?? 0),
+                          fibre_g:       (acc.fibre_g       ?? 0) + (item.fibre_g       ?? 0),
+                          sugar_g:       (acc.sugar_g       ?? 0) + (item.sugar_g       ?? 0),
+                          sodium_mg:     (acc.sodium_mg     ?? 0) + (item.sodium_mg     ?? 0),
+                          iron_mg:       (acc.iron_mg       ?? 0) + (item.iron_mg       ?? 0),
+                        }), { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0, fibre_g: 0, sugar_g: 0, sodium_mg: 0, iron_mg: 0 });
+                        setNutrientSheet({ title, color, ...sum });
+                      }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                      </svg>
+                    </button>
                   </div>
                   {visibleItems.map((item) => (
                     <div key={item.id} className={styles.mealItemWrap}>
@@ -522,11 +554,6 @@ export default function HomePage() {
                           {item.calories_kcal != null && (
                             <span className={styles.mealItemCal}>{Math.round(item.calories_kcal)} kcal</span>
                           )}
-                          <button className={styles.mealItemInfoBtn} onClick={() => setNutrientItem(item)} aria-label="Nutrients">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
-                            </svg>
-                          </button>
                           {!fallbackDate && (
                             <Link
                               href={`/log?meal=${meal.meal_type}`}
@@ -606,23 +633,23 @@ export default function HomePage() {
     </div>
     </PullToRefresh>
 
-    {nutrientItem && (
-      <div className={styles.nutrientOverlay} onClick={() => setNutrientItem(null)}>
+    {nutrientSheet && (
+      <div className={styles.nutrientOverlay} onClick={() => setNutrientSheet(null)}>
         <div className={styles.nutrientSheet} onClick={(e) => e.stopPropagation()}>
           <div className={styles.nutrientSheetHeader}>
-            <p className={styles.nutrientSheetTitle}>{nutrientItem.food_name}</p>
-            <button className={styles.nutrientSheetClose} onClick={() => setNutrientItem(null)}>×</button>
+            <p className={styles.nutrientSheetTitle} style={{ color: nutrientSheet.color }}>{nutrientSheet.title}</p>
+            <button className={styles.nutrientSheetClose} onClick={() => setNutrientSheet(null)}>×</button>
           </div>
           <div className={styles.nutrientGrid}>
             {([
-              { label: 'Cals',  value: nutrientItem.calories_kcal, unit: 'kcal', color: '#C4714A' },
-              { label: 'Pro',   value: nutrientItem.protein_g,     unit: 'g',    color: '#D4A72C' },
-              { label: 'Carbs', value: nutrientItem.carbs_g,       unit: 'g',    color: '#B09585' },
-              { label: 'Fat',   value: nutrientItem.fat_g,         unit: 'g',    color: '#A67BC4' },
-              { label: 'Fibre', value: nutrientItem.fibre_g,       unit: 'g',    color: '#7A9E7E' },
-              { label: 'Sugar', value: nutrientItem.sugar_g,       unit: 'g',    color: '#E8874A' },
-              { label: 'Salt',  value: nutrientItem.sodium_mg,     unit: 'mg',   color: '#7AA5C4' },
-              { label: 'Iron',  value: nutrientItem.iron_mg,       unit: 'mg',   color: '#B87333' },
+              { label: 'Cals',  value: nutrientSheet.calories_kcal, unit: 'kcal', color: '#C4714A' },
+              { label: 'Pro',   value: nutrientSheet.protein_g,     unit: 'g',    color: '#D4A72C' },
+              { label: 'Carbs', value: nutrientSheet.carbs_g,       unit: 'g',    color: '#B09585' },
+              { label: 'Fat',   value: nutrientSheet.fat_g,         unit: 'g',    color: '#A67BC4' },
+              { label: 'Fibre', value: nutrientSheet.fibre_g,       unit: 'g',    color: '#7A9E7E' },
+              { label: 'Sugar', value: nutrientSheet.sugar_g,       unit: 'g',    color: '#E8874A' },
+              { label: 'Salt',  value: nutrientSheet.sodium_mg,     unit: 'mg',   color: '#7AA5C4' },
+              { label: 'Iron',  value: nutrientSheet.iron_mg,       unit: 'mg',   color: '#B87333' },
             ] as { label: string; value: number | null; unit: string; color: string }[]).map(({ label, value, unit, color }) => (
               <div key={label} className={styles.nutrientSheetRow}>
                 <span className={styles.nutrientSheetLabel}>{label}</span>

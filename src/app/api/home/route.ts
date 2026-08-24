@@ -171,7 +171,7 @@ export async function GET(request: Request) {
   )
 
   const ORDER = ['breakfast', 'lunch', 'dinner', 'snack']
-  const mealMap = new Map<string, { id: string; food_name: string; calories_kcal: number | null }[]>()
+  const mealMap = new Map<string, { id: string; food_name: string; calories_kcal: number | null; protein_g: number | null; carbs_g: number | null; fat_g: number | null; fibre_g: number | null; sugar_g: number | null; sodium_mg: number | null; iron_mg: number | null }[]>()
   for (const log of realLogs) {
     const type = log.meal_type ?? 'snack'
     if (!mealMap.has(type)) mealMap.set(type, [])
