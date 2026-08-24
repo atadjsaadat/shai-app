@@ -279,9 +279,11 @@ export default function HomePage() {
   const upcomingLeap      = homeData?.leap ?? null;
   const fallbackDate      = homeData?.fallbackDate ?? null;
   const winsRecentOnly    = homeData?.winsRecentOnly ?? false;
-  const todayAppointments = (homeData?.appointments ?? []).filter(
-    (a) => a.scheduled_at.startsWith(localDate()) && !a.attended
-  );
+  const todayAppointments = (homeData?.appointments ?? []).filter((a) => {
+    const d = new Date(a.scheduled_at);
+    const apptDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return apptDate === localDate() && !a.attended;
+  });
   const hasMeals = meals.length > 0;
   const loading  = !homeData;
 

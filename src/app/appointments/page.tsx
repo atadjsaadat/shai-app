@@ -247,6 +247,7 @@ export default function AppointmentsPage() {
           (a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
         ))
       }
+      sessionStorage.setItem('shai_home_stale', '1')
       cancelForm()
     } catch {
       setFormError('Something went wrong — please try again.')
