@@ -75,6 +75,7 @@ const WIN_LABELS: Record<string, string> = {
   new_texture: 'New texture',
   self_fed:    'Ate independently',
   family_meal: 'Family meal',
+  milestone:   'Milestone',
   other:       'Something else',
 };
 
@@ -560,9 +561,7 @@ export default function HomePage() {
         <section>
           <div className={styles.sectionHeader}>
             <p className={styles.sectionLabel}>{winsRecentOnly ? 'Recent wins' : "This week's wins"}</p>
-            {weeklyWins.length > 3 && (
-              <Link href="/wins" className={styles.seeAllLink}>See all {weeklyWins.length} →</Link>
-            )}
+            <Link href="/wins" className={styles.seeAllLink}>See all →</Link>
           </div>
           <div className={styles.winsRow}>
             {weeklyWins.slice(0, 3).map((w) => {
