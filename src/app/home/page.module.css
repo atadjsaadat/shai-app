@@ -69,13 +69,12 @@
 
 .lastFeedDismiss {
   position: absolute;
-  top: 12px;
-  right: 14px;
+  top: 10px;
+  right: 12px;
   background: none;
   border: none;
-  font-family: var(--font-nunito), sans-serif;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 18px;
+  line-height: 1;
   color: var(--text-muted);
   cursor: pointer;
   padding: 0;

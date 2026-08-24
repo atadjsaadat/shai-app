@@ -397,7 +397,7 @@ export default function HomePage() {
             onClick={() => setFeedDismissed(true)}
             aria-label="Dismiss"
           >
-            close
+            ×
           </button>
         </div>
       )}
