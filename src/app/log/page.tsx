@@ -251,16 +251,8 @@ function FoodItemCard({ item, multiplier = 1, portionLabel, isWin, onWinToggle, 
 
 export default function LogPage() {
   const router = useRouter();
-  const [mealType, setMealType] = useState<MealType>(() => getMealParam() ?? detectMealType());
-  const [activeTab, setActiveTab] = useState<MealType | 'feeds'>(() => {
-    const meal = getMealParam();
-    if (meal) return meal;
-    if (typeof window !== 'undefined') {
-      const tab = sessionStorage.getItem('shai_log_tab');
-      if (tab === 'feeds') { sessionStorage.removeItem('shai_log_tab'); return 'feeds'; }
-    }
-    return detectMealType();
-  });
+  const [mealType, setMealType] = useState<MealType>(detectMealType);
+  const [activeTab, setActiveTab] = useState<MealType | 'feeds'>(detectMealType);
   const [editMealItems, setEditMealItems] = useState<Array<{ food_name: string; calories_kcal: number | null }> | null>(null);
   const [editLogIds, setEditLogIds] = useState<string[]>([]);
   const [feedsIsArchive, setFeedsIsArchive] = useState(false);
@@ -409,6 +401,17 @@ export default function LogPage() {
     setParsedData({ message: '', foodItems: [foodItem], clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: true });
     setPhase('confirming');
   };
+
+  useEffect(() => {
+    const meal = getMealParam();
+    if (meal) {
+      setActiveTab(meal);
+      setMealType(meal);
+    } else {
+      const tab = sessionStorage.getItem('shai_log_tab');
+      if (tab === 'feeds') { sessionStorage.removeItem('shai_log_tab'); setActiveTab('feeds'); }
+    }
+  }, []);
 
   useEffect(() => {
     speechRef.current = createSpeechRecognition();
