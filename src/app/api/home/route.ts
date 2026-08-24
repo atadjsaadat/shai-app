@@ -74,11 +74,17 @@ export async function GET(request: Request) {
           .select('id, name, date_of_birth, gestational_age_at_birth, leaps_surfaced')
           .eq('id', childId)
           .single(),
-    admin
-      .from('appointments')
-      .select('*')
-      .eq('child_id', childId)
-      .order('scheduled_at', { ascending: true }),
+    (() => {
+      const localMidnight = new Date(new Date(`${date}T00:00:00Z`).getTime() - offsetMinutes * 60 * 1000)
+      const windowEnd = new Date(localMidnight.getTime() + 2 * 24 * 60 * 60 * 1000)
+      return admin
+        .from('appointments')
+        .select('*')
+        .eq('child_id', childId)
+        .gte('scheduled_at', localMidnight.toISOString())
+        .lt('scheduled_at', windowEnd.toISOString())
+        .order('scheduled_at', { ascending: true })
+    })(),
     winsQuery,
     admin
       .from('newborn_feed_logs')
