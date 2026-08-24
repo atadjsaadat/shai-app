@@ -239,6 +239,15 @@ export default function JourneyPage() {
     });
   }, [router]);
 
+  const deepLinkConsumed = useRef(false);
+  useEffect(() => {
+    if (deepLinkConsumed.current || wins.length === 0) return;
+    const winId = new URLSearchParams(window.location.search).get('winId');
+    if (!winId) return;
+    const match = wins.find((w) => w.id === winId);
+    if (match) { setSelectedWin(match); deepLinkConsumed.current = true; }
+  }, [wins]);
+
   useEffect(() => {
     setEditingNote(false);
     setNoteText(selectedWin?.parent_note ?? '');
