@@ -165,6 +165,13 @@ function formatApptTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }
 
+function apptDayLabel(iso: string): string {
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const apptTime = new Date(iso).getTime();
+  return apptTime < startOfToday + 24 * 60 * 60 * 1000 ? 'Today' : 'Tomorrow';
+}
+
 function formatFallbackDate(dateStr: string): string {
   const [y, m, d] = dateStr.split('-').map(Number);
   return new Date(y, m - 1, d).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -280,9 +287,11 @@ export default function HomePage() {
   const fallbackDate      = homeData?.fallbackDate ?? null;
   const winsRecentOnly    = homeData?.winsRecentOnly ?? false;
   const todayAppointments = (homeData?.appointments ?? []).filter((a) => {
-    const d = new Date(a.scheduled_at);
-    const apptDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    return apptDate === localDate() && !a.attended;
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const endOfTomorrow = startOfToday + 2 * 24 * 60 * 60 * 1000;
+    const apptTime = new Date(a.scheduled_at).getTime();
+    return apptTime >= startOfToday && apptTime < endOfTomorrow && !a.attended;
   });
   const hasMeals = meals.length > 0;
   const loading  = !homeData;
@@ -427,11 +436,11 @@ export default function HomePage() {
               </span>
               <div className={styles.comingUpContent}>
                 <p className={styles.comingUpRowName}>
-                  {todayAppointments.length === 1 ? todayAppointments[0].title : `${todayAppointments.length} appointments today`}
+                  {todayAppointments.length === 1 ? todayAppointments[0].title : `${todayAppointments.length} upcoming appointments`}
                 </p>
                 <p className={styles.comingUpRowSub}>
                   {todayAppointments.length === 1
-                    ? `Today · ${formatApptTime(todayAppointments[0].scheduled_at)}`
+                    ? `${apptDayLabel(todayAppointments[0].scheduled_at)} · ${formatApptTime(todayAppointments[0].scheduled_at)}`
                     : 'Tap to view details'}
                 </p>
               </div>
