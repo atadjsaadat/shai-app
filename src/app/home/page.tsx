@@ -75,7 +75,6 @@ const WIN_LABELS: Record<string, string> = {
   new_texture: 'New texture',
   self_fed:    'Ate independently',
   family_meal: 'Family meal',
-  milestone:   'Milestone',
   other:       'Something else',
 };
 

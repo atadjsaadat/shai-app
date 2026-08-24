@@ -54,6 +54,7 @@ export async function GET(request: Request) {
       .from('wins')
       .select('id, logged_at, win_type, food_involved, parent_note, child_age_days, photo_url')
       .eq('child_id', childId)
+      .neq('win_type', 'milestone')
       .order('logged_at', { ascending: false })
     if (weekSince) q = q.gte('logged_at', weekSince)
     return q

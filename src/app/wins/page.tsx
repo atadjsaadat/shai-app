@@ -28,7 +28,6 @@ const WIN_TYPES = [
   { value: 'new_texture', label: 'New texture' },
   { value: 'self_fed',    label: 'Ate independently' },
   { value: 'family_meal', label: 'Family meal' },
-  { value: 'milestone',   label: 'Milestone' },
   { value: 'other',       label: 'Something else' },
 ];
 
@@ -38,7 +37,6 @@ const WIN_COLOURS: Record<string, { bg: string; text: string; badge: string }> =
   new_texture: { bg: '#D0E4F0', text: '#2E5C7A', badge: '#7AA5C4' },
   self_fed:    { bg: '#F5E8C0', text: '#7A5810', badge: '#D4A72C' },
   family_meal: { bg: '#E4D8F0', text: '#5A3F80', badge: '#A67BC4' },
-  milestone:   { bg: '#F0D5C8', text: '#9E5035', badge: '#C4714A' },
   other:       { bg: '#F0D8E4', text: '#803050', badge: '#C47A8A' },
 };
 
