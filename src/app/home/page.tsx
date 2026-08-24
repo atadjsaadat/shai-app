@@ -392,32 +392,25 @@ export default function HomePage() {
       </div>
 
       {homeData?.lastFeed && !feedDismissed && (
-        <div className={styles.lastFeedWrap}>
-          <Link
-            href="/log"
-            className={styles.lastFeedCard}
-            onClick={() => {
-              sessionStorage.setItem('shai_log_tab', 'feeds');
-              sessionStorage.setItem('shai_feeds_prefetch', JSON.stringify(homeData.lastFeed));
-            }}
-          >
-            <div className={styles.lastFeedLeft}>
-              <p className={styles.lastFeedLabel}>Last feed</p>
-              <p className={styles.lastFeedTime} suppressHydrationWarning>{timeSinceFeed(homeData.lastFeed.logged_at)}</p>
-              <p className={styles.lastFeedDetail}>{feedDetail(homeData.lastFeed)}</p>
-            </div>
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M8 5l5 5-5 5"/>
-            </svg>
-          </Link>
+        <Link
+          href="/log"
+          className={styles.lastFeedCard}
+          onClick={() => {
+            sessionStorage.setItem('shai_log_tab', 'feeds');
+            sessionStorage.setItem('shai_feeds_prefetch', JSON.stringify(homeData.lastFeed));
+          }}
+        >
+          <div className={styles.lastFeedLeft}>
+            <p className={styles.lastFeedLabel}>Last feed</p>
+            <p className={styles.lastFeedTime} suppressHydrationWarning>{timeSinceFeed(homeData.lastFeed.logged_at)}</p>
+            <p className={styles.lastFeedDetail}>{feedDetail(homeData.lastFeed)}</p>
+          </div>
           <button
             className={styles.lastFeedDismiss}
-            onClick={() => setFeedDismissed(true)}
+            onClick={(e) => { e.preventDefault(); setFeedDismissed(true); }}
             aria-label="Dismiss"
-          >
-            ×
-          </button>
-        </div>
+          >×</button>
+        </Link>
       )}
 
       <InstallBanner />
