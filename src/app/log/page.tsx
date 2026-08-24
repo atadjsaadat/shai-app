@@ -1002,6 +1002,7 @@ export default function LogPage() {
             onKeyDown={handleKeyDown}
             disabled={logCleaning}
             autoComplete="off"
+            autoCorrect="on"
             spellCheck
           />
           <button
