@@ -258,6 +258,7 @@ export default function AppointmentsPage() {
   async function handleAttended(appt: Appointment) {
     const next = !appt.attended
     setAppointments(prev => prev.map(a => a.id === appt.id ? { ...a, attended: next } : a))
+    sessionStorage.setItem('shai_home_stale', '1')
     try {
       await fetch(`/api/appointments/${appt.id}`, {
         method: 'PATCH',

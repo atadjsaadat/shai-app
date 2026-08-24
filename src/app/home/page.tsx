@@ -97,7 +97,7 @@ interface HomeApiResponse {
   targets: Targets;
   meals: Meal[];
   ageMonths: number;
-  appointments: Array<{ title: string; scheduled_at: string }>;
+  appointments: Array<{ title: string; scheduled_at: string; attended: boolean }>;
   wins: Array<{ id: string; win_type: string; food_involved: string | null }>;
   leap: { id: number; name: string; type: string; shaiMessage: string; daysUntil: number } | null;
   lastFeed: LastFeed | null;
@@ -125,6 +125,11 @@ function buildApiUrl(): string {
 
 function readCache(): HomeApiResponse | null {
   if (typeof window === 'undefined' || !_homeCache) return null;
+  if (sessionStorage.getItem('shai_home_stale')) {
+    sessionStorage.removeItem('shai_home_stale');
+    _homeCache = null;
+    return null;
+  }
   return _homeCache.cacheKey === getCacheKey() ? _homeCache.data : null;
 }
 
@@ -275,7 +280,7 @@ export default function HomePage() {
   const fallbackDate      = homeData?.fallbackDate ?? null;
   const winsRecentOnly    = homeData?.winsRecentOnly ?? false;
   const todayAppointments = (homeData?.appointments ?? []).filter(
-    (a) => a.scheduled_at.startsWith(localDate())
+    (a) => a.scheduled_at.startsWith(localDate()) && !a.attended
   );
   const hasMeals = meals.length > 0;
   const loading  = !homeData;
