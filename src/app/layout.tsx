@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Nunito, Patrick_Hand } from 'next/font/google'
 import './globals.css'
-import OrientationLock from '@/components/OrientationLock'
 
 const nunito = Nunito({
   variable: '--font-nunito',
@@ -37,10 +36,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${nunito.variable} ${patrickHand.variable}`}>
-      <body>
-        <OrientationLock />
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   )
 }

@@ -32,26 +32,6 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Portrait-only overlay — shown on iOS (where screen.orientation.lock is unsupported) when phone is rotated */
-@media screen and (orientation: landscape) and (max-height: 500px) {
-  body::after {
-    content: 'Please rotate your phone back to portrait';
-    position: fixed;
-    inset: 0;
-    background: #1a1a1a;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-nunito), system-ui, sans-serif;
-    font-size: 16px;
-    font-weight: 600;
-    text-align: center;
-    padding: 32px;
-    z-index: 9999;
-  }
-}
-
 body {
   background-color: var(--cream);
   color: var(--text-primary);
