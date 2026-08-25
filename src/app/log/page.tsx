@@ -139,6 +139,12 @@ function getMealParam(): MealType | null {
 
 type Phase = 'chatting' | 'confirming' | 'saving' | 'saved';
 
+function shortenName(name: string): string {
+  const commaIdx = name.indexOf(',');
+  const short = commaIdx !== -1 ? name.slice(0, commaIdx) : name;
+  return short.length > 30 ? short.slice(0, 27).trimEnd() + '…' : short;
+}
+
 const HARD_DAY_ACK =
   "That's okay — some days are just like that. You showed up, and that's what matters.";
 
@@ -304,6 +310,9 @@ export default function LogPage() {
   const [favouritesEditMode, setFavouritesEditMode] = useState(false);
   const [dismissedFavourites, setDismissedFavourites] = useState<Set<string>>(new Set());
   const [pinnedFavourites, setPinnedFavourites] = useState<Map<string, MealFavourite>>(new Map());
+  const [pendingPinItem, setPendingPinItem] = useState<ParsedFoodItem | null>(null);
+  const [pinNamePhase, setPinNamePhase] = useState<'confirm' | 'custom' | null>(null);
+  const [customPinName, setCustomPinName] = useState('');
 
   const loadQuickPicks = useCallback((meal: MealType) => {
     const key = STORAGE.dismissedFavourites(meal);
@@ -311,7 +320,7 @@ export default function LogPage() {
     setDismissedFavourites(new Set(dismissed));
     setFavouritesEditMode(false);
     const pinnedRaw: MealFavourite[] = JSON.parse(localStorage.getItem(STORAGE.pinnedFavourites(meal)) ?? '[]');
-    setPinnedFavourites(new Map(pinnedRaw.map(f => [f.name.toLowerCase().trim(), f])));
+    setPinnedFavourites(new Map(pinnedRaw.map(f => [(f.foods[0] ?? f.name).toLowerCase().trim(), f])));
     setMealFavourites([]);
     fetch(`/api/log/meal-favourites?mealType=${meal}`)
       .then((r) => r.json())
@@ -330,32 +339,52 @@ export default function LogPage() {
     const norm = name.toLowerCase().trim();
     const updatedPinned = existingPinned.filter(f => f.name.toLowerCase().trim() !== norm);
     localStorage.setItem(pinnedKey, JSON.stringify(updatedPinned));
-    setPinnedFavourites(new Map(updatedPinned.map(f => [f.name.toLowerCase().trim(), f])));
+    setPinnedFavourites(new Map(updatedPinned.map(f => [(f.foods[0] ?? f.name).toLowerCase().trim(), f])));
   };
 
   const handlePinToggle = (item: ParsedFoodItem) => {
+    const norm = item.food_name.toLowerCase().trim();
+    const isAlreadyPinned = pinnedFavourites.has(norm);
+    if (isAlreadyPinned) {
+      const pinnedKey = STORAGE.pinnedFavourites(mealType);
+      const existing: MealFavourite[] = JSON.parse(localStorage.getItem(pinnedKey) ?? '[]');
+      const updated = existing.filter(f => (f.foods[0] ?? f.name).toLowerCase().trim() !== norm);
+      localStorage.setItem(pinnedKey, JSON.stringify(updated));
+      setPinnedFavourites(new Map(updated.map(f => [(f.foods[0] ?? f.name).toLowerCase().trim(), f])));
+    } else {
+      setPendingPinItem(item);
+      setCustomPinName(shortenName(item.food_name));
+      setPinNamePhase('confirm');
+    }
+  };
+
+  const completePinWithName = (displayName: string) => {
+    if (!pendingPinItem) return;
+    const name = displayName.trim() || shortenName(pendingPinItem.food_name);
     const pinnedKey = STORAGE.pinnedFavourites(mealType);
     const existing: MealFavourite[] = JSON.parse(localStorage.getItem(pinnedKey) ?? '[]');
-    const norm = item.food_name.toLowerCase().trim();
-    const isAlreadyPinned = existing.some(f => f.name.toLowerCase().trim() === norm);
-    let updated: MealFavourite[];
-    if (isAlreadyPinned) {
-      updated = existing.filter(f => f.name.toLowerCase().trim() !== norm);
-    } else {
-      updated = [{ name: item.food_name, foods: [item.food_name], use_count: 0,
-        calories_kcal: item.calories_kcal, protein_g: item.protein_g, carbs_g: item.carbs_g,
-        fat_g: item.fat_g, fibre_g: item.fibre_g, sugar_g: item.sugar_g,
-        saturated_fat_g: item.saturated_fat_g, sodium_mg: item.sodium_mg, iron_mg: item.iron_mg,
-        calcium_mg: item.calcium_mg, vitamin_c_mg: item.vitamin_c_mg, vitamin_a_mcg: item.vitamin_a_mcg,
-        vitamin_d_mcg: item.vitamin_d_mcg, zinc_mg: item.zinc_mg, omega3_mg: item.omega3_mg,
-        b12_mcg: item.b12_mcg, b6_mg: item.b6_mg, folate_mcg: item.folate_mcg,
-        magnesium_mg: item.magnesium_mg, potassium_mg: item.potassium_mg, omega6_mg: item.omega6_mg,
-        iodine_mcg: item.iodine_mcg, selenium_mcg: item.selenium_mcg, phosphorus_mg: item.phosphorus_mg,
-        choline_mg: item.choline_mg, dha_mg: item.dha_mg, vitamin_k_mcg: item.vitamin_k_mcg,
-      }, ...existing];
-    }
+    const updated: MealFavourite[] = [{ name, foods: [pendingPinItem.food_name], use_count: 0,
+      calories_kcal: pendingPinItem.calories_kcal, protein_g: pendingPinItem.protein_g, carbs_g: pendingPinItem.carbs_g,
+      fat_g: pendingPinItem.fat_g, fibre_g: pendingPinItem.fibre_g, sugar_g: pendingPinItem.sugar_g,
+      saturated_fat_g: pendingPinItem.saturated_fat_g, sodium_mg: pendingPinItem.sodium_mg, iron_mg: pendingPinItem.iron_mg,
+      calcium_mg: pendingPinItem.calcium_mg, vitamin_c_mg: pendingPinItem.vitamin_c_mg, vitamin_a_mcg: pendingPinItem.vitamin_a_mcg,
+      vitamin_d_mcg: pendingPinItem.vitamin_d_mcg, zinc_mg: pendingPinItem.zinc_mg, omega3_mg: pendingPinItem.omega3_mg,
+      b12_mcg: pendingPinItem.b12_mcg, b6_mg: pendingPinItem.b6_mg, folate_mcg: pendingPinItem.folate_mcg,
+      magnesium_mg: pendingPinItem.magnesium_mg, potassium_mg: pendingPinItem.potassium_mg, omega6_mg: pendingPinItem.omega6_mg,
+      iodine_mcg: pendingPinItem.iodine_mcg, selenium_mcg: pendingPinItem.selenium_mcg, phosphorus_mg: pendingPinItem.phosphorus_mg,
+      choline_mg: pendingPinItem.choline_mg, dha_mg: pendingPinItem.dha_mg, vitamin_k_mcg: pendingPinItem.vitamin_k_mcg,
+    }, ...existing];
     localStorage.setItem(pinnedKey, JSON.stringify(updated));
-    setPinnedFavourites(new Map(updated.map(f => [f.name.toLowerCase().trim(), f])));
+    setPinnedFavourites(new Map(updated.map(f => [(f.foods[0] ?? f.name).toLowerCase().trim(), f])));
+    setPendingPinItem(null);
+    setPinNamePhase(null);
+    setCustomPinName('');
+  };
+
+  const cancelPin = () => {
+    setPendingPinItem(null);
+    setPinNamePhase(null);
+    setCustomPinName('');
   };
 
   async function handleAddSide() {
@@ -380,7 +409,7 @@ export default function LogPage() {
 
   const handleMealFavourite = (fav: MealFavourite) => {
     const foodItem: ParsedFoodItem = {
-      food_name: fav.name,
+      food_name: fav.foods[0] ?? fav.name,
       serving_size_description: null,
       calories_kcal: fav.calories_kcal, protein_g: fav.protein_g,
       carbs_g: fav.carbs_g, fat_g: fav.fat_g, fibre_g: fav.fibre_g,
@@ -844,7 +873,7 @@ export default function LogPage() {
             </div>
             <div className={styles.favouritesChips}>
               {displayFavourites.map((fav) => {
-                const isPinnedChip = pinnedFavourites.has(fav.name.toLowerCase().trim());
+                const isPinnedChip = pinnedFavourites.has((fav.foods[0] ?? fav.name).toLowerCase().trim());
                 const chipBg = MEAL_CHIP_BG[mealType];
                 const chipText = MEAL_CHIP_TEXT[mealType];
                 const chipBorder = MEAL_COLOURS[mealType];
@@ -859,7 +888,7 @@ export default function LogPage() {
                       onClick={() => !favouritesEditMode && handleMealFavourite(fav)}
                     >
                       {isPinnedChip && <span className={styles.favouriteChipStar}>♥</span>}
-                      {fav.name}
+                      {shortenName(fav.name)}
                     </button>
                   </div>
                 );
@@ -1101,6 +1130,35 @@ export default function LogPage() {
                   />
                 ))}
               </div>
+
+              {pendingPinItem && pinNamePhase === 'confirm' && (
+                <div className={styles.pinNamePrompt}>
+                  <p className={styles.pinNameText}>Save as &ldquo;{shortenName(pendingPinItem.food_name)}&rdquo;?</p>
+                  <div className={styles.pinNameBtns}>
+                    <button className={styles.pinNameYes} onClick={() => completePinWithName(shortenName(pendingPinItem.food_name))}>Yes</button>
+                    <button className={styles.pinNameNo} onClick={() => setPinNamePhase('custom')}>Rename</button>
+                    <button className={styles.pinNameCancel} onClick={cancelPin}>✕</button>
+                  </div>
+                </div>
+              )}
+
+              {pendingPinItem && pinNamePhase === 'custom' && (
+                <div className={styles.pinNamePrompt}>
+                  <input
+                    className={styles.pinNameInput}
+                    value={customPinName}
+                    onChange={(e) => setCustomPinName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' && customPinName.trim()) completePinWithName(customPinName); }}
+                    placeholder="e.g. Pasta night"
+                    autoFocus
+                    autoComplete="off"
+                  />
+                  <div className={styles.pinNameBtns}>
+                    <button className={styles.pinNameYes} onClick={() => completePinWithName(customPinName)} disabled={!customPinName.trim()}>Save</button>
+                    <button className={styles.pinNameCancel} onClick={cancelPin}>✕</button>
+                  </div>
+                </div>
+              )}
 
               {fromFavourite && addSideOpen ? (
                 <div className={styles.addSideRow}>

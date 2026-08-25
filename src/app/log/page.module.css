@@ -735,6 +735,82 @@
   opacity: 1;
 }
 
+.pinNamePrompt {
+  background: var(--oat);
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pinNameText {
+  font-size: 14px;
+  color: var(--text-primary);
+  margin: 0;
+  font-weight: 600;
+}
+
+.pinNameBtns {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pinNameYes {
+  background: var(--terracotta);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 18px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pinNameYes:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pinNameNo {
+  background: var(--cream);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 20px;
+  padding: 8px 18px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pinNameCancel {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  margin-left: auto;
+  line-height: 1;
+}
+
+.pinNameInput {
+  flex: 1;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 13px;
+  background: var(--cream);
+  color: var(--text-primary);
+  outline: none;
+  width: 100%;
+}
+
 .winInlineBtn {
   flex-shrink: 0;
   background: none;
