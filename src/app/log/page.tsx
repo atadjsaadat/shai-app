@@ -5,7 +5,6 @@ import { createSpeechRecognition } from '@/lib/speech/recognition';
 import { useRouter } from 'next/navigation';
 import SHAiPresence from '@/components/SHAiPresence';
 import Confetti from '@/components/Confetti';
-import BarcodeScanner from '@/components/BarcodeScanner';
 import FeedsTab from '@/components/FeedsTab';
 import styles from './page.module.css';
 import { saveFoodLog } from '@/lib/log/save';
@@ -273,7 +272,6 @@ export default function LogPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [childValidated, setChildValidated] = useState(false);
   const [mealFavourites, setMealFavourites] = useState<MealFavourite[]>([]);
-  const [showScanner, setShowScanner] = useState(false);
   const [fromBarcode, setFromBarcode] = useState(false);
   const [barcodeScoreData, setBarcodeScoreData] = useState<{ novaClass: number | null; additivesN: number | null } | null>(null);
   const [portionSelection, setPortionSelection] = useState<string | null>(null);
@@ -514,6 +512,25 @@ export default function LogPage() {
       });
   }, [router]);
 
+  // Handle "Log it now" from the scan page — product data already fetched, skip lookup
+  useEffect(() => {
+    const stored = sessionStorage.getItem('shai_scan_to_log');
+    if (!stored) return;
+    sessionStorage.removeItem('shai_scan_to_log');
+    try {
+      const { item, novaClass, additivesN } = JSON.parse(stored);
+      if (item) {
+        setPortionSelection(null);
+        resetReactions();
+        setFromBarcode(true);
+        setBarcodeScoreData({ novaClass: novaClass ?? null, additivesN: additivesN ?? null });
+        setParsedData({ message: '', foodItems: [item], clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: true });
+        setPhase('confirming');
+      }
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     const stored = sessionStorage.getItem('shai_edit_meal');
     if (!stored) return;
@@ -584,7 +601,6 @@ export default function LogPage() {
   };
 
   const handleBarcodeDetect = useCallback(async (barcode: string) => {
-    setShowScanner(false);
     setIsThinking(true);
     try {
       const res = await fetch(`/api/barcode/lookup?barcode=${encodeURIComponent(barcode)}`);
@@ -597,12 +613,13 @@ export default function LogPage() {
         return;
       }
       if (!res.ok) throw new Error('lookup failed');
-      const { item, novaClass, additivesN } = await res.json();
+      const { item, novaClass, additivesN, brand } = await res.json();
+      const enriched = { ...item, barcode, brand: brand ?? null, nova_classification: novaClass ?? null, additives_n: additivesN ?? null };
       setPortionSelection(null);
       resetReactions();
       setFromBarcode(true);
       setBarcodeScoreData({ novaClass: novaClass ?? null, additivesN: additivesN ?? null });
-      setParsedData({ message: '', foodItems: [item], clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: true });
+      setParsedData({ message: '', foodItems: [enriched], clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: true });
       setPhase('confirming');
     } catch {
       setMessages((prev) => [...prev, {
@@ -639,7 +656,7 @@ export default function LogPage() {
         }),
       });
 
-      const data: ParseApiResponse = await res.json();
+      let data: ParseApiResponse = await res.json();
 
       setMessages((prev) => [
         ...prev,
@@ -655,6 +672,26 @@ export default function LogPage() {
       }
 
       if (data.complete && !data.distressLevel) {
+        // Silently upgrade AI-estimated nutrients with exact barcode data where we have a match
+        try {
+          const matchRes = await fetch('/api/barcode/match', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ foodNames: data.foodItems.map((i: { food_name: string }) => i.food_name) }),
+          });
+          if (matchRes.ok) {
+            const { matches } = await matchRes.json();
+            if (Object.keys(matches).length > 0) {
+              data = {
+                ...data,
+                foodItems: data.foodItems.map((item: ParsedFoodItem) => {
+                  const match = matches[item.food_name];
+                  return match ? { ...match.item, food_name: item.food_name } : item;
+                }),
+              };
+            }
+          }
+        } catch { /* AI estimate fallback — silent */ }
         setParsedData(data);
         setPhase('confirming');
       }
@@ -785,10 +822,6 @@ export default function LogPage() {
   return (
     <div className={styles.screen}>
       {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
-      {showScanner && (
-        <BarcodeScanner onDetect={handleBarcodeDetect} onClose={() => setShowScanner(false)} />
-      )}
-
       {/* ── Top bar ── */}
       <div className={styles.topBar}>
         <button className={styles.backBtn} onClick={() => router.push('/home')} aria-label="Back to home">
@@ -1034,21 +1067,7 @@ export default function LogPage() {
             autoCorrect="on"
             spellCheck
           />
-          <button
-            className={styles.barcodeBtn}
-            onClick={() => setShowScanner(true)}
-            aria-label="Scan barcode"
-            type="button"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="4" width="3" height="16" rx="0.5" fill="currentColor" stroke="none" />
-              <rect x="7" y="4" width="1.5" height="16" rx="0.5" fill="currentColor" stroke="none" />
-              <rect x="10.5" y="4" width="3" height="16" rx="0.5" fill="currentColor" stroke="none" />
-              <rect x="15.5" y="4" width="1.5" height="16" rx="0.5" fill="currentColor" stroke="none" />
-              <rect x="19" y="4" width="3" height="16" rx="0.5" fill="currentColor" stroke="none" />
-            </svg>
-          </button>
-          <button
+<button
             className={`${styles.micBtn}${(logListening || logCleaning) ? ` ${styles.micBtnActive}` : ''}`}
             onClick={toggleLogDictation}
             disabled={logCleaning}

@@ -57,6 +57,9 @@ export async function POST(request: Request) {
     serving_size_description: item.serving_size_description,
     data_source: item.data_source ?? 'ai',
     confidence_score: item.confidence_score,
+    barcode:             item.barcode ?? null,
+    brand:               item.brand ?? null,
+    nova_classification: item.nova_classification ?? null,
     // Core macros
     calories_kcal:    item.calories_kcal,
     protein_g:        item.protein_g,

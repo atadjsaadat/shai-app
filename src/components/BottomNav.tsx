@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import styles from './BottomNav.module.css';
 
 const TABS = [
@@ -58,8 +58,31 @@ const TABS = [
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didLongPress = useRef(false);
+
   useEffect(() => { setMounted(true); }, []);
+
+  const handleLogTouchStart = () => {
+    didLongPress.current = false;
+    longPressTimer.current = setTimeout(() => {
+      didLongPress.current = true;
+      router.push('/scan');
+    }, 600);
+  };
+
+  const handleLogTouchEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  const handleLogClick = () => {
+    if (!didLongPress.current) router.push('/log');
+  };
 
   const left = TABS.slice(0, 2);
   const right = TABS.slice(2);
@@ -82,12 +105,19 @@ export default function BottomNav() {
         })}
 
         <div className={styles.logSlot}>
-          <Link href="/log" className={styles.logBtn} aria-label="Log a meal">
+          <button
+            className={styles.logBtn}
+            aria-label="Log a meal (hold to scan in shop)"
+            onTouchStart={handleLogTouchStart}
+            onTouchEnd={handleLogTouchEnd}
+            onTouchCancel={handleLogTouchEnd}
+            onClick={handleLogClick}
+          >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-          </Link>
+          </button>
           <span className={styles.logLabel}>Log</span>
         </div>
 

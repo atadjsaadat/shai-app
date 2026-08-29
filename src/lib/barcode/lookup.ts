@@ -115,6 +115,7 @@ export interface BarcodeResult {
   item: ParsedFoodItem
   novaClass: number | null
   additivesN: number | null
+  brand: string | null
 }
 
 export async function lookupBarcode(barcode: string): Promise<BarcodeResult | null> {
@@ -135,6 +136,7 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeResult | nu
       item: cacheRowToFoodItem(cached),
       novaClass: (cached.nova_classification as number | null) ?? null,
       additivesN: (cached.additives_n as number | null) ?? null,
+      brand: (cached.brand as string | null) ?? null,
     }
   }
 
@@ -180,5 +182,5 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeResult | nu
     scan_count: 1,
   })
 
-  return { item, novaClass, additivesN }
+  return { item, novaClass, additivesN, brand: brand ?? null }
 }

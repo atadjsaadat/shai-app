@@ -42,6 +42,11 @@ export interface ParsedFoodItem {
   vitamin_k_mcg: number | null;
   confidence_score: number;
   data_source?: 'ai' | 'barcode' | 'manual';
+  // Barcode-specific metadata (populated on scan, passed through to save)
+  barcode?: string | null;
+  brand?: string | null;
+  nova_classification?: number | null;
+  additives_n?: number | null;
 }
 
 export interface LogMessage {
