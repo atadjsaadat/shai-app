@@ -216,7 +216,7 @@ export default function ScanPage() {
               onClick={() => handleOutcome('rejected')}
               disabled={phase === 'saving'}
             >
-              Leaving it
+              Not for Me
             </button>
           </div>
         </div>
@@ -228,7 +228,7 @@ export default function ScanPage() {
           <p className={styles.doneText}>
             {outcome === 'purchased'
               ? 'Added to your pantry — mention it when you log a meal and we\'ll use the exact data.'
-              : 'Noted. We\'ll remember you left it.'}
+              : 'Noted. We\'ll remember this one\'s not for you.'}
           </p>
           <button className={styles.addingBtn} onClick={() => setPhase('scanning')}>Scan another</button>
           <button className={styles.secondaryBtn} onClick={() => router.push('/home')}>Done</button>
