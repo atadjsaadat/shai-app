@@ -202,7 +202,7 @@ export default function ScanPage() {
               onClick={() => handleOutcome('purchased')}
               disabled={phase === 'saving'}
             >
-              Adding it
+              Add to pantry
             </button>
             <button
               className={styles.logNowBtn}
@@ -227,7 +227,7 @@ export default function ScanPage() {
         <div className={styles.resultCard}>
           <p className={styles.doneText}>
             {outcome === 'purchased'
-              ? 'Saved — mention it when you log a meal and we\'ll use the exact data.'
+              ? 'Added to your pantry — mention it when you log a meal and we\'ll use the exact data.'
               : 'Noted. We\'ll remember you left it.'}
           </p>
           <button className={styles.addingBtn} onClick={() => setPhase('scanning')}>Scan another</button>
