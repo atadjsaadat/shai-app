@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import BarcodeScanner from '@/components/BarcodeScanner'
+import { stopCachedStream } from '@/lib/camera/barcode'
 import { calculateChildProductScore, type ScoreBand } from '@/lib/nutrition/childProductScore'
 import type { ParsedFoodItem } from '@/lib/log/types'
 import styles from './page.module.css'
@@ -43,11 +44,16 @@ export default function ScanPage() {
   const [showHint, setShowHint] = useState(false)
 
   useEffect(() => {
+    // Stop camera stream when leaving this page
+    return () => stopCachedStream()
+  }, [])
+
+  useEffect(() => {
     // First-use hint
     if (!localStorage.getItem('shai_scan_hint_shown')) {
       setShowHint(true)
       localStorage.setItem('shai_scan_hint_shown', '1')
-      setTimeout(() => setShowHint(false), 3500)
+      setTimeout(() => setShowHint(false), 4500)
     }
     // Load child data for score card
     fetch('/api/children')
@@ -141,7 +147,7 @@ export default function ScanPage() {
 
       {showHint && (
         <div className={styles.hint}>
-          Scan in the shop — save products before you buy
+          Tap &ldquo;Allow&rdquo; (not &ldquo;Allow Once&rdquo;) and camera won&apos;t ask again
         </div>
       )}
 
