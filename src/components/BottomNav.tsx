@@ -70,7 +70,7 @@ export default function BottomNav() {
     longPressTimer.current = setTimeout(() => {
       didLongPress.current = true;
       router.push('/scan');
-    }, 600);
+    }, 400);
   };
 
   const handleLogTouchEnd = () => {
@@ -111,6 +111,7 @@ export default function BottomNav() {
             onTouchStart={handleLogTouchStart}
             onTouchEnd={handleLogTouchEnd}
             onTouchCancel={handleLogTouchEnd}
+            onContextMenu={(e) => e.preventDefault()}
             onClick={handleLogClick}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">

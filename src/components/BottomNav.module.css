@@ -71,6 +71,12 @@
   text-decoration: none;
   margin-top: -28px;
   animation: logPulse 2s ease-in-out infinite;
+  /* Prevent iOS long-press context menu */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+  cursor: pointer;
 }
 
 .logLabel {
