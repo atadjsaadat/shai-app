@@ -261,3 +261,33 @@
   font-family: var(--font-nunito), sans-serif;
   cursor: pointer;
 }
+
+.noDataNote {
+  background: var(--oat);
+  border: 1px solid var(--oat-dark);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-family: var(--font-nunito), sans-serif;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.photoLabelBtn {
+  background: none;
+  color: var(--terracotta);
+  border: 1.5px solid var(--terracotta);
+  border-radius: 12px;
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: var(--font-nunito), sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.photoLabelBtn:disabled { opacity: 0.6; }

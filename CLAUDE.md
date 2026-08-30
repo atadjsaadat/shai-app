@@ -20,6 +20,7 @@
 11. If something the founder suggests does not work well technically or commercially — say so clearly and correct it, do not agree to be agreeable
 12. Build the data layer and monetisation hooks into everything from day one — tier flags, analytics events, schema fields — so nothing needs retrofitting later
 13. EU AI Act Article 50 compliance — every screen or flow where SHAI speaks to a user must include a visible AI disclosure: "SHAI is an AI assistant." Build this into the UI from day one, not retrofitted later. Already enforceable as of August 2 2026.
+14. AI-estimated nutritional values — hard rule, non-negotiable. Never display AI-estimated nutritional values as if they are real product data. Never generate a nutrition score, rating, or any assessment from estimated or null data. If a value is AI-estimated it must be clearly labelled "Nutritional values are estimated — actual amounts may vary" wherever it appears. If nutritional data is null or estimated, do not show a macro breakdown or score. The barcode data waterfall is: Nutritionix API first → Open Food Facts second → AI estimation absolute last resort only, clearly labelled. Photo label capture (parent photographs the product's nutrition panel) extracts real label data via Haiku vision and saves it to the Supabase barcode cache — this counts as real data, not estimated.
 
 ---
 
@@ -70,7 +71,8 @@ Never use ambiguous directional language ("go to the bottom of the function" etc
 - **Supabase** — Frankfurt region. RLS from day one. Data API enabled. "Auto expose new tables" off. Pro tier before first real user.
 - **Vercel** — Personal tier. GitHub SSH connected. Preview deployments on every branch.
 - **Anthropic API** — separate from Claude.ai subscription. Spend alert €100/month in beta.
-- **Open Food Facts** — barcode scanning, 3M+ products, free. Every scan cached in Supabase — repeat scans instant, zero API cost.
+- **Nutritionix API** — barcode lookup, first source in the waterfall. Better data quality for branded products. Free tier: 500 UPC lookups/day. Paid tier if volume demands. Keys: NUTRITIONIX_APP_ID + NUTRITIONIX_APP_KEY (env vars only, never in code).
+- **Open Food Facts** — barcode lookup fallback, 3M+ products, free. Used if Nutritionix returns no calorie data or doesn't find the product. Every successful scan from either source cached in Supabase — repeat scans instant, zero API cost.
 - **OpenWeatherMap** — 1 call per child per calendar day, cached. Never per meal log.
 - **Stripe** — dormant until premium activates. Schema built from day one.
 - **Sentry** — error tracking from day one.

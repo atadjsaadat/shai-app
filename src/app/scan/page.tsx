@@ -1,12 +1,40 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import BarcodeScanner from '@/components/BarcodeScanner'
 import { stopCachedStream } from '@/lib/camera/barcode'
 import { calculateChildProductScore, type ScoreBand } from '@/lib/nutrition/childProductScore'
 import type { ParsedFoodItem } from '@/lib/log/types'
 import styles from './page.module.css'
+
+function compressToBase64(file: File, maxBytes = 800_000): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      const MAX_DIM = 1600
+      let { width, height } = img
+      if (width > MAX_DIM || height > MAX_DIM) {
+        const ratio = Math.min(MAX_DIM / width, MAX_DIM / height)
+        width = Math.round(width * ratio)
+        height = Math.round(height * ratio)
+      }
+      const canvas = document.createElement('canvas')
+      canvas.width = width; canvas.height = height
+      canvas.getContext('2d')!.drawImage(img, 0, 0, width, height)
+      const tryEncode = (q: number) => {
+        const dataUrl = canvas.toDataURL('image/jpeg', q)
+        const b64 = dataUrl.split(',')[1]
+        if (b64.length * 0.75 < maxBytes || q <= 0.3) resolve(b64)
+        else tryEncode(q - 0.15)
+      }
+      tryEncode(0.85)
+    }
+    img.src = url
+  })
+}
 
 const BAND_COLOURS: Record<ScoreBand, string> = {
   good: '#7A9E7E',
@@ -43,6 +71,8 @@ export default function ScanPage() {
   const [outcome, setOutcome] = useState<'purchased' | 'rejected' | null>(null)
   const [pantryFull, setPantryFull] = useState<{ limit: number; tier: string } | null>(null)
   const [saveFailed, setSaveFailed] = useState(false)
+  const [labelPhotoLoading, setLabelPhotoLoading] = useState(false)
+  const labelPhotoInputRef = useRef<HTMLInputElement>(null)
 
   const [showHint, setShowHint] = useState(false)
 
@@ -118,6 +148,26 @@ export default function ScanPage() {
       if (json.pantryFull) setPantryFull({ limit: json.limit, tier: json.tier })
     } catch { setSaveFailed(true) }
     setPhase('done')
+  }
+
+  const handleLabelPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !scannedBarcode) return
+    setLabelPhotoLoading(true)
+    try {
+      const imageBase64 = await compressToBase64(file)
+      const res = await fetch('/api/barcode/photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64, mediaType: 'image/jpeg', barcode: scannedBarcode }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.item?.calories_kcal != null) setItem(data.item)
+      }
+    } catch { /* ignore — user can try again */ }
+    setLabelPhotoLoading(false)
   }
 
   const handleLogNow = () => {
@@ -197,26 +247,44 @@ export default function ScanPage() {
             {brand && <p className={styles.productBrand}>{brand}</p>}
           </div>
 
-          <div className={styles.macroRow}>
-            {MACROS.map(({ key, label, unit }) => {
-              const v = item[key] as number | null
-              if (v == null) return null
-              return (
-                <span key={key} className={styles.macroChip}>
-                  <span className={styles.macroVal}>{Math.round(v)}{unit}</span>
-                  <span className={styles.macroLabel}>{label}</span>
-                </span>
-              )
-            })}
-          </div>
+          {item.calories_kcal != null ? (
+            <>
+              <div className={styles.macroRow}>
+                {MACROS.map(({ key, label, unit }) => {
+                  const v = item[key] as number | null
+                  if (v == null) return null
+                  return (
+                    <span key={key} className={styles.macroChip}>
+                      <span className={styles.macroVal}>{Math.round(v)}{unit}</span>
+                      <span className={styles.macroLabel}>{label}</span>
+                    </span>
+                  )
+                })}
+              </div>
 
-          {scoreResult && (
-            <div className={styles.scoreCard} style={{ borderColor: BAND_COLOURS[scoreResult.band], background: BAND_BG[scoreResult.band] }}>
-              <p className={styles.scoreLabel}>SHAi score{childName ? ` for ${childName}` : ''}&apos;s age</p>
-              <p className={styles.scoreNumber} style={{ color: BAND_COLOURS[scoreResult.band] }}>{scoreResult.score}</p>
-              <p className={styles.scoreText}>{scoreResult.label}</p>
-            </div>
+              {scoreResult && (
+                <div className={styles.scoreCard} style={{ borderColor: BAND_COLOURS[scoreResult.band], background: BAND_BG[scoreResult.band] }}>
+                  <p className={styles.scoreLabel}>SHAi score{childName ? ` for ${childName}` : ''}&apos;s age</p>
+                  <p className={styles.scoreNumber} style={{ color: BAND_COLOURS[scoreResult.band] }}>{scoreResult.score}</p>
+                  <p className={styles.scoreText}>{scoreResult.label}</p>
+                </div>
+              )}
+            </>
+          ) : (
+            <p className={styles.noDataNote}>
+              Nutritional data not found for this product. Add to pantry or log it, then tap below to photograph the label and we&apos;ll fill in the numbers.
+            </p>
           )}
+
+          {/* Hidden file input for label photo capture */}
+          <input
+            ref={labelPhotoInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            style={{ display: 'none' }}
+            onChange={handleLabelPhoto}
+          />
 
           <div className={styles.actions}>
             <button
@@ -233,6 +301,15 @@ export default function ScanPage() {
             >
               Log it now
             </button>
+            {item.calories_kcal == null && (
+              <button
+                className={styles.photoLabelBtn}
+                onClick={() => labelPhotoInputRef.current?.click()}
+                disabled={phase === 'saving' || labelPhotoLoading}
+              >
+                {labelPhotoLoading ? 'Reading label…' : 'Photo the label for nutrition data'}
+              </button>
+            )}
             <button
               className={styles.leavingBtn}
               onClick={() => handleOutcome('rejected')}

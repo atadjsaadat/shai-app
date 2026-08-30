@@ -267,21 +267,25 @@ function FoodItemCard({ item, multiplier = 1, portionLabel, isWin, onWinToggle, 
           <span className={styles.serving}>{servingDesc}</span>
         )}
       </div>
-      <div className={styles.macroRow}>
-        {MACROS.map(({ key, label, unit, color }) => {
-          const raw = item[key] as number | null | undefined;
-          if (raw == null) return null;
-          return (
-            <span
-              key={key}
-              className={styles.macroChip}
-              style={{ '--c': color } as React.CSSProperties}
-            >
-              {Math.round(raw * multiplier)}{unit} {label}
-            </span>
-          );
-        })}
-      </div>
+      {item.data_source === 'ai' ? (
+        <p className={styles.estimatedNote}>Nutritional values are estimated — actual amounts may vary</p>
+      ) : (
+        <div className={styles.macroRow}>
+          {MACROS.map(({ key, label, unit, color }) => {
+            const raw = item[key] as number | null | undefined;
+            if (raw == null) return null;
+            return (
+              <span
+                key={key}
+                className={styles.macroChip}
+                style={{ '--c': color } as React.CSSProperties}
+              >
+                {Math.round(raw * multiplier)}{unit} {label}
+              </span>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -1274,7 +1278,9 @@ function LogPage() {
                 </div>
               )}
 
-              {fromBarcode && barcodeScoreData && parsedData.foodItems[0] && (
+              {fromBarcode && barcodeScoreData && parsedData.foodItems[0] &&
+               parsedData.foodItems[0].calories_kcal != null &&
+               parsedData.foodItems[0].data_source !== 'ai' && (
                 <ProductScoreCard
                   item={parsedData.foodItems[0]}
                   novaClass={barcodeScoreData.novaClass}
