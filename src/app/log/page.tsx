@@ -785,7 +785,7 @@ function LogPage() {
       }
 
       if (data.complete && !data.distressLevel) {
-        // Check for barcode/pantry match — confirm with parent before logging
+        // Check for barcode/pantry match
         try {
           const matchRes = await fetch('/api/barcode/match', {
             method: 'POST',
@@ -797,12 +797,25 @@ function LogPage() {
             const firstKey = Object.keys(matches)[0];
             if (firstKey && matches[firstKey]) {
               const match = matches[firstKey];
+              const resetState = () => {
+                setPortionSelection(null);
+                setReactions([]); setNoReaction(false); setIsWin(false); setWinNote('');
+                setShowReactions(false); confettiFiredRef.current = false;
+                setAllergyPromptActive(false); setAllergyDismissed(false);
+                setAllergyContextFoods([]); setSelectedAllergyFood(null); setAllergyAdded(false);
+              };
+              const isPantryStub = data.foodItems[0]?.calories_kcal == null;
+              if (isPantryStub) {
+                // Route already confirmed the product — go straight to confirmation with barcode nutrition
+                resetState();
+                setBarcodeScoreData({ novaClass: match.novaClass ?? null, additivesN: match.additivesN ?? null });
+                setParsedData({ ...data, foodItems: [match.item] });
+                setPhase('confirming');
+                return;
+              }
+              // AI has nutrition — show chip so parent can upgrade to exact barcode data
               const displayName = [match.brand, match.item.food_name].filter(Boolean).join(' ');
-              setPortionSelection(null);
-              setReactions([]); setNoReaction(false); setIsWin(false); setWinNote('');
-              setShowReactions(false); confettiFiredRef.current = false;
-              setAllergyPromptActive(false); setAllergyDismissed(false);
-              setAllergyContextFoods([]); setSelectedAllergyFood(null); setAllergyAdded(false);
+              resetState();
               setPendingBarcodeItem({ item: match.item, novaClass: match.novaClass ?? null, additivesN: match.additivesN ?? null });
               setMessages((prev) => [...prev, {
                 id: generateId(),
