@@ -15,6 +15,38 @@ import { STORAGE } from '@/lib/storage/keys';
 import { ALL_ALLERGENS, ALLERGY_TRIGGER_REACTIONS } from '@/lib/allergens';
 import AIDisclosure from '@/components/AIDisclosure';
 
+async function compressImage(file: File, maxBytes = 800_000): Promise<{ base64: string; mediaType: string }> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      const MAX_DIM = 1600
+      let { width, height } = img
+      if (width > MAX_DIM || height > MAX_DIM) {
+        const ratio = Math.min(MAX_DIM / width, MAX_DIM / height)
+        width = Math.round(width * ratio)
+        height = Math.round(height * ratio)
+      }
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      canvas.getContext('2d')!.drawImage(img, 0, 0, width, height)
+      const tryEncode = (quality: number) => {
+        const dataUrl = canvas.toDataURL('image/jpeg', quality)
+        const base64 = dataUrl.split(',')[1]
+        if (base64.length * 0.75 < maxBytes || quality <= 0.3) {
+          resolve({ base64, mediaType: 'image/jpeg' })
+        } else {
+          tryEncode(quality - 0.15)
+        }
+      }
+      tryEncode(0.85)
+    }
+    img.src = url
+  })
+}
+
 const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack', 'hydration'];
 
 const REACTION_OPTIONS = [
@@ -295,6 +327,8 @@ export default function LogPage() {
   const [showWinToast, setShowWinToast] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const confettiFiredRef = useRef(false);
+  const labelPhotoInputRef = useRef<HTMLInputElement>(null);
+  const [showLabelPhotoBtn, setShowLabelPhotoBtn] = useState(false);
   const searchParams = useSearchParams();
   const logDate = searchParams.get('date');
 
@@ -611,8 +645,9 @@ export default function LogPage() {
         setMessages((prev) => [...prev, {
           id: generateId(),
           role: 'assistant',
-          content: "I couldn't find that product. Could you tell me what it is?",
+          content: "I couldn't find that one. You can photo the nutrition label and I'll read it, or just describe it.",
         }]);
+        setShowLabelPhotoBtn(true);
         return;
       }
       if (!res.ok) throw new Error('lookup failed');
@@ -656,6 +691,46 @@ export default function LogPage() {
     }]);
   }, []);
 
+  const handleLabelPhoto = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setShowLabelPhotoBtn(false);
+    setIsThinking(true);
+    try {
+      const { base64, mediaType } = await compressImage(file);
+      const res = await fetch('/api/barcode/photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: base64, mediaType }),
+      });
+      if (!res.ok) throw new Error('read failed');
+      const { item } = await res.json();
+      const hasName = item.food_name && item.food_name !== 'Scanned product';
+      setPortionSelection(null);
+      setReactions([]); setNoReaction(false); setIsWin(false); setWinNote('');
+      setShowReactions(false); confettiFiredRef.current = false;
+      setAllergyPromptActive(false); setAllergyDismissed(false);
+      setAllergyContextFoods([]); setSelectedAllergyFood(null); setAllergyAdded(false);
+      setPendingBarcodeItem({ item, novaClass: null, additivesN: null });
+      setMessages((prev) => [...prev, {
+        id: generateId(),
+        role: 'assistant',
+        content: hasName
+          ? `I read the label — found ${item.food_name}. Does that look right?`
+          : "I read the label and pulled the nutritional information. Does that look right?",
+      }]);
+    } catch {
+      setMessages((prev) => [...prev, {
+        id: generateId(),
+        role: 'assistant',
+        content: "I couldn't read the label clearly — could you describe the product instead?",
+      }]);
+    } finally {
+      setIsThinking(false);
+    }
+  }, []);
+
   const sendMessage = useCallback(async () => {
     const text = input.trim();
     if (!text || isThinking || phase !== 'chatting') return;
@@ -665,6 +740,7 @@ export default function LogPage() {
 
     setMessages(nextMessages);
     setInput('');
+    setShowLabelPhotoBtn(false);
     setIsThinking(true);
     textareaRef.current?.focus(); // sync — keeps iOS keyboard open
 
@@ -1061,6 +1137,18 @@ export default function LogPage() {
           </div>
         )}
 
+        {showLabelPhotoBtn && !isThinking && phase === 'chatting' && (
+          <div className={styles.barcodeConfirmRow}>
+            <button className={styles.labelPhotoBtn} onClick={() => labelPhotoInputRef.current?.click()}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+              Photo the label
+            </button>
+          </div>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
 
@@ -1410,6 +1498,14 @@ export default function LogPage() {
         </div>
       )}
       </>)}
+      <input
+        ref={labelPhotoInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className={styles.hiddenInput}
+        onChange={handleLabelPhoto}
+      />
     </div>
   );
 }

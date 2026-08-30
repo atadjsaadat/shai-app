@@ -1416,3 +1416,22 @@
   padding: 8px 18px;
   cursor: pointer;
 }
+
+.labelPhotoBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  background: var(--oat);
+  color: var(--text-primary);
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 20px;
+  padding: 8px 18px;
+  cursor: pointer;
+}
+
+.hiddenInput {
+  display: none;
+}
