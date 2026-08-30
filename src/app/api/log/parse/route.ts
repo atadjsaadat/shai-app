@@ -39,14 +39,12 @@ export async function POST(req: NextRequest) {
   const latestUserMessage = [...messages].reverse().find(m => m.role === 'user')?.content ?? '';
   const anthropic = createAnthropicClient();
 
-  // ── Pantry intercept — always runs before Haiku ──────────────────────────
+  // ── Pantry check — runs first for every message ──────────────────────────
   const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
   const nMsg = norm(latestUserMessage);
+  const msgWords = nMsg.split(' ').filter(w => w.length >= 3);
 
-  const PANTRY_TRIGGERS = ['pantry', 'scanned', 'i scanned', 'from the scan', 'saved it', 'the one i saved', 'in my pantry', 'from my pantry', 'from the pantry', 'my pantry', 'the one i already'];
-  const isPantryRef = PANTRY_TRIGGERS.some(t => nMsg.includes(t));
-
-  // Helper — build a null-nutrient food item (full nutrition comes from barcode match)
+  // Helper — null-nutrient stub; full nutrition fetched from DB via barcode match
   const pantryFoodItem = (name: string) => ({
     food_name: name, serving_size_description: null,
     calories_kcal: null, protein_g: null, carbs_g: null, fat_g: null,
@@ -58,13 +56,31 @@ export async function POST(req: NextRequest) {
     choline_mg: null, dha_mg: null, vitamin_k_mcg: null, confidence_score: 0.95,
   });
 
-  // 1. Check if any pantry product name word appears in the message — catches "Museli and milk"
+  const PANTRY_TRIGGERS = ['pantry', 'scanned', 'i scanned', 'saved it', 'the one i', 'in my pantry', 'from my pantry', 'from the pantry', 'my pantry'];
+  const LIST_TRIGGERS = ['list', 'show', 'what did i scan', 'what have i scanned', 'show all', 'all my', 'show my pantry', 'whats in my pantry', 'what is in my pantry'];
+  const isPantryRef = PANTRY_TRIGGERS.some(t => nMsg.includes(t));
+  const isListReq = LIST_TRIGGERS.some(t => nMsg.includes(t)) && (isPantryRef || nMsg.includes('scan'));
+
+  // List all pantry items on request
+  if (isListReq && pantryItems.length > 0) {
+    const list = pantryItems.map(p => [p.brand, p.product_name].filter(Boolean).join(' ')).join(', ');
+    return NextResponse.json({
+      message: `Here's what's in your pantry: ${list}. Which one did they have?`,
+      foodItems: [], clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: false,
+    } satisfies ParseApiResponse);
+  }
+
+  // Match every message against pantry — bidirectional word overlap (3+ chars)
   let productMatch: { product_name: string; brand: string | null } | null = null;
   for (const p of pantryItems) {
     const nName = norm(p.product_name);
     const nBrand = p.brand ? norm(p.brand) : '';
+    // Full name or brand contained in message
     if (nMsg.includes(nName) || (nBrand && nMsg.includes(nBrand))) { productMatch = p; break; }
-    if (nName.split(' ').filter(w => w.length > 3).some(w => nMsg.includes(w))) { productMatch = p; break; }
+    // Any 3+ char word from product name appears in message
+    if (nName.split(' ').filter(w => w.length >= 3).some(w => nMsg.includes(w))) { productMatch = p; break; }
+    // Any 3+ char word from message appears in product name or brand
+    if (msgWords.some(w => nName.includes(w) || (nBrand && nBrand.includes(w)))) { productMatch = p; break; }
   }
 
   if (productMatch) {
@@ -76,7 +92,7 @@ export async function POST(req: NextRequest) {
     } satisfies ParseApiResponse);
   }
 
-  // 2. Pantry reference but no product name in message
+  // Explicit pantry reference but no product name matched
   if (isPantryRef) {
     if (pantryItems.length === 0) {
       return NextResponse.json({
@@ -86,16 +102,15 @@ export async function POST(req: NextRequest) {
     }
     if (pantryItems.length === 1) {
       const p = pantryItems[0];
-      const displayName = [p.brand, p.product_name].filter(Boolean).join(' ');
       return NextResponse.json({
-        message: `I found ${displayName} in your pantry — is that the one you're logging?`,
+        message: `I found ${[p.brand, p.product_name].filter(Boolean).join(' ')} in your pantry — is that the one you're logging?`,
         foodItems: [pantryFoodItem(p.product_name)],
         clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: true,
       } satisfies ParseApiResponse);
     }
-    const list = pantryItems.slice(0, 4).map(p => p.product_name).join(', ');
+    const list = pantryItems.slice(0, 5).map(p => p.product_name).join(', ');
     return NextResponse.json({
-      message: `Which one from your pantry? You have: ${list}${pantryItems.length > 4 ? ` and ${pantryItems.length - 4} more` : ''}.`,
+      message: `Which one from your pantry? You have: ${list}${pantryItems.length > 5 ? ` and ${pantryItems.length - 5} more — just ask to see the full list` : ''}.`,
       foodItems: [], clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: false,
     } satisfies ParseApiResponse);
   }
