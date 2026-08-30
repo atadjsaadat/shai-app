@@ -39,57 +39,65 @@ export async function POST(req: NextRequest) {
   const latestUserMessage = [...messages].reverse().find(m => m.role === 'user')?.content ?? '';
   const anthropic = createAnthropicClient();
 
-  // ── Pantry reference intercept — runs before Haiku ──────────────────────
-  const PANTRY_TRIGGERS = ['pantry', 'scanned', 'i scanned', 'from the scan', 'saved it', 'the one i saved', 'in my pantry', 'from my pantry', 'from the pantry', 'my pantry', 'scanned product', 'nutritional info for', 'nutrition info for', 'bring up the', 'log the'];
-  const lowerMsg = latestUserMessage.toLowerCase();
-  const isPantryRef = PANTRY_TRIGGERS.some(t => lowerMsg.includes(t));
+  // ── Pantry intercept — always runs before Haiku ──────────────────────────
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
+  const nMsg = norm(latestUserMessage);
 
-  if (isPantryRef && pantryItems.length === 0) {
+  const PANTRY_TRIGGERS = ['pantry', 'scanned', 'i scanned', 'from the scan', 'saved it', 'the one i saved', 'in my pantry', 'from my pantry', 'from the pantry', 'my pantry', 'the one i already'];
+  const isPantryRef = PANTRY_TRIGGERS.some(t => nMsg.includes(t));
+
+  // Helper — build a null-nutrient food item (full nutrition comes from barcode match)
+  const pantryFoodItem = (name: string) => ({
+    food_name: name, serving_size_description: null,
+    calories_kcal: null, protein_g: null, carbs_g: null, fat_g: null,
+    fibre_g: null, sugar_g: null, saturated_fat_g: null, sodium_mg: null,
+    iron_mg: null, calcium_mg: null, vitamin_c_mg: null, vitamin_a_mcg: null,
+    vitamin_d_mcg: null, zinc_mg: null, omega3_mg: null, b12_mcg: null,
+    b6_mg: null, folate_mcg: null, magnesium_mg: null, potassium_mg: null,
+    omega6_mg: null, iodine_mcg: null, selenium_mcg: null, phosphorus_mg: null,
+    choline_mg: null, dha_mg: null, vitamin_k_mcg: null, confidence_score: 0.95,
+  });
+
+  // 1. Check if any pantry product name word appears in the message — catches "Museli and milk"
+  let productMatch: { product_name: string; brand: string | null } | null = null;
+  for (const p of pantryItems) {
+    const nName = norm(p.product_name);
+    const nBrand = p.brand ? norm(p.brand) : '';
+    if (nMsg.includes(nName) || (nBrand && nMsg.includes(nBrand))) { productMatch = p; break; }
+    if (nName.split(' ').filter(w => w.length > 3).some(w => nMsg.includes(w))) { productMatch = p; break; }
+  }
+
+  if (productMatch) {
+    const displayName = [productMatch.brand, productMatch.product_name].filter(Boolean).join(' ');
     return NextResponse.json({
-      message: "I can't see your pantry right now — what was the product called? I'll log it accurately for you.",
-      foodItems: [],
-      clarifyingQuestion: null,
-      mealType,
-      isHardFoodDay: false,
-      complete: false,
+      message: `I found ${displayName} in your pantry — is that the one you're logging?`,
+      foodItems: [pantryFoodItem(productMatch.product_name)],
+      clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: true,
     } satisfies ParseApiResponse);
   }
 
-  if (isPantryRef && pantryItems.length > 0) {
-    // Try to find the named product directly — no Haiku call needed
-    const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
-    const nMsg = normalize(latestUserMessage);
-    const matched = pantryItems.find(p => {
-      const nName = normalize(p.product_name);
-      const nBrand = p.brand ? normalize(p.brand) : '';
-      if (nMsg.includes(nName) || (nBrand && nMsg.includes(nBrand))) return true;
-      // word-level: any significant word from product name appears in message
-      return nName.split(' ').filter(w => w.length > 3).some(w => nMsg.includes(w));
-    });
-
-    if (matched) {
-      const displayName = [matched.brand, matched.product_name].filter(Boolean).join(' ');
+  // 2. Pantry reference but no product name in message
+  if (isPantryRef) {
+    if (pantryItems.length === 0) {
       return NextResponse.json({
-        message: `I found ${displayName} in your pantry — is that the one you're logging?`,
-        foodItems: [{
-          food_name: matched.product_name,
-          serving_size_description: null,
-          calories_kcal: null, protein_g: null, carbs_g: null, fat_g: null,
-          fibre_g: null, sugar_g: null, saturated_fat_g: null, sodium_mg: null,
-          iron_mg: null, calcium_mg: null, vitamin_c_mg: null, vitamin_a_mcg: null,
-          vitamin_d_mcg: null, zinc_mg: null, omega3_mg: null, b12_mcg: null,
-          b6_mg: null, folate_mcg: null, magnesium_mg: null, potassium_mg: null,
-          omega6_mg: null, iodine_mcg: null, selenium_mcg: null, phosphorus_mg: null,
-          choline_mg: null, dha_mg: null, vitamin_k_mcg: null,
-          confidence_score: 0.95,
-        }],
-        clarifyingQuestion: null,
-        mealType,
-        isHardFoodDay: false,
-        complete: true,
+        message: "I can't see your pantry right now — what was the product called? I'll log it accurately.",
+        foodItems: [], clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: false,
       } satisfies ParseApiResponse);
     }
-    // No direct match — fall through to Haiku with pantry context injected
+    if (pantryItems.length === 1) {
+      const p = pantryItems[0];
+      const displayName = [p.brand, p.product_name].filter(Boolean).join(' ');
+      return NextResponse.json({
+        message: `I found ${displayName} in your pantry — is that the one you're logging?`,
+        foodItems: [pantryFoodItem(p.product_name)],
+        clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: true,
+      } satisfies ParseApiResponse);
+    }
+    const list = pantryItems.slice(0, 4).map(p => p.product_name).join(', ');
+    return NextResponse.json({
+      message: `Which one from your pantry? You have: ${list}${pantryItems.length > 4 ? ` and ${pantryItems.length - 4} more` : ''}.`,
+      foodItems: [], clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: false,
+    } satisfies ParseApiResponse);
   }
 
   // ── Distress intercept ──────────────────────────────────────────────────
