@@ -7,4 +7,5 @@ export const STORAGE = {
   dismissedFavourites: (meal: string) => `shai_dismissed_favourites_${meal}`,
   pinnedFavourites: (meal: string) => `shai_pinned_favs_${meal}`,
   FEED_DISMISSED_AT: 'shai_feed_dismissed_at',
+  LOG_DATE: 'shai_log_date',
 } as const;

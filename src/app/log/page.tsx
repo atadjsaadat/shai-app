@@ -294,6 +294,7 @@ export default function LogPage() {
   const [showWinToast, setShowWinToast] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const confettiFiredRef = useRef(false);
+  const [logDate, setLogDate] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -438,6 +439,11 @@ export default function LogPage() {
       const tab = sessionStorage.getItem('shai_log_tab');
       if (tab === 'feeds') { sessionStorage.removeItem('shai_log_tab'); setActiveTab('feeds'); }
     }
+  }, []);
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem(STORAGE.LOG_DATE);
+    if (stored) { sessionStorage.removeItem(STORAGE.LOG_DATE); setLogDate(stored); }
   }, []);
 
   useEffect(() => {
@@ -736,6 +742,7 @@ export default function LogPage() {
 
     const reactionType = noReaction ? ['no_reaction'] : reactions.length ? reactions : null;
 
+    const loggedAt = logDate ? new Date(logDate + 'T12:00:00').toISOString() : undefined;
     const { error } = await saveFoodLog(
       childId,
       parsedData.foodItems.map((item) => scaleItem(item, portionMultiplier)),
@@ -745,6 +752,7 @@ export default function LogPage() {
       isWin,
       winNote.trim() || null,
       editLogIds.length > 0 ? editLogIds : undefined,
+      loggedAt,
     );
 
     if (error) {
@@ -842,6 +850,13 @@ export default function LogPage() {
           </button>
         )}
       </div>
+
+      {/* ── Past date banner ── */}
+      {logDate && (
+        <div className={styles.logDateBanner}>
+          Logging for {new Date(logDate + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}
+        </div>
+      )}
 
       {/* ── Meal type tabs ── */}
       <div className={styles.tabsRow}>

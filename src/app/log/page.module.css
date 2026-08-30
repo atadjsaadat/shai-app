@@ -51,6 +51,16 @@
 }
 
 /* ── Meal type tabs ──────────────────────────────────── */
+.logDateBanner {
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--terra-dark);
+  background: var(--terra-light);
+  padding: 6px 16px;
+}
+
 .tabsRow {
   flex-shrink: 0;
   display: flex;

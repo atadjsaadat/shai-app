@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-  const { childId, items, mealType, isHardFoodDay, reactionType, isWin, winDescription, replaceLogIds }: {
+  const { childId, items, mealType, isHardFoodDay, reactionType, isWin, winDescription, replaceLogIds, loggedAt }: {
     childId: string
     items: ParsedFoodItem[]
     mealType: MealType
@@ -17,6 +17,7 @@ export async function POST(request: Request) {
     isWin?: boolean
     winDescription?: string | null
     replaceLogIds?: string[]
+    loggedAt?: string
   } = await request.json()
 
   if (!childId) return NextResponse.json({ error: 'No child profile found — please complete setup first.' }, { status: 400 })
@@ -30,6 +31,7 @@ export async function POST(request: Request) {
       meal_type: mealType,
       is_hard_food_day: true,
       data_source: 'ai',
+      ...(loggedAt && { logged_at: loggedAt }),
     })
     return error
       ? NextResponse.json({ error: error.message }, { status: 500 })
@@ -53,6 +55,7 @@ export async function POST(request: Request) {
     child_id: childId,
     logged_by_user_id: user.id,
     meal_type: mealType,
+    ...(loggedAt && { logged_at: loggedAt }),
     food_name: item.food_name,
     serving_size_description: item.serving_size_description,
     data_source: item.data_source ?? 'ai',

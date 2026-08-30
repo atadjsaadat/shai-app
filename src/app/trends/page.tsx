@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import BottomNav from '@/components/BottomNav';
 import { STORAGE } from '@/lib/storage/keys';
 import AIDisclosure from '@/components/AIDisclosure';
@@ -284,6 +285,7 @@ function NutrientCol({ nutrients, averages, targets, onSelect }: {
 }
 
 export default function TrendsPage() {
+  const router = useRouter();
   const today = localDate();
   const _c = readTrendsCache();
   const [activeChildId, setActiveChildId] = useState<string | null>(
@@ -469,7 +471,14 @@ const onRefresh = useCallback(() => {
                     <button
                       key={day.date}
                       className={`${styles.dayCol} ${styles.dayColBtn}${isSelected ? ` ${styles.dayColSelected}` : ''}`}
-                      onClick={() => toggleWeekSnapshot(day.date)}
+                      onClick={() => {
+                        if (!day.hasLogs && !day.isHardDay && day.date !== today) {
+                          sessionStorage.setItem(STORAGE.LOG_DATE, day.date);
+                          router.push('/log');
+                        } else {
+                          toggleWeekSnapshot(day.date);
+                        }
+                      }}
                     >
                       {day.isHardDay ? (
                         <div className={`${styles.dotHardDay}${isSelected ? ` ${styles.dotFilledSelected}` : ''}`}>
