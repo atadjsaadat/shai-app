@@ -128,8 +128,11 @@ export async function POST(req: NextRequest) {
     if (msgWords.some(w => nName.includes(w) || (nBrand && nBrand.includes(w)))) { productMatch = p; break; }
   }
 
-  // Only short-circuit if the stored item has real nutrition — otherwise fall through to Haiku
-  if (productMatch && productMatch.calories_kcal != null) {
+  // If message contains a number, Haiku must scale — don't short-circuit
+  const hasNumericCount = /\b\d+\b/.test(latestUserMessage);
+
+  // Short-circuit only when no count specified — otherwise fall through to Haiku for portion scaling
+  if (productMatch && productMatch.calories_kcal != null && !hasNumericCount) {
     const displayName = [productMatch.brand, productMatch.product_name].filter(Boolean).join(' ');
     return NextResponse.json({
       message: `Logged ${displayName} from your pantry.`,
@@ -226,7 +229,7 @@ export async function POST(req: NextRequest) {
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 2048,
-    system: buildParserSystemPrompt(mealType, alreadyLogged, pantryItems.length > 0 ? pantryItems as { product_name: string; brand: string | null }[] : undefined),
+    system: buildParserSystemPrompt(mealType, alreadyLogged, pantryItems.length > 0 ? pantryItems as { product_name: string; brand: string | null }[] : undefined, hasNumericCount && productMatch ? productMatch : undefined),
     messages,
   });
 
@@ -245,6 +248,18 @@ export async function POST(req: NextRequest) {
       mealType,
       isHardFoodDay: false,
       complete: false,
+    };
+  }
+
+  // Merge pantry barcode metadata back into Haiku's scaled result
+  if (hasNumericCount && productMatch && parsed.foodItems && parsed.foodItems.length > 0) {
+    parsed.foodItems[0] = {
+      ...parsed.foodItems[0],
+      data_source: 'barcode' as const,
+      barcode: productMatch.barcode ?? null,
+      brand: productMatch.brand ?? null,
+      nova_classification: productMatch.nova_classification ?? null,
+      additives_n: productMatch.additives_n ?? null,
     };
   }
 

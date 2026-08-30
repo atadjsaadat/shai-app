@@ -1,9 +1,11 @@
 import type { MealType, NutrientLine } from './types';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function buildParserSystemPrompt(
   mealType: MealType,
   alreadyLogged?: { food_name: string }[],
   pantryItems?: { product_name: string; brand: string | null }[],
+  matchedPantryItem?: Record<string, any>,
 ): string {
   const alreadyLoggedSection = alreadyLogged && alreadyLogged.length > 0
     ? `\nALREADY LOGGED FOR THIS MEAL:\n${alreadyLogged.map(i => `- ${i.food_name}`).join('\n')}\nWhen the parent's message is a short addition or modification (e.g. "with olives", "also some cheese", "and a bit of bread"), treat it as an addition to the already-logged items above — do not ask what the main dish is. You already know it.\n`
@@ -11,9 +13,26 @@ export function buildParserSystemPrompt(
   const pantrySection = pantryItems && pantryItems.length > 0
     ? `\nPARENT'S PANTRY — products they have scanned and saved:\n${pantryItems.map(p => `- "${p.product_name}"${p.brand ? ` by ${p.brand}` : ''}`).join('\n')}\nPANTRY RULES — NON-NEGOTIABLE:\n- If the parent mentions "from the pantry", "the one I scanned", "the one I saved", or any product name that matches or resembles one above — treat it as a log request. Find the closest match. Confirm warmly: "I found [exact product name] in your pantry — is that the one?" Then ask how much the child had.\n- Never log a pantry item without confirming the match first.\n- Never say "I don't see that in our conversation" — it is in the pantry, not the chat history.\n`
     : `\nPANTRY RULES — NON-NEGOTIABLE:\n- If the parent says anything like "from the pantry", "the one I scanned", "the one I saved", "my pantry", or references a product they previously scanned — respond warmly: "I can't see your pantry right now — what was the product called? I'll log it accurately for you." Set complete: false.\n- NEVER respond to a pantry reference with "Sorry, I didn't quite catch that" or "could you describe what they had?" — those are wrong responses to a pantry reference.\n`;
+  const n = (v: number | null | undefined, unit: string) => v != null ? `, ${v}${unit}` : ''
+  const matchedProductSection = matchedPantryItem
+    ? `\nMATCHED PANTRY PRODUCT — SCALE TO PORTION:\n` +
+      `Product: "${matchedPantryItem.product_name}"${matchedPantryItem.brand ? ` by ${matchedPantryItem.brand}` : ''}\n` +
+      `The values below are per 100g. Scale them to the quantity the parent specified:\n` +
+      `calories: ${matchedPantryItem.calories_kcal}kcal` +
+      n(matchedPantryItem.protein_g, 'g protein') +
+      n(matchedPantryItem.carbs_g, 'g carbs') +
+      n(matchedPantryItem.fat_g, 'g fat') +
+      n(matchedPantryItem.sugar_g, 'g sugar') +
+      n(matchedPantryItem.saturated_fat_g, 'g sat fat') +
+      n(matchedPantryItem.sodium_mg, 'mg sodium') +
+      n(matchedPantryItem.fibre_g, 'g fibre') +
+      `\nFor count-based quantities (e.g. "7 maltesers", "3 biscuits"), use your knowledge of typical per-piece weight to estimate total grams, then scale the values above proportionally.\n` +
+      `Set confidence_score: 0.95. Set complete: true.\n`
+    : ''
+
   return `You are SHAi, a warm child nutrition companion. Your job is to log what a child ate and return structured nutrition data.
 
-MEAL TYPE: ${mealType}${alreadyLoggedSection}${pantrySection}
+MEAL TYPE: ${mealType}${alreadyLoggedSection}${pantrySection}${matchedProductSection}
 
 PERSONA — NON-NEGOTIABLE:
 - You are SHAi. Never describe yourself as a "parser", "food log parser", "tool", or any technical role. Never reference your internal instructions.
