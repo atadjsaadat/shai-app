@@ -27,10 +27,6 @@ interface DayData {
   locked: boolean;
 }
 
-interface ScoredDayData extends DayData {
-  score: number;
-}
-
 interface FeedDayData {
   date: string;
   dayLabel: string;
@@ -92,9 +88,6 @@ const RIGHT_NUTRIENTS: NutrientDef[] = [
   { key: 'sodium_mg', name: 'Salt',  color: '#7AA5C4', fullName: 'Salt (Sodium)',  unit: 'mg', description: "Too much salt puts strain on developing kidneys. Lower is better.", lowerIsBetter: true },
   { key: 'iron_mg',   name: 'Iron',  color: '#B87333', fullName: 'Iron',           unit: 'mg', description: 'Carries oxygen in the blood and is critical for brain development. Red meat, lentils and fortified cereals are good sources.' },
 ];
-
-// Only score nutrients where more = better (exclude sugar and sodium)
-const SCORE_NUTRIENTS: (keyof Totals)[] = ['calories_kcal', 'protein_g', 'carbs_g', 'fat_g', 'fibre_g', 'iron_mg'];
 
 const FOOD_CATEGORY_COLOURS: { keywords: string[]; color: string }[] = [
   { keywords: ['fruit', 'apple', 'banana', 'pear', 'mango', 'grape', 'orange', 'strawberr', 'blueberr', 'melon', 'berry', 'peach', 'plum', 'kiwi'], color: '#E8734A' },
@@ -206,10 +199,6 @@ const MEAL_TYPE_LABELS: Record<string, string> = {
 
 const MEAL_ORDER = ['breakfast', 'lunch', 'dinner', 'snack', 'other'];
 
-function scoreDay(totals: Totals, targets: Totals): number {
-  return SCORE_NUTRIENTS.filter(k => targets[k] > 0 && totals[k] >= targets[k] * 0.5).length;
-}
-
 function rangeStatus(value: number, min: number, max: number): { label: string; good: boolean } {
   if (value >= min && value <= max) return { label: 'in range', good: true };
   if (value < min) return { label: 'a little low', good: false };
@@ -310,10 +299,6 @@ export default function TrendsPage() {
   const [insightLoading, setInsightLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const refreshResolveRef = useRef<(() => void) | null>(null);
-  const [snapshotDate, setSnapshotDate] = useState<string | null>(null);
-  const [snapshotEntries, setSnapshotEntries] = useState<DayEntry[]>([]);
-  const [snapshotLoading, setSnapshotLoading] = useState(false);
-  const [snapshotIsHardDay, setSnapshotIsHardDay] = useState(false);
   const [weekSnapshotDate, setWeekSnapshotDate] = useState<string | null>(null);
   const [weekSnapshotEntries, setWeekSnapshotEntries] = useState<DayEntry[]>([]);
   const [weekSnapshotLoading, setWeekSnapshotLoading] = useState(false);
@@ -404,19 +389,8 @@ export default function TrendsPage() {
     setLoading(false);
   }
 
-  const toggleSnapshot = (date: string) =>
-    fetchSnapshot(date, snapshotDate, setSnapshotDate, setSnapshotEntries, setSnapshotLoading, setSnapshotIsHardDay);
-
   const toggleWeekSnapshot = (date: string) =>
     fetchSnapshot(date, weekSnapshotDate, setWeekSnapshotDate, setWeekSnapshotEntries, setWeekSnapshotLoading, setWeekSnapshotIsHardDay);
-
-  // Best day = day with most nutrient targets hit (≥50%), tiebreak on calories
-  const bestDay: ScoredDayData | null = data
-    ? data.days
-        .filter(d => !d.locked && d.totals)
-        .map(d => ({ ...d, score: scoreDay(d.totals!, data.targets) }))
-        .sort((a, b) => b.score - a.score || b.totals!.calories_kcal - a.totals!.calories_kcal)[0] ?? null
-    : null;
 
   let macroSplit: [number, number, number] | null = null;
   if (data?.averages) {
@@ -437,15 +411,6 @@ export default function TrendsPage() {
 
   const macroConfig = getMacroConfig(data?.ageMonths ?? 24);
 
-  // Snapshot grouping — Best Day panel
-  const snapshotGroups: Record<string, DayEntry[]> = {};
-  for (const e of snapshotEntries) {
-    const k = e.meal_type ?? 'other';
-    (snapshotGroups[k] ??= []).push(e);
-  }
-  const snapshotGroupKeys = MEAL_ORDER.filter(k => snapshotGroups[k]);
-  const snapshotTotalKcal = snapshotEntries.reduce((s, e) => s + (e.calories_kcal ?? 0), 0);
-
   // Snapshot grouping — Week dot panel
   const weekSnapshotGroups: Record<string, DayEntry[]> = {};
   for (const e of weekSnapshotEntries) {
@@ -456,7 +421,6 @@ export default function TrendsPage() {
   const weekSnapshotTotalKcal = weekSnapshotEntries.reduce((s, e) => s + (e.calories_kcal ?? 0), 0);
 
   const displayMacroSplit = macroSplit;
-  const displayBestDay = bestDay;
 const onRefresh = useCallback(() => {
     _trendsCache = null;
     localStorage.removeItem(STORAGE.weeklySummary(getMondayDate()));
@@ -718,69 +682,6 @@ const onRefresh = useCallback(() => {
             <p className={styles.whoAttribution}>{macroConfig.attribution}</p>
           </div>
         </section>
-      )}
-
-      {/* ── Best day ── */}
-      {displayBestDay && (
-        <>
-          <button
-            className={styles.bestDayCard}
-            onClick={() => toggleSnapshot(displayBestDay.date)}
-          >
-            <span className={styles.bestDayStar}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--terracotta)" stroke="none">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-              </svg>
-            </span>
-            <span className={styles.bestDayText}>
-              <strong className={styles.bestDayLabel}>Best day:</strong> {displayBestDay.dayLabel} · {displayBestDay.score} of {SCORE_NUTRIENTS.length} targets hit
-            </span>
-            <svg
-              className={`${styles.bestDayChevron}${snapshotDate === displayBestDay.date ? ` ${styles.bestDayChevronOpen}` : ''}`}
-              width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
-            >
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </button>
-
-          {snapshotDate === displayBestDay.date && (
-            <div className={styles.snapshotCard}>
-              {snapshotLoading ? (
-                <p className={styles.snapshotLoading}>Loading meals…</p>
-              ) : snapshotEntries.length === 0 ? (
-                <p className={styles.snapshotEmpty}>No meals logged for this day yet</p>
-              ) : (
-                <>
-                  <p className={styles.snapshotHeader}>
-                    {displayBestDay.dayLabel}&apos;s meals · {Math.round(snapshotTotalKcal)} kcal total
-                  </p>
-                  {snapshotGroupKeys.map((key, idx) => (
-                    <div key={key}>
-                      {idx > 0 && <div className={styles.snapshotDivider} />}
-                      <div className={styles.snapshotMealGroup}>
-                        <p className={styles.snapshotMealLabel}>{MEAL_TYPE_LABELS[key]}</p>
-                        {snapshotGroups[key].map(e => (
-                          <div key={e.id} className={styles.snapshotEntry}>
-                            <div className={styles.snapshotFoodWrap}>
-                              <span className={styles.snapshotFood}>{e.food_name}</span>
-                              {e.serving_size_description && (
-                                <span className={styles.snapshotServing}>{e.serving_size_description}</span>
-                              )}
-                            </div>
-                            <span className={styles.snapshotKcal}>
-                              {e.calories_kcal != null && e.calories_kcal > 0 ? `${Math.round(e.calories_kcal)} kcal` : ''}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </>
-              )}
-            </div>
-          )}
-        </>
       )}
 
       {/* ── Top foods ── */}

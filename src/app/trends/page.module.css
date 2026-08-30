@@ -396,63 +396,6 @@
   60%       { transform: scale(1.35) rotate(12deg); }
 }
 
-.bestDayCard {
-  background: var(--oat);
-  border-radius: 16px;
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  border: none;
-  width: 100%;
-  text-align: left;
-  box-shadow: var(--card-shadow);
-}
-
-.bestDayStar {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  animation: starPop 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both,
-             starBounce 1.4s ease-in-out 0.8s infinite;
-  transform-origin: center;
-}
-
-.bestDayText {
-  font-size: 13px;
-  color: var(--text-secondary);
-  font-weight: 600;
-}
-
-.bestDayLabel {
-  color: var(--terracotta);
-  font-weight: 700;
-}
-
-.bestDayChevron {
-  margin-left: auto;
-  flex-shrink: 0;
-  color: var(--text-muted);
-  transition: transform 0.25s ease;
-}
-
-.bestDayChevronOpen {
-  transform: rotate(180deg);
-}
-
-/* ── Day snapshot ────────────────────────────────────── */
-.snapshotCard {
-  background: var(--oat);
-  border-radius: 16px;
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: -10px;
-  box-shadow: var(--card-shadow);
-}
-
 .snapshotHeader {
   font-size: 12px;
   font-weight: 700;
