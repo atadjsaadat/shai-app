@@ -461,19 +461,48 @@ const onRefresh = useCallback(() => {
               <div className={styles.dotsRow}>
                 {data.days.map((day) => {
                   const isToday = day.date === today;
+                  const isPast = day.date < today;
                   const isSelected = weekSnapshotDate === day.date;
-                  return day.locked ? (
-                    <div key={day.date} className={styles.dayCol}>
-                      <div className={styles.dotLocked} />
-                      <span className={`${styles.dayLabel} ${styles.dayLabelLocked}`}>{day.dayLabel}</span>
-                    </div>
-                  ) : (
+                  const isEmptyLoggable = !day.hasLogs && !day.isHardDay && (isPast || isToday);
+
+                  const plusIcon = (
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <line x1="6" y1="1" x2="6" y2="11" /><line x1="1" y1="6" x2="11" y2="6" />
+                    </svg>
+                  );
+
+                  // Locked + empty past/today → tappable "+" to log
+                  if (day.locked && isEmptyLoggable) {
+                    return (
+                      <button
+                        key={day.date}
+                        className={`${styles.dayCol} ${styles.dayColBtn}`}
+                        onClick={() => { if (isPast) sessionStorage.setItem(STORAGE.LOG_DATE, day.date); router.push('/log'); }}
+                      >
+                        <div className={`${styles.dotLocked} ${styles.dotPlus}`}>{plusIcon}</div>
+                        <span className={`${styles.dayLabel} ${styles.dayLabelLocked}`}>{day.dayLabel}</span>
+                      </button>
+                    );
+                  }
+
+                  // Locked with data or locked future → non-interactive
+                  if (day.locked) {
+                    return (
+                      <div key={day.date} className={styles.dayCol}>
+                        <div className={styles.dotLocked} />
+                        <span className={`${styles.dayLabel} ${styles.dayLabelLocked}`}>{day.dayLabel}</span>
+                      </div>
+                    );
+                  }
+
+                  // Non-locked
+                  return (
                     <button
                       key={day.date}
                       className={`${styles.dayCol} ${styles.dayColBtn}${isSelected ? ` ${styles.dayColSelected}` : ''}`}
                       onClick={() => {
-                        if (!day.hasLogs && !day.isHardDay && day.date !== today) {
-                          sessionStorage.setItem(STORAGE.LOG_DATE, day.date);
+                        if (isEmptyLoggable) {
+                          if (isPast) sessionStorage.setItem(STORAGE.LOG_DATE, day.date);
                           router.push('/log');
                         } else {
                           toggleWeekSnapshot(day.date);
@@ -496,7 +525,9 @@ const onRefresh = useCallback(() => {
                           </svg>
                         </div>
                       ) : (
-                        <div className={`${styles.dotEmpty}${isToday ? ` ${styles.dotTodayEmpty}` : ''}${isSelected ? ` ${styles.dotEmptySelected}` : ''}`} />
+                        <div className={`${styles.dotEmpty} ${styles.dotPlus}${isToday ? ` ${styles.dotTodayEmpty}` : ''}`}>
+                          {plusIcon}
+                        </div>
                       )}
                       <span className={`${styles.dayLabel}${isToday ? ` ${styles.dayLabelToday}` : ''}`}>{day.dayLabel}</span>
                       {isToday && <div className={styles.todayPip} />}
