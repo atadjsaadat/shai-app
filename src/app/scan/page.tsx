@@ -42,6 +42,8 @@ export default function ScanPage() {
   const [childName, setChildName] = useState<string | null>(null)
   const [outcome, setOutcome] = useState<'purchased' | 'rejected' | null>(null)
   const [pantryFull, setPantryFull] = useState<{ limit: number; tier: string } | null>(null)
+  const [saveFailed, setSaveFailed] = useState(false)
+
   const [showHint, setShowHint] = useState(false)
 
   useEffect(() => {
@@ -96,6 +98,7 @@ export default function ScanPage() {
   const handleOutcome = async (chosen: 'purchased' | 'rejected') => {
     if (!scannedBarcode) return
     setOutcome(chosen)
+    setSaveFailed(false)
     setPhase('saving')
     try {
       const res = await fetch('/api/barcode/save-scan', {
@@ -104,10 +107,9 @@ export default function ScanPage() {
         body: JSON.stringify({ barcode: scannedBarcode, outcome: chosen }),
       })
       const json = await res.json()
-      if (json.pantryFull) {
-        setPantryFull({ limit: json.limit, tier: json.tier })
-      }
-    } catch { /* silent */ }
+      if (!res.ok || json.error) { setSaveFailed(true); setPhase('done'); return }
+      if (json.pantryFull) setPantryFull({ limit: json.limit, tier: json.tier })
+    } catch { setSaveFailed(true) }
     setPhase('done')
   }
 
@@ -239,13 +241,15 @@ export default function ScanPage() {
       {phase === 'done' && (
         <div className={styles.resultCard}>
           <p className={styles.doneText}>
-            {pantryFull
-              ? `Your pantry is full (${pantryFull.limit} products). Upgrade to SHAi Premium to store up to 100 products.`
-              : outcome === 'purchased'
-                ? 'Saved to your pantry! Just mention it by name when you\'re logging a meal and SHAi will know exactly what it is.'
-                : 'Noted. We\'ll remember this one\'s not for you.'}
+            {saveFailed
+              ? 'Something went wrong saving that — please try again.'
+              : pantryFull
+                ? `Your pantry is full (${pantryFull.limit} products). Upgrade to SHAi Premium to store up to 100 products.`
+                : outcome === 'purchased'
+                  ? 'Saved to your pantry! Just mention it by name when you\'re logging a meal and SHAi will know exactly what it is.'
+                  : 'Noted. We\'ll remember this one\'s not for you.'}
           </p>
-          <button className={styles.addingBtn} onClick={() => { setPantryFull(null); setPhase('scanning') }}>Scan another</button>
+          <button className={styles.addingBtn} onClick={() => { setPantryFull(null); setSaveFailed(false); setPhase('scanning') }}>Scan another</button>
           <button className={styles.secondaryBtn} onClick={() => router.push('/home')}>Done</button>
         </div>
       )}

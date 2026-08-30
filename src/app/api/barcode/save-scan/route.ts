@@ -51,12 +51,17 @@ export async function POST(req: NextRequest) {
   const result = await lookupBarcode(barcode)
   if (!result) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
 
-  await saveChildScan(child.id, barcode, outcome, {
-    item: result.item,
-    brand: result.brand,
-    novaClass: result.novaClass,
-    additivesN: result.additivesN,
-  })
+  try {
+    await saveChildScan(child.id, barcode, outcome, {
+      item: result.item,
+      brand: result.brand,
+      novaClass: result.novaClass,
+      additivesN: result.additivesN,
+    })
+  } catch (err) {
+    console.error('[save-scan] saveChildScan error:', err)
+    return NextResponse.json({ error: 'Failed to save scan', detail: String(err) }, { status: 500 })
+  }
 
   return NextResponse.json({ success: true, item: result.item, novaClass: result.novaClass, additivesN: result.additivesN, brand: result.brand })
 }

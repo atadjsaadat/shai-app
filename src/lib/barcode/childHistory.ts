@@ -76,7 +76,7 @@ export async function saveChildScan(
 ): Promise<void> {
   const admin = createAdminClient()
   const { item } = data
-  await admin.from('child_scanned_products').upsert({
+  const { error } = await admin.from('child_scanned_products').upsert({
     child_id:          childId,
     barcode,
     product_name:      item.food_name,
@@ -113,6 +113,7 @@ export async function saveChildScan(
     vitamin_k_mcg:     item.vitamin_k_mcg,
     updated_at:        new Date().toISOString(),
   }, { onConflict: 'child_id,barcode' })
+  if (error) throw new Error(`saveChildScan failed: ${error.message}`)
 }
 
 export async function matchFoodNames(
