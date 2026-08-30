@@ -336,6 +336,12 @@ export default function HomePage() {
   }, [fetchHomeData]);
 
   useEffect(() => {
+    if (!homeData?.lastFeed?.logged_at) return;
+    const dismissed = localStorage.getItem(STORAGE.FEED_DISMISSED_AT);
+    if (dismissed === homeData.lastFeed.logged_at) setFeedDismissed(true);
+  }, [homeData?.lastFeed?.logged_at]);
+
+  useEffect(() => {
     const cached = localStorage.getItem(STORAGE.dailyFeedback(localDate()));
     if (cached) { setDailyFeedback(cached); return; }
     if (!homeData || !hasMeals || !totals || !targets || fallbackDate) return;
@@ -422,7 +428,7 @@ export default function HomePage() {
           </div>
           <button
             className={styles.lastFeedDismiss}
-            onClick={(e) => { e.preventDefault(); setFeedDismissed(true); }}
+            onClick={(e) => { e.preventDefault(); setFeedDismissed(true); if (homeData?.lastFeed?.logged_at) localStorage.setItem(STORAGE.FEED_DISMISSED_AT, homeData.lastFeed.logged_at); }}
             aria-label="Dismiss"
           >×</button>
         </Link>
