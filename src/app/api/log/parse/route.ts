@@ -12,7 +12,8 @@ export async function POST(req: NextRequest) {
 
   // Soft auth — needed for distress logging and pantry lookup; food parse works without it
   let userId: string | null = null;
-  let pantryItems: { product_name: string; brand: string | null }[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let pantryItems: Record<string, any>[] = [];
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -27,12 +28,12 @@ export async function POST(req: NextRequest) {
       const pantryLimit = (profile?.tier ?? 'free') === 'free' ? 30 : 100;
       const { data: scanned } = await admin
         .from('child_scanned_products')
-        .select('product_name, brand')
+        .select('product_name, brand, barcode, nova_classification, additives_n, serving_size_g, calories_kcal, protein_g, carbs_g, fat_g, fibre_g, sugar_g, saturated_fat_g, sodium_mg, iron_mg, calcium_mg, vitamin_c_mg, vitamin_a_mcg, vitamin_d_mcg, zinc_mg, omega3_mg, b12_mcg, b6_mg, folate_mcg, magnesium_mg, potassium_mg, omega6_mg, iodine_mcg, selenium_mcg, phosphorus_mg, choline_mg, dha_mg, vitamin_k_mcg')
         .eq('child_id', childId)
         .eq('scan_outcome', 'purchased')
         .order('updated_at', { ascending: false })
         .limit(pantryLimit);
-      pantryItems = (scanned ?? []).map(r => ({ product_name: r.product_name ?? '', brand: r.brand ?? null })).filter(r => r.product_name);
+      pantryItems = (scanned ?? []).map(r => ({ ...r, product_name: r.product_name ?? '', brand: r.brand ?? null })).filter(r => r.product_name);
     }
   } catch { /* proceed without pantry */ }
 
@@ -44,16 +45,44 @@ export async function POST(req: NextRequest) {
   const nMsg = norm(latestUserMessage);
   const msgWords = nMsg.split(' ').filter(w => w.length >= 3);
 
-  // Helper — null-nutrient stub; full nutrition fetched from DB via barcode match
-  const pantryFoodItem = (name: string) => ({
-    food_name: name, serving_size_description: null,
-    calories_kcal: null, protein_g: null, carbs_g: null, fat_g: null,
-    fibre_g: null, sugar_g: null, saturated_fat_g: null, sodium_mg: null,
-    iron_mg: null, calcium_mg: null, vitamin_c_mg: null, vitamin_a_mcg: null,
-    vitamin_d_mcg: null, zinc_mg: null, omega3_mg: null, b12_mcg: null,
-    b6_mg: null, folate_mcg: null, magnesium_mg: null, potassium_mg: null,
-    omega6_mg: null, iodine_mcg: null, selenium_mcg: null, phosphorus_mg: null,
-    choline_mg: null, dha_mg: null, vitamin_k_mcg: null, confidence_score: 0.95,
+  // Build a food item from the stored pantry record — uses real DB nutrition, not a stub
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pantryFoodItem = (p: Record<string, any>) => ({
+    food_name: p.product_name,
+    serving_size_description: p.serving_size_g ? `${p.serving_size_g}g` : null,
+    data_source: 'barcode' as const,
+    barcode: p.barcode ?? null,
+    brand: p.brand ?? null,
+    nova_classification: p.nova_classification ?? null,
+    additives_n: p.additives_n ?? null,
+    confidence_score: 0.95,
+    calories_kcal: p.calories_kcal ?? null,
+    protein_g: p.protein_g ?? null,
+    carbs_g: p.carbs_g ?? null,
+    fat_g: p.fat_g ?? null,
+    fibre_g: p.fibre_g ?? null,
+    sugar_g: p.sugar_g ?? null,
+    saturated_fat_g: p.saturated_fat_g ?? null,
+    sodium_mg: p.sodium_mg ?? null,
+    iron_mg: p.iron_mg ?? null,
+    calcium_mg: p.calcium_mg ?? null,
+    vitamin_c_mg: p.vitamin_c_mg ?? null,
+    vitamin_a_mcg: p.vitamin_a_mcg ?? null,
+    vitamin_d_mcg: p.vitamin_d_mcg ?? null,
+    zinc_mg: p.zinc_mg ?? null,
+    omega3_mg: p.omega3_mg ?? null,
+    b12_mcg: p.b12_mcg ?? null,
+    b6_mg: p.b6_mg ?? null,
+    folate_mcg: p.folate_mcg ?? null,
+    magnesium_mg: p.magnesium_mg ?? null,
+    potassium_mg: p.potassium_mg ?? null,
+    omega6_mg: p.omega6_mg ?? null,
+    iodine_mcg: p.iodine_mcg ?? null,
+    selenium_mcg: p.selenium_mcg ?? null,
+    phosphorus_mg: p.phosphorus_mg ?? null,
+    choline_mg: p.choline_mg ?? null,
+    dha_mg: p.dha_mg ?? null,
+    vitamin_k_mcg: p.vitamin_k_mcg ?? null,
   });
 
   const PANTRY_TRIGGERS = ['pantry', 'scanned', 'i scanned', 'saved it', 'the one i', 'in my pantry', 'from my pantry', 'from the pantry', 'my pantry'];
@@ -85,7 +114,8 @@ export async function POST(req: NextRequest) {
   };
 
   // Match every message against pantry — bidirectional word overlap with fuzzy spelling
-  let productMatch: { product_name: string; brand: string | null } | null = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let productMatch: Record<string, any> | null = null;
   for (const p of pantryItems) {
     const nName = norm(p.product_name);
     const nBrand = p.brand ? norm(p.brand) : '';
@@ -98,11 +128,12 @@ export async function POST(req: NextRequest) {
     if (msgWords.some(w => nName.includes(w) || (nBrand && nBrand.includes(w)))) { productMatch = p; break; }
   }
 
-  if (productMatch) {
+  // Only short-circuit if the stored item has real nutrition — otherwise fall through to Haiku
+  if (productMatch && productMatch.calories_kcal != null) {
     const displayName = [productMatch.brand, productMatch.product_name].filter(Boolean).join(' ');
     return NextResponse.json({
-      message: `I found ${displayName} in your pantry — is that the one you're logging?`,
-      foodItems: [pantryFoodItem(productMatch.product_name)],
+      message: `Logged ${displayName} from your pantry.`,
+      foodItems: [pantryFoodItem(productMatch)],
       clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: true,
     } satisfies ParseApiResponse);
   }
@@ -117,10 +148,16 @@ export async function POST(req: NextRequest) {
     }
     if (pantryItems.length === 1) {
       const p = pantryItems[0];
+      if (p.calories_kcal != null) {
+        return NextResponse.json({
+          message: `Logged ${[p.brand, p.product_name].filter(Boolean).join(' ')} from your pantry.`,
+          foodItems: [pantryFoodItem(p)],
+          clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: true,
+        } satisfies ParseApiResponse);
+      }
       return NextResponse.json({
         message: `I found ${[p.brand, p.product_name].filter(Boolean).join(' ')} in your pantry — is that the one you're logging?`,
-        foodItems: [pantryFoodItem(p.product_name)],
-        clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: true,
+        foodItems: [], clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: false,
       } satisfies ParseApiResponse);
     }
     const list = pantryItems.slice(0, 5).map(p => p.product_name).join(', ');
@@ -189,7 +226,7 @@ export async function POST(req: NextRequest) {
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 2048,
-    system: buildParserSystemPrompt(mealType, alreadyLogged, pantryItems.length > 0 ? pantryItems : undefined),
+    system: buildParserSystemPrompt(mealType, alreadyLogged, pantryItems.length > 0 ? pantryItems as { product_name: string; brand: string | null }[] : undefined),
     messages,
   });
 

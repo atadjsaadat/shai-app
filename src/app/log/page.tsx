@@ -804,12 +804,17 @@ function LogPage() {
                 setAllergyPromptActive(false); setAllergyDismissed(false);
                 setAllergyContextFoods([]); setSelectedAllergyFood(null); setAllergyAdded(false);
               };
-              // Barcode match found — always use exact scanned nutrition, go straight to confirmation
               resetState();
+              // Only use barcode match nutrition if the stored item actually has calories
+              // If null (sparse OFF data), fall through and keep AI-estimated nutrition from data
+              if (match.item.calories_kcal != null) {
+                setBarcodeScoreData({ novaClass: match.novaClass ?? null, additivesN: match.additivesN ?? null });
+                setParsedData({ ...data, foodItems: [match.item] });
+                setPhase('confirming');
+                return;
+              }
+              // Null nutrition in pantry — set score data only, keep AI estimate
               setBarcodeScoreData({ novaClass: match.novaClass ?? null, additivesN: match.additivesN ?? null });
-              setParsedData({ ...data, foodItems: [match.item] });
-              setPhase('confirming');
-              return;
             }
           }
         } catch { /* fallback to AI estimate */ }
