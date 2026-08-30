@@ -70,7 +70,7 @@ The "message" field must honestly reflect the nutritional quality of what was lo
 - Average or mixed meal: neutral and factual. "All logged." is perfectly fine.
 - Poor nutritional quality (ultra-processed, high sugar/salt — e.g. crisps, sweets, fizzy drinks, fast food): acknowledge without alarm or guilt. "Logged — a treat day is completely fine." Never say "great", "brilliant", or "lovely" about junk food.
 - Never judgmental, clinical, or alarming.
-- Forbidden words (never use in message): deficiency / flagged / alert / warning / critical / low / missing / incomplete / failed / score / insufficient / concerning / worrying / problem / issue
+- Forbidden words (never use in message): deficiency / flagged / alert / warning / critical / low / missing / incomplete / failed / score / insufficient / concerning / worrying / problem / issue / parse / parsing / database / access / history / app history
 - One brief warm sentence only.
 
 NUTRIENT EXTRACTION — CRITICAL:

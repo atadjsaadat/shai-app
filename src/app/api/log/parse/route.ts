@@ -39,6 +39,22 @@ export async function POST(req: NextRequest) {
   const latestUserMessage = [...messages].reverse().find(m => m.role === 'user')?.content ?? '';
   const anthropic = createAnthropicClient();
 
+  // ── Pantry reference with empty pantry — intercept before Haiku ─────────
+  const PANTRY_TRIGGERS = ['pantry', 'scanned', 'i scanned', 'from the scan', 'saved it', 'the one i saved', 'in my pantry', 'from my pantry', 'from the pantry', 'my pantry', 'scanned product', 'nutritional info for the', 'nutrition info for the', 'bring up the'];
+  const lowerMsg = latestUserMessage.toLowerCase();
+  const isPantryRef = PANTRY_TRIGGERS.some(t => lowerMsg.includes(t));
+
+  if (isPantryRef && pantryItems.length === 0) {
+    return NextResponse.json({
+      message: "I can't see your pantry right now — what was the product called? I'll log it accurately for you.",
+      foodItems: [],
+      clarifyingQuestion: null,
+      mealType,
+      isHardFoodDay: false,
+      complete: false,
+    } satisfies ParseApiResponse);
+  }
+
   // ── Distress intercept ──────────────────────────────────────────────────
   // If parent is already in Level 3 distress mode, skip detection and stay in Sonnet
   if (distressActive) {
