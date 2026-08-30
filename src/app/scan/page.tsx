@@ -242,7 +242,7 @@ export default function ScanPage() {
             {pantryFull
               ? `Your pantry is full (${pantryFull.limit} products). Upgrade to SHAi Premium to store up to 100 products.`
               : outcome === 'purchased'
-                ? 'Saved! When you log a meal, just say the brand or product name and SHAi will use the exact nutrition data.'
+                ? 'Saved to your pantry! Just mention it by name when you\'re logging a meal and SHAi will know exactly what it is.'
                 : 'Noted. We\'ll remember this one\'s not for you.'}
           </p>
           <button className={styles.addingBtn} onClick={() => { setPantryFull(null); setPhase('scanning') }}>Scan another</button>
