@@ -70,16 +70,31 @@ export async function POST(req: NextRequest) {
     } satisfies ParseApiResponse);
   }
 
-  // Match every message against pantry — bidirectional word overlap (3+ chars)
+  // Fuzzy word match — allows 1 edit distance for 5+ char words ("museli" matches "muesli")
+  const editDist = (a: string, b: string): number => {
+    if (a === b) return 0;
+    const m = a.length, n = b.length;
+    const dp = Array.from({ length: m + 1 }, (_, i) => Array.from({ length: n + 1 }, (_, j) => i === 0 ? j : j === 0 ? i : 0));
+    for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+    return dp[m][n];
+  };
+  const fuzzyMatch = (a: string, b: string): boolean => {
+    if (a === b) return true;
+    if (a.length < 4 || b.length < 4) return false;
+    return editDist(a, b) <= 1;
+  };
+
+  // Match every message against pantry — bidirectional word overlap with fuzzy spelling
   let productMatch: { product_name: string; brand: string | null } | null = null;
   for (const p of pantryItems) {
     const nName = norm(p.product_name);
     const nBrand = p.brand ? norm(p.brand) : '';
     // Full name or brand contained in message
     if (nMsg.includes(nName) || (nBrand && nMsg.includes(nBrand))) { productMatch = p; break; }
-    // Any 3+ char word from product name appears in message
-    if (nName.split(' ').filter(w => w.length >= 3).some(w => nMsg.includes(w))) { productMatch = p; break; }
-    // Any 3+ char word from message appears in product name or brand
+    // Any 3+ char word from product name fuzzy-matches any word in message
+    const nameWords = nName.split(' ').filter(w => w.length >= 3);
+    if (nameWords.some(nw => msgWords.some(mw => fuzzyMatch(nw, mw)))) { productMatch = p; break; }
+    // Any 3+ char word from message appears in product name or brand (exact)
     if (msgWords.some(w => nName.includes(w) || (nBrand && nBrand.includes(w)))) { productMatch = p; break; }
   }
 

@@ -804,24 +804,11 @@ function LogPage() {
                 setAllergyPromptActive(false); setAllergyDismissed(false);
                 setAllergyContextFoods([]); setSelectedAllergyFood(null); setAllergyAdded(false);
               };
-              const isPantryStub = data.foodItems[0]?.calories_kcal == null;
-              if (isPantryStub) {
-                // Route already confirmed the product — go straight to confirmation with barcode nutrition
-                resetState();
-                setBarcodeScoreData({ novaClass: match.novaClass ?? null, additivesN: match.additivesN ?? null });
-                setParsedData({ ...data, foodItems: [match.item] });
-                setPhase('confirming');
-                return;
-              }
-              // AI has nutrition — show chip so parent can upgrade to exact barcode data
-              const displayName = [match.brand, match.item.food_name].filter(Boolean).join(' ');
+              // Barcode match found — always use exact scanned nutrition, go straight to confirmation
               resetState();
-              setPendingBarcodeItem({ item: match.item, novaClass: match.novaClass ?? null, additivesN: match.additivesN ?? null });
-              setMessages((prev) => [...prev, {
-                id: generateId(),
-                role: 'assistant',
-                content: `I found ${displayName} in your pantry — is that the right one?`,
-              }]);
+              setBarcodeScoreData({ novaClass: match.novaClass ?? null, additivesN: match.additivesN ?? null });
+              setParsedData({ ...data, foodItems: [match.item] });
+              setPhase('confirming');
               return;
             }
           }
