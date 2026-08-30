@@ -21,13 +21,17 @@ export async function POST(req: NextRequest) {
     if (childId) {
       const { createAdminClient } = await import('@/lib/supabase/server');
       const admin = createAdminClient();
+      const { data: profile } = userId
+        ? await admin.from('profiles').select('tier').eq('id', userId).single()
+        : { data: null };
+      const pantryLimit = (profile?.tier ?? 'free') === 'free' ? 30 : 100;
       const { data: scanned } = await admin
         .from('child_scanned_products')
         .select('product_name, brand')
         .eq('child_id', childId)
         .eq('scan_outcome', 'purchased')
         .order('updated_at', { ascending: false })
-        .limit(30);
+        .limit(pantryLimit);
       pantryItems = (scanned ?? []).map(r => ({ product_name: r.product_name ?? '', brand: r.brand ?? null })).filter(r => r.product_name);
     }
   } catch { /* proceed without pantry */ }

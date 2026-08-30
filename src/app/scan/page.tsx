@@ -41,6 +41,7 @@ export default function ScanPage() {
   const [childAgeMonths, setChildAgeMonths] = useState<number | null>(null)
   const [childName, setChildName] = useState<string | null>(null)
   const [outcome, setOutcome] = useState<'purchased' | 'rejected' | null>(null)
+  const [pantryFull, setPantryFull] = useState<{ limit: number; tier: string } | null>(null)
   const [showHint, setShowHint] = useState(false)
 
   useEffect(() => {
@@ -96,11 +97,17 @@ export default function ScanPage() {
     if (!scannedBarcode) return
     setOutcome(chosen)
     setPhase('saving')
-    await fetch('/api/barcode/save-scan', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ barcode: scannedBarcode, outcome: chosen }),
-    }).catch(() => {})
+    try {
+      const res = await fetch('/api/barcode/save-scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ barcode: scannedBarcode, outcome: chosen }),
+      })
+      const json = await res.json()
+      if (json.pantryFull) {
+        setPantryFull({ limit: json.limit, tier: json.tier })
+      }
+    } catch { /* silent */ }
     setPhase('done')
   }
 
@@ -232,11 +239,13 @@ export default function ScanPage() {
       {phase === 'done' && (
         <div className={styles.resultCard}>
           <p className={styles.doneText}>
-            {outcome === 'purchased'
-              ? 'Saved! When you log a meal, just say the brand or product name and SHAi will use the exact nutrition data.'
-              : 'Noted. We\'ll remember this one\'s not for you.'}
+            {pantryFull
+              ? `Your pantry is full (${pantryFull.limit} products). Upgrade to SHAi Premium to store up to 100 products.`
+              : outcome === 'purchased'
+                ? 'Saved! When you log a meal, just say the brand or product name and SHAi will use the exact nutrition data.'
+                : 'Noted. We\'ll remember this one\'s not for you.'}
           </p>
-          <button className={styles.addingBtn} onClick={() => setPhase('scanning')}>Scan another</button>
+          <button className={styles.addingBtn} onClick={() => { setPantryFull(null); setPhase('scanning') }}>Scan another</button>
           <button className={styles.secondaryBtn} onClick={() => router.push('/home')}>Done</button>
         </div>
       )}
