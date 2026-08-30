@@ -1385,3 +1385,34 @@
   color: var(--text-secondary);
   margin: 0;
 }
+
+.barcodeConfirmRow {
+  display: flex;
+  gap: 10px;
+  padding: 4px 16px 8px 56px;
+  justify-content: flex-start;
+}
+
+.barcodeConfirmYes {
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  background: var(--terracotta);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 18px;
+  cursor: pointer;
+}
+
+.barcodeConfirmNo {
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 20px;
+  padding: 8px 18px;
+  cursor: pointer;
+}

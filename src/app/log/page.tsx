@@ -274,6 +274,7 @@ export default function LogPage() {
   const [mealFavourites, setMealFavourites] = useState<MealFavourite[]>([]);
   const [fromBarcode, setFromBarcode] = useState(false);
   const [barcodeScoreData, setBarcodeScoreData] = useState<{ novaClass: number | null; additivesN: number | null } | null>(null);
+  const [pendingBarcodeItem, setPendingBarcodeItem] = useState<{ item: ParsedFoodItem; novaClass: number | null; additivesN: number | null } | null>(null);
   const [portionSelection, setPortionSelection] = useState<string | null>(null);
   const selectedPortion = PORTION_OPTIONS.find(o => o.id === portionSelection) ?? null;
   const portionMultiplier = selectedPortion?.value ?? 1;
@@ -617,12 +618,15 @@ export default function LogPage() {
       if (!res.ok) throw new Error('lookup failed');
       const { item, novaClass, additivesN, brand } = await res.json();
       const enriched = { ...item, barcode, brand: brand ?? null, nova_classification: novaClass ?? null, additives_n: additivesN ?? null };
+      const displayName = [brand, item.food_name].filter(Boolean).join(' ');
       setPortionSelection(null);
       resetReactions();
-      setFromBarcode(true);
-      setBarcodeScoreData({ novaClass: novaClass ?? null, additivesN: additivesN ?? null });
-      setParsedData({ message: '', foodItems: [enriched], clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: true });
-      setPhase('confirming');
+      setPendingBarcodeItem({ item: enriched, novaClass: novaClass ?? null, additivesN: additivesN ?? null });
+      setMessages((prev) => [...prev, {
+        id: generateId(),
+        role: 'assistant',
+        content: `I found ${displayName} — is that the one you're logging?`,
+      }]);
     } catch {
       setMessages((prev) => [...prev, {
         id: generateId(),
@@ -633,6 +637,24 @@ export default function LogPage() {
       setIsThinking(false);
     }
   }, [mealType]);
+
+  const confirmBarcodeItem = useCallback(() => {
+    if (!pendingBarcodeItem) return;
+    setFromBarcode(true);
+    setBarcodeScoreData({ novaClass: pendingBarcodeItem.novaClass, additivesN: pendingBarcodeItem.additivesN });
+    setParsedData({ message: '', foodItems: [pendingBarcodeItem.item], clarifyingQuestion: null, mealType, isHardFoodDay: false, complete: true });
+    setPhase('confirming');
+    setPendingBarcodeItem(null);
+  }, [pendingBarcodeItem, mealType]);
+
+  const rejectBarcodeItem = useCallback(() => {
+    setPendingBarcodeItem(null);
+    setMessages((prev) => [...prev, {
+      id: generateId(),
+      role: 'assistant',
+      content: "No problem — could you describe it, or scan a different one?",
+    }]);
+  }, []);
 
   const sendMessage = useCallback(async () => {
     const text = input.trim();
@@ -1025,6 +1047,17 @@ export default function LogPage() {
               <span className={styles.typingDot} />
               <span className={styles.typingDot} />
             </div>
+          </div>
+        )}
+
+        {pendingBarcodeItem && !isThinking && phase === 'chatting' && (
+          <div className={styles.barcodeConfirmRow}>
+            <button className={styles.barcodeConfirmYes} onClick={confirmBarcodeItem}>
+              Yes, log it
+            </button>
+            <button className={styles.barcodeConfirmNo} onClick={rejectBarcodeItem}>
+              Not this one
+            </button>
           </div>
         )}
 
