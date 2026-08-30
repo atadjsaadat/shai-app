@@ -170,7 +170,7 @@ export async function matchFoodNames(
 
     if (bestScore >= THRESHOLD && best) {
       results.set(foodName, {
-        item: rowToItem(best.row, foodName),
+        item: rowToItem(best.row, best.name || foodName),
         brand: best.brand,
         barcode: best.barcode,
         novaClass: best.novaClass,

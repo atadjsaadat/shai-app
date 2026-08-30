@@ -785,7 +785,7 @@ export default function LogPage() {
       }
 
       if (data.complete && !data.distressLevel) {
-        // Silently upgrade AI-estimated nutrients with exact barcode data where we have a match
+        // Check for barcode/pantry match — confirm with parent before logging
         try {
           const matchRes = await fetch('/api/barcode/match', {
             method: 'POST',
@@ -794,17 +794,25 @@ export default function LogPage() {
           });
           if (matchRes.ok) {
             const { matches } = await matchRes.json();
-            if (Object.keys(matches).length > 0) {
-              data = {
-                ...data,
-                foodItems: data.foodItems.map((item: ParsedFoodItem) => {
-                  const match = matches[item.food_name];
-                  return match ? { ...match.item, food_name: item.food_name } : item;
-                }),
-              };
+            const firstKey = Object.keys(matches)[0];
+            if (firstKey && matches[firstKey]) {
+              const match = matches[firstKey];
+              const displayName = [match.brand, match.item.food_name].filter(Boolean).join(' ');
+              setPortionSelection(null);
+              setReactions([]); setNoReaction(false); setIsWin(false); setWinNote('');
+              setShowReactions(false); confettiFiredRef.current = false;
+              setAllergyPromptActive(false); setAllergyDismissed(false);
+              setAllergyContextFoods([]); setSelectedAllergyFood(null); setAllergyAdded(false);
+              setPendingBarcodeItem({ item: match.item, novaClass: match.novaClass ?? null, additivesN: match.additivesN ?? null });
+              setMessages((prev) => [...prev, {
+                id: generateId(),
+                role: 'assistant',
+                content: `I found ${displayName} in your pantry — is that the right one?`,
+              }]);
+              return;
             }
           }
-        } catch { /* AI estimate fallback — silent */ }
+        } catch { /* fallback to AI estimate */ }
         setParsedData(data);
         setPhase('confirming');
       }
