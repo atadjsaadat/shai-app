@@ -308,6 +308,13 @@ export default function TrendsPage() {
   const [selectedNutrient, setSelectedNutrient] = useState<NutrientDef | null>(null);
 
   useEffect(() => {
+    if (sessionStorage.getItem('shai_trends_stale')) {
+      sessionStorage.removeItem('shai_trends_stale');
+      _trendsCache = null;
+    }
+  }, []);
+
+  useEffect(() => {
     async function init() {
       let childId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
       let name = localStorage.getItem(STORAGE.CHILD_NAME);
@@ -471,21 +478,7 @@ const onRefresh = useCallback(() => {
                     </svg>
                   );
 
-                  // Locked + empty past/today → tappable "+" to log
-                  if (day.locked && isEmptyLoggable) {
-                    return (
-                      <button
-                        key={day.date}
-                        className={`${styles.dayCol} ${styles.dayColBtn}`}
-                        onClick={() => { if (isPast) sessionStorage.setItem(STORAGE.LOG_DATE, day.date); router.push('/log'); }}
-                      >
-                        <div className={`${styles.dotLocked} ${styles.dotPlus}`}>{plusIcon}</div>
-                        <span className={`${styles.dayLabel} ${styles.dayLabelLocked}`}>{day.dayLabel}</span>
-                      </button>
-                    );
-                  }
-
-                  // Locked with data or locked future → non-interactive
+                  // Locked days → always non-interactive (tier-gated history window)
                   if (day.locked) {
                     return (
                       <div key={day.date} className={styles.dayCol}>
@@ -502,8 +495,7 @@ const onRefresh = useCallback(() => {
                       className={`${styles.dayCol} ${styles.dayColBtn}${isSelected ? ` ${styles.dayColSelected}` : ''}`}
                       onClick={() => {
                         if (isEmptyLoggable) {
-                          if (isPast) sessionStorage.setItem(STORAGE.LOG_DATE, day.date);
-                          router.push('/log');
+                          router.push(isPast ? `/log?date=${day.date}` : '/log');
                         } else {
                           toggleWeekSnapshot(day.date);
                         }

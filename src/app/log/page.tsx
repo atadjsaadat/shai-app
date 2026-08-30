@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createSpeechRecognition } from '@/lib/speech/recognition';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import SHAiPresence from '@/components/SHAiPresence';
 import Confetti from '@/components/Confetti';
 import FeedsTab from '@/components/FeedsTab';
@@ -294,7 +294,8 @@ export default function LogPage() {
   const [showWinToast, setShowWinToast] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const confettiFiredRef = useRef(false);
-  const [logDate, setLogDate] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const logDate = searchParams.get('date');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -439,11 +440,6 @@ export default function LogPage() {
       const tab = sessionStorage.getItem('shai_log_tab');
       if (tab === 'feeds') { sessionStorage.removeItem('shai_log_tab'); setActiveTab('feeds'); }
     }
-  }, []);
-
-  useEffect(() => {
-    const stored = sessionStorage.getItem(STORAGE.LOG_DATE);
-    if (stored) { sessionStorage.removeItem(STORAGE.LOG_DATE); setLogDate(stored); }
   }, []);
 
   useEffect(() => {
@@ -768,6 +764,7 @@ export default function LogPage() {
     })();
     localStorage.removeItem(STORAGE.dailyFeedback(today));
     localStorage.removeItem(STORAGE.weeklySummary(monday));
+    sessionStorage.setItem('shai_trends_stale', '1');
 
     if (ALLERGY_TRIGGER_REACTIONS.some(r => reactions.includes(r)) && parsedData) {
       setAllergyPromptActive(true);
