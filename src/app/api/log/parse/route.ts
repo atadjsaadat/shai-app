@@ -8,15 +8,29 @@ import { logDistressFlag } from '@/lib/distress/log';
 import type { ParseApiRequest, ParseApiResponse } from '@/lib/log/types';
 
 export async function POST(req: NextRequest) {
-  const { messages, mealType, distressActive, alreadyLogged }: ParseApiRequest = await req.json();
+  const { messages, mealType, distressActive, alreadyLogged, childId }: ParseApiRequest & { childId?: string } = await req.json();
 
-  // Soft auth — needed for distress logging; food parse works without it
+  // Soft auth — needed for distress logging and pantry lookup; food parse works without it
   let userId: string | null = null;
+  let pantryItems: { product_name: string; brand: string | null }[] = [];
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     userId = user?.id ?? null;
-  } catch { /* proceed without auth */ }
+
+    if (childId) {
+      const { createAdminClient } = await import('@/lib/supabase/server');
+      const admin = createAdminClient();
+      const { data: scanned } = await admin
+        .from('child_scanned_products')
+        .select('product_name, brand')
+        .eq('child_id', childId)
+        .eq('scan_outcome', 'purchased')
+        .order('updated_at', { ascending: false })
+        .limit(30);
+      pantryItems = (scanned ?? []).map(r => ({ product_name: r.product_name ?? '', brand: r.brand ?? null })).filter(r => r.product_name);
+    }
+  } catch { /* proceed without pantry */ }
 
   const latestUserMessage = [...messages].reverse().find(m => m.role === 'user')?.content ?? '';
   const anthropic = createAnthropicClient();
@@ -80,7 +94,7 @@ export async function POST(req: NextRequest) {
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 2048,
-    system: buildParserSystemPrompt(mealType, alreadyLogged),
+    system: buildParserSystemPrompt(mealType, alreadyLogged, pantryItems.length > 0 ? pantryItems : undefined),
     messages,
   });
 

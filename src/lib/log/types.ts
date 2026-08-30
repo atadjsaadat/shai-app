@@ -60,6 +60,7 @@ export interface ParseApiRequest {
   mealType: MealType;
   distressActive?: boolean;
   alreadyLogged?: { food_name: string }[];
+  childId?: string;
 }
 
 export interface ParseApiResponse {

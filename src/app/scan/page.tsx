@@ -169,7 +169,7 @@ export default function ScanPage() {
         <div className={styles.resultCard}>
           <p className={styles.notFoundText}>Product not found in the database.</p>
           <button className={styles.retryBtn} onClick={() => setPhase('scanning')}>Try again</button>
-          <button className={styles.secondaryBtn} onClick={() => router.push('/log')}>Log manually</button>
+          <button className={styles.secondaryBtn} onClick={() => router.push('/log?labelPhoto=1')}>Photo the label</button>
         </div>
       )}
 
@@ -233,7 +233,7 @@ export default function ScanPage() {
         <div className={styles.resultCard}>
           <p className={styles.doneText}>
             {outcome === 'purchased'
-              ? 'Added to your pantry — mention it when you log a meal and we\'ll use the exact data.'
+              ? 'Saved! When you log a meal, just say the brand or product name and SHAi will use the exact nutrition data.'
               : 'Noted. We\'ll remember this one\'s not for you.'}
           </p>
           <button className={styles.addingBtn} onClick={() => setPhase('scanning')}>Scan another</button>

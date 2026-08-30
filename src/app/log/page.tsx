@@ -569,6 +569,18 @@ export default function LogPage() {
   }, []);
 
   useEffect(() => {
+    if (searchParams.get('labelPhoto') === '1') {
+      setShowLabelPhotoBtn(true);
+      setMessages(prev => [...prev, {
+        id: generateId(),
+        role: 'assistant',
+        content: "That barcode isn't in our database yet — take a photo of the nutrition label and I'll read it, or just describe the product.",
+      }]);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     const stored = sessionStorage.getItem('shai_edit_meal');
     if (!stored) return;
     sessionStorage.removeItem('shai_edit_meal');
@@ -751,6 +763,7 @@ export default function LogPage() {
         body: JSON.stringify({
           messages: nextMessages.map((m) => ({ role: m.role, content: m.content })),
           mealType,
+          childId: localStorage.getItem(STORAGE.ACTIVE_CHILD_ID) ?? undefined,
           ...(distressLevel === 3 && { distressActive: true }),
           ...(editMealItems && { alreadyLogged: editMealItems }),
         }),
