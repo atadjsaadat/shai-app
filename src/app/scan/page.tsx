@@ -104,7 +104,14 @@ export default function ScanPage() {
       const res = await fetch('/api/barcode/save-scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ barcode: scannedBarcode, outcome: chosen }),
+        body: JSON.stringify({
+          barcode: scannedBarcode,
+          outcome: chosen,
+          item: item ?? undefined,
+          brand: brand ?? undefined,
+          novaClass: novaClass ?? undefined,
+          additivesN: additivesN ?? undefined,
+        }),
       })
       const json = await res.json()
       if (!res.ok || json.error) { setSaveFailed(true); setPhase('done'); return }
