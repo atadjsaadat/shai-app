@@ -807,7 +807,7 @@ const onRefresh = useCallback(() => {
               <p className={styles.modalDesc}>{n.description}</p>
               <div className={styles.modalRows}>
                 <div className={styles.modalRow}>
-                  <span className={styles.modalRowLabel}>3-day average</span>
+                  <span className={styles.modalRowLabel}>{data.tier === 'free' ? '3-day' : '7-day'} average</span>
                   <span className={styles.modalRowValue} style={{ color: n.color }}>{value > 0 ? `${Math.round(value)} ${n.unit}` : '—'}</span>
                 </div>
                 <div className={styles.modalRow}>
