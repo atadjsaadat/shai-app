@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { createSpeechRecognition } from '@/lib/speech/recognition';
 import { useRouter, useSearchParams } from 'next/navigation';
 import SHAiPresence from '@/components/SHAiPresence';
@@ -286,7 +286,7 @@ function FoodItemCard({ item, multiplier = 1, portionLabel, isWin, onWinToggle, 
   );
 }
 
-export default function LogPage() {
+function LogPage() {
   const router = useRouter();
   const [mealType, setMealType] = useState<MealType>(detectMealType);
   const [activeTab, setActiveTab] = useState<MealType | 'feeds'>(detectMealType);
@@ -1529,4 +1529,8 @@ export default function LogPage() {
       />
     </div>
   );
+}
+
+export default function LogPageWrapper() {
+  return <Suspense><LogPage /></Suspense>;
 }
