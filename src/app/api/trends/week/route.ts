@@ -100,11 +100,11 @@ export async function GET(request: Request) {
 
   // Group by local date and sum nutrients
   const dayTotalsMap = new Map<string, Targets>()
-  let mealCount = 0
+  const dayMealCountMap = new Map<string, number>()
   for (const log of (logs ?? [])) {
     if (!log.food_name || log.is_hard_food_day) continue
-    mealCount++
     const localDate = toLocalDateStr(new Date(log.logged_at).getTime(), offsetMinutes)
+    dayMealCountMap.set(localDate, (dayMealCountMap.get(localDate) ?? 0) + 1)
     if (!dayTotalsMap.has(localDate)) {
       dayTotalsMap.set(localDate, { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0, fibre_g: 0, sugar_g: 0, sodium_mg: 0, iron_mg: 0 })
     }
@@ -130,7 +130,8 @@ export async function GET(request: Request) {
     locked: idx < lockThreshold,
   }))
 
-  const loggedCount = days.filter(d => d.hasLogs).length
+  const mealCount = days.filter(d => !d.locked).reduce((sum, d) => sum + (dayMealCountMap.get(d.date) ?? 0), 0)
+  const loggedCount = days.filter(d => !d.locked && d.hasLogs).length
 
   // Average across visible days that have logs
   const visibleWithLogs = days.filter(d => !d.locked && d.totals)
