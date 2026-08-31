@@ -34,8 +34,17 @@ export async function startBarcodeScanner(
 
   const stream = await getStream()
 
+  // Require 2 consecutive matching reads before accepting — filters one-frame misreads
+  let lastRead = ''
   await reader.decodeFromStream(stream, video, (result, err) => {
-    if (result) onResult(result.getText())
+    if (result) {
+      const text = result.getText()
+      if (text === lastRead) {
+        onResult(text)
+      } else {
+        lastRead = text
+      }
+    }
     if (err && !(err instanceof NotFoundException)) onError(err as Error)
   })
 
