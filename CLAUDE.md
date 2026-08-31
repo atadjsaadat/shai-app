@@ -138,6 +138,7 @@ Default: Haiku. Every new API call must be added to this table before implementa
 
 - Weather API: 1 call/child/day cached, never per meal log
 - Barcode cache: every successful scan stored in Supabase, repeat scans instant at zero cost
+- Barcode data integrity: nightly cron (20:00 UTC) audits every cache entry — auto-deletes invalid barcodes, auto-corrects missing names and calories from Open Food Facts, flags macro/calorie mismatches above 25% for manual review. Data accuracy is enforced automatically, not retroactively.
 - WHO calculations: computed once on profile load, recalculated only on weight update
 - Real-time subscriptions: OFF in v1, enabled for clinician portal in v2 only
 - Image compression: client-side to 800KB max before upload
