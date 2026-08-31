@@ -65,9 +65,9 @@ export async function POST(req: NextRequest) {
   if (barcode && parsed.calories_kcal) {
     try {
       const admin = createAdminClient()
+      // Photo updates nutrients only — product_name stays as whatever OFF/USDA returned
       await admin.from('barcode_cache').upsert({
         barcode,
-        product_name:      (parsed.product_name as string | null) ?? 'Unknown product',
         calories_kcal:     parsed.calories_kcal     as number | null,
         protein_g:         parsed.protein_g         as number | null,
         carbs_g:           parsed.carbs_g           as number | null,
@@ -83,9 +83,8 @@ export async function POST(req: NextRequest) {
         vitamin_a_mcg:     parsed.vitamin_a_mcg     as number | null,
         zinc_mg:           parsed.zinc_mg           as number | null,
         omega3_mg:         parsed.omega3_mg         as number | null,
-        last_scanned_at:   new Date().toISOString(),
         first_scanned_at:  new Date().toISOString(),
-        scan_count:        1,
+        last_scanned_at:   new Date().toISOString(),
       }, { onConflict: 'barcode' })
     } catch { /* non-fatal — cache is best-effort */ }
   }

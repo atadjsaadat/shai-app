@@ -187,9 +187,8 @@ async function lookupUSDA(barcode: string): Promise<BarcodeResult | null> {
     const json  = await res.json() as { foods?: AnyRecord[] }
     const foods = json.foods ?? []
 
-    // Prefer exact UPC match; fall back to first result
+    // Require exact UPC match — never fall back to foods[0] (a text-search guess)
     const food = foods.find(f => (f.gtinUpc as string | null)?.replace(/^0+/, '') === barcode.replace(/^0+/, ''))
-               ?? foods[0]
     if (!food) return null
 
     return {
@@ -342,7 +341,6 @@ async function writeToCache(barcode: string, result: BarcodeResult, servingG: nu
       phosphorus_mg:       item.phosphorus_mg,
       last_scanned_at:     new Date().toISOString(),
       first_scanned_at:    new Date().toISOString(),
-      scan_count:          1,
     }, { onConflict: 'barcode' })
   } catch { /* non-fatal */ }
 }
