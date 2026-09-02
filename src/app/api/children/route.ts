@@ -81,6 +81,23 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ success: true });
   }
 
+  if (body.date_of_birth !== undefined) {
+    if (typeof body.date_of_birth !== 'string' || !/^\d{4}-\d{2}$/.test(body.date_of_birth)) {
+      return NextResponse.json({ error: 'Invalid date_of_birth format' }, { status: 400 });
+    }
+    const { data: child } = await admin
+      .from('children')
+      .select('id')
+      .or(`user_id.eq.${user.id},linked_user_ids.cs.{${user.id}}`)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (!child) return NextResponse.json({ error: 'Child not found' }, { status: 404 });
+    const { error } = await admin.from('children').update({ date_of_birth: body.date_of_birth }).eq('id', child.id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: true });
+  }
+
   if (!Array.isArray(body.allergies) || !Array.isArray(body.intolerances)) {
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
   }

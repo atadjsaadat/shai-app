@@ -333,6 +333,26 @@
   align-items: center;
 }
 
+.dobEditor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.dobInput {
+  width: 100%;
+  background: var(--oat);
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  box-sizing: border-box;
+}
+
 /* ── Tier badge ──────────────────────────────────────── */
 .tierBadge {
   font-size: 12px;

@@ -98,6 +98,11 @@ export default function ProfilePage() {
   const [genderEditing, setGenderEditing] = useState(false);
   const [genderSaving, setGenderSaving] = useState(false);
 
+  // Birthday editing state
+  const [dobEditing, setDobEditing] = useState(false);
+  const [dobDraft, setDobDraft] = useState('');
+  const [dobSaving, setDobSaving] = useState(false);
+
   // Journal lock state
   type PinFlow = 'idle' | 'setup_enter' | 'setup_confirm' | 'disable_verify' | 'change_verify' | 'change_enter' | 'change_confirm';
   const [journalLockEnabled, setJournalLockEnabled] = useState(_profilePageCache?.journalLockEnabled ?? false);
@@ -344,6 +349,27 @@ export default function ProfilePage() {
     }
   }
 
+  function formatDob(dob: string | null): string {
+    const d = parseDob(dob);
+    if (!d) return 'Not added';
+    return d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  }
+
+  async function handleDobSave() {
+    if (dobSaving || !dobDraft) return;
+    setDobSaving(true);
+    try {
+      await fetch('/api/children', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date_of_birth: dobDraft }),
+      });
+      setChild(c => c ? { ...c, date_of_birth: dobDraft } : c);
+      setDobEditing(false);
+    } catch { /* ignore */ }
+    setDobSaving(false);
+  }
+
   async function handleGenderSelect(sex: 'male' | 'female' | 'not_specified') {
     if (genderSaving) return;
     setGenderSaving(true);
@@ -517,10 +543,36 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <>
-                  {child.date_of_birth && (
-                    <div className={styles.detailRow}>
-                      <span className={styles.detailLabel}>Birthday</span>
-                      <span className={styles.detailValue}>{child.date_of_birth}</span>
+                  <div className={styles.detailRow}>
+                    <span className={styles.detailLabel}>Birthday</span>
+                    <button
+                      className={styles.genderValue}
+                      onClick={() => { setDobDraft(child.date_of_birth ?? ''); setDobEditing(e => !e); }}
+                      disabled={allergyEditing || dobSaving}
+                    >
+                      {formatDob(child.date_of_birth)}
+                      {!allergyEditing && (
+                        <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M8 5l5 5-5 5"/>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                  {dobEditing && (
+                    <div className={styles.dobEditor}>
+                      <input
+                        type="month"
+                        className={styles.dobInput}
+                        value={dobDraft}
+                        onChange={e => setDobDraft(e.target.value)}
+                        max={new Date().toISOString().slice(0, 7)}
+                      />
+                      <div className={styles.allergyPickerActions}>
+                        <button className={styles.allergyDoneBtn} onClick={handleDobSave} disabled={dobSaving || !dobDraft}>
+                          {dobSaving ? 'Saving…' : 'Done'}
+                        </button>
+                        <button className={styles.allergyCancelBtn} onClick={() => setDobEditing(false)}>Cancel</button>
+                      </div>
                     </div>
                   )}
                   <div className={styles.detailRow}>
