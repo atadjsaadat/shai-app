@@ -433,11 +433,11 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeResult | nu
 
   if (cached?.calories_kcal != null) {
     const raw = cached.allergens as string[] | null
-    let allergens = Array.isArray(raw) ? raw.filter((t: string) => !t.startsWith('trace:')) : []
-    // Always fetch OFF for allergens + traces — traces are not cached (child safety critical)
+    const cachedAllergens = Array.isArray(raw) ? raw.filter((t: string) => !t.startsWith('trace:')) : []
+    // Always fetch fresh OFF allergens + traces — cached allergens may be stale as OFF data improves
     const off = await lookupOFF(barcode)
-    if (allergens.length === 0) allergens = off?.allergens ?? []
-    const traces = off?.traces ?? []
+    const allergens = off?.allergens ?? cachedAllergens
+    const traces    = off?.traces    ?? []
     admin.from('barcode_cache')
       .update({ allergens, last_scanned_at: new Date().toISOString(), scan_count: (cached.scan_count ?? 1) + 1 })
       .eq('barcode', barcode)
