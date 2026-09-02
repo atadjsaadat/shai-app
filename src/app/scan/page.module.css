@@ -199,6 +199,19 @@
 
 .addingBtn:disabled { opacity: 0.6; }
 
+.inPantryBtn {
+  background: var(--sage-light);
+  color: var(--sage-dark);
+  border: 1.5px solid var(--sage);
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: var(--font-nunito), sans-serif;
+  cursor: default;
+  box-shadow: var(--card-shadow);
+}
+
 .logNowBtn {
   background: var(--terracotta);
   color: white;

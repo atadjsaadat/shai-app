@@ -111,6 +111,7 @@ export default function ScanPage() {
   const [scannedBarcode, setScannedBarcode] = useState<string | null>(null)
   const [childAgeMonths, setChildAgeMonths] = useState<number | null>(null)
   const [childName, setChildName] = useState<string | null>(null)
+  const [inPantry, setInPantry] = useState(false)
   const [outcome, setOutcome] = useState<'purchased' | 'rejected' | null>(null)
   const [pantryFull, setPantryFull] = useState<{ limit: number; tier: string } | null>(null)
   const [saveFailed, setSaveFailed] = useState(false)
@@ -171,6 +172,7 @@ export default function ScanPage() {
       setBrand(data.brand ?? null)
       setNovaClass(data.novaClass ?? null)
       setAdditivesN(data.additivesN ?? null)
+      setInPantry(data.inPantry ?? false)
       const productAllergens = data.allergens ?? []
       setAllergyMatches(getMatchingAllergens(childAllergiesRef.current, productAllergens))
       setIntoleranceMatches(getMatchingIntolerances(childIntolerancesRef.current, productAllergens))
@@ -386,11 +388,11 @@ export default function ScanPage() {
 
           <div className={styles.actions}>
             <button
-              className={styles.addingBtn}
-              onClick={() => handleOutcome('purchased')}
-              disabled={phase === 'saving'}
+              className={inPantry ? styles.inPantryBtn : styles.addingBtn}
+              onClick={inPantry ? undefined : () => handleOutcome('purchased')}
+              disabled={phase === 'saving' || inPantry}
             >
-              Add to pantry
+              {inPantry ? '✓ Already in your pantry' : 'Add to pantry'}
             </button>
             <button
               className={styles.logNowBtn}
