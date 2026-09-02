@@ -63,12 +63,20 @@ export async function POST(req: NextRequest) {
   }
 
   // Write to barcode cache so future scans of this product get real label data
+  const servingDesc = parsed.serving_size_description as string | null
+  const servingGMatch = servingDesc?.match(/(\d+(?:\.\d+)?)\s*g/i)
+  const servingMlMatch = servingDesc?.match(/(\d+(?:\.\d+)?)\s*ml/i)
+  const servingG = servingGMatch ? parseFloat(servingGMatch[1]) : null
+  const servingMl = servingMlMatch ? parseFloat(servingMlMatch[1]) : null
+
   if (barcode && parsed.calories_kcal) {
     try {
       const admin = createAdminClient()
       await admin.from('barcode_cache').upsert({
         barcode,
         ...(parsed.product_name ? { product_name: parsed.product_name as string } : {}),
+        ...(servingG  != null ? { serving_size_g:  servingG  } : {}),
+        ...(servingMl != null ? { serving_size_ml: servingMl } : {}),
         calories_kcal:     parsed.calories_kcal     as number | null,
         protein_g:         parsed.protein_g         as number | null,
         carbs_g:           parsed.carbs_g           as number | null,
@@ -93,7 +101,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     item: {
       food_name:               (parsed.product_name as string | null) ?? 'Scanned product',
-      serving_size_description:(parsed.serving_size_description as string | null) ?? 'per serving',
+      serving_size_description: servingG != null ? `${servingG}g` : servingMl != null ? `${servingMl}ml` : (servingDesc ?? null),
       calories_kcal:           parsed.calories_kcal    as number | null,
       protein_g:               parsed.protein_g        as number | null,
       carbs_g:                 parsed.carbs_g          as number | null,
