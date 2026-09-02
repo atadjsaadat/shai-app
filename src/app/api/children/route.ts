@@ -63,6 +63,24 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ success: true })
   }
 
+  if (body.sex !== undefined) {
+    const validSex = ['male', 'female', 'not_specified'];
+    if (!validSex.includes(body.sex)) {
+      return NextResponse.json({ error: 'Invalid sex value' }, { status: 400 });
+    }
+    const { data: child } = await admin
+      .from('children')
+      .select('id')
+      .or(`user_id.eq.${user.id},linked_user_ids.cs.{${user.id}}`)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (!child) return NextResponse.json({ error: 'Child not found' }, { status: 404 });
+    const { error } = await admin.from('children').update({ sex: body.sex }).eq('id', child.id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: true });
+  }
+
   if (!Array.isArray(body.allergies) || !Array.isArray(body.intolerances)) {
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
   }

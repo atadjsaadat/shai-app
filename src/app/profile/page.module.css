@@ -305,6 +305,34 @@
   box-shadow: var(--btn-shadow);
 }
 
+/* ── Gender picker ───────────────────────────────────── */
+.genderValue {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--terracotta);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.genderValue:disabled {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.genderPicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  align-items: center;
+}
+
 /* ── Tier badge ──────────────────────────────────────── */
 .tierBadge {
   font-size: 12px;

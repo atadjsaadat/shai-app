@@ -94,6 +94,10 @@ export default function ProfilePage() {
   const [intoleranceDraft, setIntoleranceDraft] = useState<string[]>([]);
   const [allergySaving, setAllergySaving] = useState(false);
 
+  // Gender editing state
+  const [genderEditing, setGenderEditing] = useState(false);
+  const [genderSaving, setGenderSaving] = useState(false);
+
   // Journal lock state
   type PinFlow = 'idle' | 'setup_enter' | 'setup_confirm' | 'disable_verify' | 'change_verify' | 'change_enter' | 'change_confirm';
   const [journalLockEnabled, setJournalLockEnabled] = useState(_profilePageCache?.journalLockEnabled ?? false);
@@ -340,6 +344,21 @@ export default function ProfilePage() {
     }
   }
 
+  async function handleGenderSelect(sex: 'male' | 'female' | 'not_specified') {
+    if (genderSaving) return;
+    setGenderSaving(true);
+    try {
+      await fetch('/api/children', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sex }),
+      });
+      setChild(c => c ? { ...c, sex } : c);
+      setGenderEditing(false);
+    } catch { /* ignore */ }
+    setGenderSaving(false);
+  }
+
   function openAllergyEditor() {
     setAllergyDraft(child?.allergies?.filter(Boolean) ?? []);
     setIntoleranceDraft(child?.intolerances?.filter(Boolean) ?? []);
@@ -504,10 +523,34 @@ export default function ProfilePage() {
                       <span className={styles.detailValue}>{child.date_of_birth}</span>
                     </div>
                   )}
-                  {child.sex && child.sex !== 'not_specified' && (
-                    <div className={styles.detailRow}>
-                      <span className={styles.detailLabel}>Gender</span>
-                      <span className={styles.detailValue}>{child.sex === 'male' ? 'Boy' : 'Girl'}</span>
+                  <div className={styles.detailRow}>
+                    <span className={styles.detailLabel}>Gender</span>
+                    <button
+                      className={styles.genderValue}
+                      onClick={() => setGenderEditing(e => !e)}
+                      disabled={allergyEditing || genderSaving}
+                    >
+                      {child.sex === 'male' ? 'Boy' : child.sex === 'female' ? 'Girl' : 'Not specified'}
+                      {!allergyEditing && (
+                        <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M8 5l5 5-5 5"/>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                  {genderEditing && (
+                    <div className={styles.genderPicker}>
+                      {(['male', 'female', 'not_specified'] as const).map(opt => (
+                        <button
+                          key={opt}
+                          className={`${styles.allergyPickerChip}${child.sex === opt ? ` ${styles.allergyPickerChipSelected}` : ''}`}
+                          onClick={() => handleGenderSelect(opt)}
+                          disabled={genderSaving}
+                        >
+                          {opt === 'male' ? 'Boy' : opt === 'female' ? 'Girl' : 'Not specified'}
+                        </button>
+                      ))}
+                      <button className={styles.allergyCancelBtn} onClick={() => setGenderEditing(false)}>Cancel</button>
                     </div>
                   )}
                   <div className={styles.detailRow}>
