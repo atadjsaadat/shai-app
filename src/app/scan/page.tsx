@@ -56,6 +56,31 @@ const MACROS: { key: keyof ParsedFoodItem; label: string; unit: string }[] = [
   { key: 'sodium_mg',     label: 'salt',  unit: 'mg' },
 ]
 
+// Maps OFF allergen tags (language-prefix stripped) to keywords found in our allergen list
+const OFF_ALLERGEN_KEYWORDS: Record<string, string[]> = {
+  'gluten':       ['wheat', 'barley', 'rye', 'oat'],
+  'fish':         ['cod', 'mackerel', 'salmon', 'tuna', 'haddock', 'halibut'],
+  'crustaceans':  ['crab', 'lobster', 'shrimp', 'prawn'],
+  'molluscs':     ['squid', 'octopus', 'clam', 'oyster', 'mussel'],
+  'nuts':         ['almond', 'cashew', 'hazelnut', 'walnut', 'pecan', 'pistachio', 'brazil'],
+  'sesame-seeds': ['sesame'],
+  'sulphites':    ['sulphite', 'sulfite'],
+}
+
+function getMatchingAllergens(childAllergies: string[], productAllergens: string[]): string[] {
+  const matches = new Set<string>()
+  for (const ca of childAllergies) {
+    const c = ca.toLowerCase()
+    for (const pa of productAllergens) {
+      const p = pa.toLowerCase()
+      if (c.includes(p) || p.includes(c)) { matches.add(ca); break }
+      const keywords = OFF_ALLERGEN_KEYWORDS[p]
+      if (keywords?.some(kw => c.includes(kw))) { matches.add(ca); break }
+    }
+  }
+  return [...matches]
+}
+
 type ScanPhase = 'scanning' | 'loading' | 'result' | 'saving' | 'done' | 'notfound'
 
 export default function ScanPage() {
@@ -73,6 +98,9 @@ export default function ScanPage() {
   const [saveFailed, setSaveFailed] = useState(false)
   const [labelPhotoLoading, setLabelPhotoLoading] = useState(false)
   const labelPhotoInputRef = useRef<HTMLInputElement>(null)
+
+  const childAllergiesRef = useRef<string[]>([])
+  const [allergyMatches, setAllergyMatches] = useState<string[]>([])
 
   const [showHint, setShowHint] = useState(false)
 
@@ -103,6 +131,7 @@ export default function ScanPage() {
             setChildAgeMonths((now.getFullYear() - dobYear) * 12 + (now.getMonth() + 1 - dobMonth))
           }
         }
+        childAllergiesRef.current = json.childAllergies ?? []
       })
       .catch(() => {})
   }, [])
@@ -119,6 +148,7 @@ export default function ScanPage() {
       setBrand(data.brand ?? null)
       setNovaClass(data.novaClass ?? null)
       setAdditivesN(data.additivesN ?? null)
+      setAllergyMatches(getMatchingAllergens(childAllergiesRef.current, data.allergens ?? []))
       setPhase('result')
     } catch {
       setPhase('notfound')
@@ -274,6 +304,20 @@ export default function ScanPage() {
             <p className={styles.noDataNote}>
               Nutritional data not found for this product. Add to pantry or log it, then tap below to photograph the label and we&apos;ll fill in the numbers.
             </p>
+          )}
+
+          {allergyMatches.length > 0 && (
+            <div className={styles.allergyBanner}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <span>
+                This product contains <strong>{allergyMatches.join(', ')}</strong>
+                {childName ? ` — ${childName} is allergic to this` : ' — child is allergic to this'}.
+              </span>
+            </div>
           )}
 
           {/* Hidden file input for label photo capture */}

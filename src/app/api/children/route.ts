@@ -139,12 +139,12 @@ export async function GET() {
   const admin = createAdminClient()
   const { data: child } = await admin
     .from('children')
-    .select('id, name, date_of_birth')
+    .select('id, name, date_of_birth, allergies, intolerances')
     .or(`user_id.eq.${user.id},linked_user_ids.cs.{${user.id}}`)
     .order('created_at', { ascending: true })
     .limit(1)
     .single()
 
-  if (!child) return NextResponse.json({ childId: null, childName: null, childDob: null })
-  return NextResponse.json({ childId: child.id, childName: child.name, childDob: child.date_of_birth })
+  if (!child) return NextResponse.json({ childId: null, childName: null, childDob: null, childAllergies: [], childIntolerances: [] })
+  return NextResponse.json({ childId: child.id, childName: child.name, childDob: child.date_of_birth, childAllergies: child.allergies ?? [], childIntolerances: child.intolerances ?? [] })
 }

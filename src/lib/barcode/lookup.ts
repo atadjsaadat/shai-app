@@ -70,6 +70,7 @@ export interface BarcodeResult {
   novaClass:  number | null
   additivesN: number | null
   brand:      string | null
+  allergens:  string[]
 }
 
 // ── OFF lookup ────────────────────────────────────────────────────────────────
@@ -129,11 +130,15 @@ async function lookupOFF(barcode: string): Promise<BarcodeResult | null> {
 
     const product  = json.product
     const servingG = parseServingGrams(product.serving_size as string | null)
+    const allergens = ((product.allergens_tags ?? []) as string[])
+      .map((t: string) => t.replace(/^[a-z]{2}:/, '').toLowerCase())
+      .filter(Boolean)
     return {
       item:       mapOFF(product, servingG),
       novaClass:  (product.nova_group  as number | undefined) ?? null,
       additivesN: (product.additives_n as number | undefined) ?? null,
       brand:      (product.brands      as string | undefined)?.split(',')[0]?.trim() ?? null,
+      allergens,
     }
   } catch { return null }
 }
@@ -196,6 +201,7 @@ async function lookupUSDA(barcode: string): Promise<BarcodeResult | null> {
       novaClass:  null,
       additivesN: null,
       brand:      (food.brandOwner as string | null) ?? (food.brandName as string | null) ?? null,
+      allergens:  [],
     }
   } catch { return null }
 }
@@ -255,6 +261,7 @@ function merge(usda: BarcodeResult | null, off: BarcodeResult | null): BarcodeRe
     novaClass:  off.novaClass,   // Only OFF has NOVA
     additivesN: off.additivesN,  // Only OFF has additives count
     brand:      usda.brand ?? off.brand,
+    allergens:  off.allergens,   // Only OFF has allergen tags
   }
 }
 
@@ -302,13 +309,14 @@ function cacheRowToResult(row: AnyRecord): BarcodeResult {
     novaClass:  (row.nova_classification as number | null) ?? null,
     additivesN: (row.additives_n         as number | null) ?? null,
     brand:      (row.brand               as string | null) ?? null,
+    allergens:  Array.isArray(row.allergens) ? (row.allergens as string[]) : [],
   }
 }
 
 async function writeToCache(barcode: string, result: BarcodeResult, servingG: number | null = null): Promise<void> {
   try {
     const admin  = createAdminClient()
-    const { item, brand, novaClass, additivesN } = result
+    const { item, brand, novaClass, additivesN, allergens } = result
     await admin.from('barcode_cache').upsert({
       barcode,
       product_name:        item.food_name,
@@ -339,6 +347,7 @@ async function writeToCache(barcode: string, result: BarcodeResult, servingG: nu
       iodine_mcg:          item.iodine_mcg,
       selenium_mcg:        item.selenium_mcg,
       phosphorus_mg:       item.phosphorus_mg,
+      allergens:           allergens.length > 0 ? allergens : null,
       last_scanned_at:     new Date().toISOString(),
       first_scanned_at:    new Date().toISOString(),
     }, { onConflict: 'barcode' })
