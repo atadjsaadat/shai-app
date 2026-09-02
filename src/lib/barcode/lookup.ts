@@ -367,12 +367,14 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeResult | nu
     .single()
 
   if (cached?.calories_kcal != null) {
-    // Update hit count in background — don't await
+    const allergens = cached.allergens == null
+      ? (await lookupOFF(barcode))?.allergens ?? []
+      : (cached.allergens as string[])
     admin.from('barcode_cache')
-      .update({ last_scanned_at: new Date().toISOString(), scan_count: (cached.scan_count ?? 1) + 1 })
+      .update({ allergens, last_scanned_at: new Date().toISOString(), scan_count: (cached.scan_count ?? 1) + 1 })
       .eq('barcode', barcode)
       .then(() => {})
-    return cacheRowToResult(cached)
+    return { ...cacheRowToResult(cached), allergens }
   }
 
   // 2. USDA + OFF in parallel — best of both sources merged
