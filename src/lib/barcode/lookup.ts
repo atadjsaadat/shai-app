@@ -83,7 +83,7 @@ const INGREDIENT_ALLERGEN_PATTERNS: { pattern: RegExp; tag: string }[] = [
   { pattern: /\b(peanut|groundnut|arachis)\b/i,                                     tag: 'peanuts' },
   { pattern: /\b(wheat|spelt|kamut|rye|barley|oat|gluten)\b/i,                     tag: 'gluten' },
   { pattern: /\b(soy[ab]?|soya|soybean|tofu|miso|edamame|tempeh)\b/i,              tag: 'soybeans' },
-  { pattern: /\b(almond|hazelnut|walnut|cashew|pecan|pistachio|brazil nut|macadamia)\b/i, tag: 'nuts' },
+  { pattern: /\b(nuts?|tree nut|almond|hazelnut|walnut|cashew|pecan|pistachio|brazil nut|macadamia)\b/i, tag: 'nuts' },
   { pattern: /\b(sesame|tahini)\b/i,                                                tag: 'sesame-seeds' },
   { pattern: /\b(cod|salmon|tuna|mackerel|anchov|sardine|herring|haddock|halibut|trout|fish)\b/i, tag: 'fish' },
   { pattern: /\b(shrimp|prawn|crab|lobster|crayfish|langoustine)\b/i,              tag: 'crustaceans' },
