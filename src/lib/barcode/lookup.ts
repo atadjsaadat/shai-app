@@ -182,10 +182,12 @@ async function lookupOFF(barcode: string): Promise<BarcodeResult | null> {
 
 function mapUSDA(food: AnyRecord): ParsedFoodItem {
   const servingG    = typeof food.servingSize === 'number' &&
-                      (food.servingSizeUnit as string | null)?.toLowerCase() === 'g'
+                      ['g', 'grm', 'gram', 'grams'].includes((food.servingSizeUnit as string | null)?.toLowerCase() ?? '')
                       ? food.servingSize as number
                       : null
-  const householdText = food.householdServingFullText as string | null
+  // Strip leading "per " from household text (e.g. USDA "per biscuit" → "biscuit")
+  const rawHousehold  = food.householdServingFullText as string | null
+  const householdText = rawHousehold?.replace(/^\s*per\s+/i, '') ?? null
   const servingDesc = householdText != null
     ? (servingG != null && !householdText.match(/\d+\s*g/i) ? `${householdText} (${servingG}g)` : householdText)
     : (servingG != null ? `${servingG}g` : 'per 100g')
@@ -256,7 +258,7 @@ function merge(usda: BarcodeResult | null, off: BarcodeResult | null): BarcodeRe
     (u[field] as number | null) ?? (o[field] as number | null)
 
   const merged: ParsedFoodItem = {
-    food_name:               u.food_name || o.food_name,
+    food_name:               (u.food_name && u.food_name !== 'Unknown product') ? u.food_name : o.food_name,
     serving_size_description:u.serving_size_description ?? o.serving_size_description,
     confidence_score:        0.95,
     data_source:             'barcode',

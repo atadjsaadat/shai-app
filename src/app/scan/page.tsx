@@ -319,7 +319,11 @@ export default function ScanPage() {
                 })}
               </div>
               {item.serving_size_description && (
-                <p className={styles.servingNote}>per {item.serving_size_description}</p>
+                <p className={styles.servingNote}>
+                  {item.serving_size_description?.toLowerCase().startsWith('per ')
+                    ? item.serving_size_description
+                    : `per ${item.serving_size_description}`}
+                </p>
               )}
 
               {scoreResult && (
