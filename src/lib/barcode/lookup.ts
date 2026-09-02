@@ -73,6 +73,35 @@ export interface BarcodeResult {
   allergens:  string[]
 }
 
+// ── Allergen extraction ───────────────────────────────────────────────────────
+// OFF allergen tags are often empty — parse ingredients text as the primary source
+
+const INGREDIENT_ALLERGEN_PATTERNS: { pattern: RegExp; tag: string }[] = [
+  { pattern: /\b(milk|cream|butter|cheese|lactose|whey|casein|dairy|yogur[th])\b/i, tag: 'milk' },
+  { pattern: /\b(egg|albumin|ovalbumin|lysozyme)\b/i,                               tag: 'eggs' },
+  { pattern: /\b(peanut|groundnut|arachis)\b/i,                                     tag: 'peanuts' },
+  { pattern: /\b(wheat|spelt|kamut|rye|barley|oat|gluten)\b/i,                     tag: 'gluten' },
+  { pattern: /\b(soy[ab]?|soya|soybean|tofu|miso|edamame|tempeh)\b/i,              tag: 'soybeans' },
+  { pattern: /\b(almond|hazelnut|walnut|cashew|pecan|pistachio|brazil nut|macadamia)\b/i, tag: 'nuts' },
+  { pattern: /\b(sesame|tahini)\b/i,                                                tag: 'sesame-seeds' },
+  { pattern: /\b(cod|salmon|tuna|mackerel|anchov|sardine|herring|haddock|halibut|trout|fish)\b/i, tag: 'fish' },
+  { pattern: /\b(shrimp|prawn|crab|lobster|crayfish|langoustine)\b/i,              tag: 'crustaceans' },
+  { pattern: /\b(squid|octopus|mussel|clam|oyster|scallop)\b/i,                    tag: 'molluscs' },
+  { pattern: /\b(celery|celeriac)\b/i,                                              tag: 'celery' },
+  { pattern: /\b(mustard|sinapis)\b/i,                                              tag: 'mustard' },
+  { pattern: /\b(lupin[e]?)\b/i,                                                    tag: 'lupin' },
+  { pattern: /\b(sulphite|sulfite|sulphur dioxide|sulfur dioxide)\b/i,             tag: 'sulphites' },
+]
+
+function extractAllergensFromIngredients(text: string | null | undefined): string[] {
+  if (!text) return []
+  const found = new Set<string>()
+  for (const { pattern, tag } of INGREDIENT_ALLERGEN_PATTERNS) {
+    if (pattern.test(text)) found.add(tag)
+  }
+  return [...found]
+}
+
 // ── OFF lookup ────────────────────────────────────────────────────────────────
 
 function getNutrient(n: Nutriments, key: string, servingG: number | null): number | null {
@@ -136,6 +165,9 @@ async function lookupOFF(barcode: string): Promise<BarcodeResult | null> {
         const norm = t.replace(/^[a-z]{2}:/, '').toLowerCase().trim()
         if (norm) allergenSet.add(norm)
       }
+    }
+    for (const tag of extractAllergensFromIngredients(product.ingredients_text as string | null)) {
+      allergenSet.add(tag)
     }
     const allergens = [...allergenSet]
     return {
