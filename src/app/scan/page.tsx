@@ -316,6 +316,9 @@ export default function ScanPage() {
                   )
                 })}
               </div>
+              {item.serving_size_description && (
+                <p className={styles.servingNote}>per {item.serving_size_description}</p>
+              )}
 
               {scoreResult && (
                 <div className={styles.scoreCard} style={{ borderColor: BAND_COLOURS[scoreResult.band], background: BAND_BG[scoreResult.band] }}>
