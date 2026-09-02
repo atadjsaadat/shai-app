@@ -107,16 +107,22 @@ export default function RecordPage() {
 
   const SECTIONS = [
     {
-      label: 'Milestones',
-      href: '/baby-book/milestones',
+      label: 'Allergies',
+      href: '/baby-book/allergies',
       color: '#F0D5C8',
       textColor: '#9E5035',
-      preview1: summary.lastMilestoneTitle,
-      preview2: summary.lastMilestoneDate ? formatPastDate(summary.lastMilestoneDate) : null,
+      preview1: (() => {
+        const a = summary.allergies.length;
+        const i = summary.intolerances.length;
+        if (a === 0 && i === 0) return 'None recorded';
+        return [a > 0 ? `${a} allerg${a === 1 ? 'y' : 'ies'}` : null, i > 0 ? `${i} intolerance${i === 1 ? '' : 's'}` : null].filter(Boolean).join(' · ');
+      })(),
+      preview2: null,
       icon: (
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
       ),
     },
@@ -170,22 +176,16 @@ export default function RecordPage() {
       ),
     },
     {
-      label: 'Allergies',
-      href: '/baby-book/allergies',
-      color: '#DDE4F5',
-      textColor: '#3A5B8B',
-      preview1: (() => {
-        const a = summary.allergies.length;
-        const i = summary.intolerances.length;
-        if (a === 0 && i === 0) return 'None recorded';
-        return [a > 0 ? `${a} allerg${a === 1 ? 'y' : 'ies'}` : null, i > 0 ? `${i} intolerance${i === 1 ? '' : 's'}` : null].filter(Boolean).join(' · ');
-      })(),
-      preview2: null,
+      label: 'Milestones',
+      href: '/baby-book/milestones',
+      color: '#F0D5C8',
+      textColor: '#9E5035',
+      preview1: summary.lastMilestoneTitle,
+      preview2: summary.lastMilestoneDate ? formatPastDate(summary.lastMilestoneDate) : null,
       icon: (
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-          <line x1="12" y1="9" x2="12" y2="13"/>
-          <line x1="12" y1="17" x2="12.01" y2="17"/>
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
         </svg>
       ),
     },
