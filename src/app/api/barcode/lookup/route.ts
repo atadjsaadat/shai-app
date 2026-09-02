@@ -13,5 +13,5 @@ export async function GET(req: NextRequest) {
   const result = await lookupBarcode(barcode)
   if (!result) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
 
-  return NextResponse.json({ item: result.item, novaClass: result.novaClass, additivesN: result.additivesN, brand: result.brand, allergens: result.allergens, traces: result.traces })
+  return NextResponse.json({ item: result.item, novaClass: result.novaClass, additivesN: result.additivesN, brand: result.brand, allergens: result.allergens })
 }

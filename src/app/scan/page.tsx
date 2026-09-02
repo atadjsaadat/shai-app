@@ -119,8 +119,8 @@ export default function ScanPage() {
 
   const childAllergiesRef = useRef<string[]>([])
   const childIntolerancesRef = useRef<string[]>([])
+  const [childAllergies, setChildAllergies] = useState<string[]>([])
   const [allergyMatches, setAllergyMatches] = useState<string[]>([])
-  const [traceMatches, setTraceMatches] = useState<string[]>([])
   const [intoleranceMatches, setIntoleranceMatches] = useState<string[]>([])
 
   const [showHint, setShowHint] = useState(false)
@@ -154,6 +154,7 @@ export default function ScanPage() {
         }
         childAllergiesRef.current = json.childAllergies ?? []
         childIntolerancesRef.current = json.childIntolerances ?? []
+        setChildAllergies(json.childAllergies ?? [])
       })
       .catch(() => {})
   }, [])
@@ -171,9 +172,7 @@ export default function ScanPage() {
       setNovaClass(data.novaClass ?? null)
       setAdditivesN(data.additivesN ?? null)
       const productAllergens = data.allergens ?? []
-      const productTraces    = data.traces    ?? []
       setAllergyMatches(getMatchingAllergens(childAllergiesRef.current, productAllergens))
-      setTraceMatches(getMatchingAllergens(childAllergiesRef.current, productTraces))
       setIntoleranceMatches(getMatchingIntolerances(childIntolerancesRef.current, productAllergens))
       setPhase('result')
     } catch {
@@ -346,20 +345,6 @@ export default function ScanPage() {
             </div>
           )}
 
-          {traceMatches.length > 0 && !allergyMatches.some(a => traceMatches.includes(a)) && (
-            <div className={styles.traceBanner}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                <line x1="12" y1="9" x2="12" y2="13"/>
-                <line x1="12" y1="17" x2="12.01" y2="17"/>
-              </svg>
-              <span>
-                Made in a factory that handles <strong>{traceMatches.join(', ')}</strong>
-                {childName ? ` — ${childName} is allergic to this` : ' — child is allergic to this'}.
-              </span>
-            </div>
-          )}
-
           {intoleranceMatches.length > 0 && (
             <div className={styles.intoleranceBanner}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
@@ -369,6 +354,19 @@ export default function ScanPage() {
               </svg>
               <span>
                 {childName ? `${childName} is` : 'Child is'} <strong>{intoleranceMatches.map(i => i.toLowerCase()).join(' and ')} intolerant</strong> — this product may contain related ingredients.
+              </span>
+            </div>
+          )}
+
+          {childAllergies.length > 0 && (
+            <div className={styles.allergyAdvisory}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <span>
+                Always check this label too — we flag what we find, but &lsquo;may contain&rsquo; statements and data gaps mean the physical label is the final word{childName ? ` for ${childName}` : ''}.
               </span>
             </div>
           )}

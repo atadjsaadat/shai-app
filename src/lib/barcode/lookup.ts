@@ -9,7 +9,6 @@ type Nutriments = Record<string, number | undefined>
 type AnyRecord  = Record<string, any>
 
 // ── USDA nutrient ID → ParsedFoodItem field ───────────────────────────────────
-// All USDA branded food values are per 100g — we scale by servingSize below
 const USDA_NUTRIENT_MAP: Partial<Record<number, keyof ParsedFoodItem>> = {
   1008: 'calories_kcal',
   1003: 'protein_g',
@@ -34,7 +33,6 @@ const USDA_NUTRIENT_MAP: Partial<Record<number, keyof ParsedFoodItem>> = {
   1103: 'selenium_mcg',
   1100: 'iodine_mcg',
 }
-// Omega-3 components (ALA + EPA + DHA) summed and converted g → mg
 const USDA_OMEGA3_IDS = new Set([1404, 1405, 1406])
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
@@ -70,8 +68,7 @@ export interface BarcodeResult {
   novaClass:  number | null
   additivesN: number | null
   brand:      string | null
-  allergens:  string[]  // confirmed — product contains this
-  traces:     string[]  // may contain — factory cross-contamination risk
+  allergens:  string[]
 }
 
 // ── Allergen extraction ───────────────────────────────────────────────────────
@@ -94,20 +91,13 @@ const INGREDIENT_ALLERGEN_PATTERNS: { pattern: RegExp; tag: string }[] = [
   { pattern: /\b(sulphite|sulfite|sulphur dioxide|sulfur dioxide)\b/i,             tag: 'sulphites' },
 ]
 
-function extractAllergensFromIngredients(text: string | null | undefined): string[] {
+export function extractAllergensFromIngredients(text: string | null | undefined): string[] {
   if (!text) return []
   const found = new Set<string>()
   for (const { pattern, tag } of INGREDIENT_ALLERGEN_PATTERNS) {
     if (pattern.test(text)) found.add(tag)
   }
   return [...found]
-}
-
-function extractTracesFromText(text: string | null | undefined): string[] {
-  if (!text) return []
-  // Match "may contain [traces of] X" or "produced in a factory that handles X"
-  const match = text.match(/(?:may\s+contain(?:\s+traces?\s+of)?|factory\s+that\s+handles)\s*:?\s*(.+?)(?:\.|$)/i)
-  return match ? extractAllergensFromIngredients(match[1]) : []
 }
 
 // ── OFF lookup ────────────────────────────────────────────────────────────────
@@ -178,21 +168,12 @@ async function lookupOFF(barcode: string): Promise<BarcodeResult | null> {
       allergenSet.add(tag)
     }
 
-    const tracesSet = new Set<string>()
-    for (const t of ((product.traces_tags ?? []) as string[])) {
-      const norm = t.replace(/^[a-z]{2}:/, '').toLowerCase().trim()
-      if (norm) tracesSet.add(norm)
-    }
-    for (const tag of extractTracesFromText(product.traces as string | null)) tracesSet.add(tag)
-    for (const tag of extractTracesFromText(product.ingredients_text as string | null)) tracesSet.add(tag)
-
     return {
       item:       mapOFF(product, servingG),
       novaClass:  (product.nova_group  as number | undefined) ?? null,
       additivesN: (product.additives_n as number | undefined) ?? null,
       brand:      (product.brands      as string | undefined)?.split(',')[0]?.trim() ?? null,
       allergens:  [...allergenSet],
-      traces:     [...tracesSet],
     }
   } catch { return null }
 }
@@ -216,7 +197,6 @@ function mapUSDA(food: AnyRecord): ParsedFoodItem {
     const value = fn.value     as number | null
     if (value == null) continue
 
-    // Scale per-100g → per-serving
     const scaled = servingG != null ? round2(value * servingG / 100) : round2(value)
     if (scaled == null) continue
 
@@ -224,7 +204,6 @@ function mapUSDA(food: AnyRecord): ParsedFoodItem {
     if (field) {
       (item as AnyRecord)[field] = scaled
     } else if (USDA_OMEGA3_IDS.has(id)) {
-      // ALA/EPA/DHA in g — accumulate then convert to mg
       omega3Sum += value * (servingG != null ? servingG / 100 : 1)
     }
   }
@@ -256,14 +235,12 @@ async function lookupUSDA(barcode: string): Promise<BarcodeResult | null> {
       additivesN: null,
       brand:      (food.brandOwner as string | null) ?? (food.brandName as string | null) ?? null,
       allergens:  [],
-      traces:     [],
     }
   } catch { return null }
 }
 
 // ── Merge ─────────────────────────────────────────────────────────────────────
-// USDA wins for any nutrient it has (more rigorously verified).
-// OFF fills remaining gaps and contributes NOVA / additives.
+// USDA wins for any nutrient it has. OFF fills remaining gaps and contributes NOVA / additives.
 
 function merge(usda: BarcodeResult | null, off: BarcodeResult | null): BarcodeResult | null {
   if (!usda && !off) return null
@@ -273,7 +250,6 @@ function merge(usda: BarcodeResult | null, off: BarcodeResult | null): BarcodeRe
   const u = usda.item
   const o = off.item
 
-  // USDA wins for any nutrient it has; OFF fills the rest
   const pick = (field: keyof ParsedFoodItem) =>
     (u[field] as number | null) ?? (o[field] as number | null)
 
@@ -313,26 +289,14 @@ function merge(usda: BarcodeResult | null, off: BarcodeResult | null): BarcodeRe
 
   return {
     item:       merged,
-    novaClass:  off.novaClass,   // Only OFF has NOVA
-    additivesN: off.additivesN,  // Only OFF has additives count
+    novaClass:  off.novaClass,
+    additivesN: off.additivesN,
     brand:      usda.brand ?? off.brand,
     allergens:  off.allergens,
-    traces:     off.traces,
   }
 }
 
 // ── Cache helpers ─────────────────────────────────────────────────────────────
-
-function partitionCachedAllergens(raw: unknown): { allergens: string[]; traces: string[] } {
-  const allergens: string[] = []
-  const traces: string[] = []
-  if (!Array.isArray(raw)) return { allergens, traces }
-  for (const t of raw as string[]) {
-    if (t.startsWith('trace:')) traces.push(t.slice(6))
-    else allergens.push(t)
-  }
-  return { allergens, traces }
-}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function cacheRowToResult(row: AnyRecord): BarcodeResult {
@@ -376,14 +340,15 @@ function cacheRowToResult(row: AnyRecord): BarcodeResult {
     novaClass:  (row.nova_classification as number | null) ?? null,
     additivesN: (row.additives_n         as number | null) ?? null,
     brand:      (row.brand               as string | null) ?? null,
-    ...partitionCachedAllergens(row.allergens),
+    // Strip any legacy trace: prefixed entries written before traces were removed
+    allergens:  Array.isArray(row.allergens) ? (row.allergens as string[]).filter(t => !t.startsWith('trace:')) : [],
   }
 }
 
 async function writeToCache(barcode: string, result: BarcodeResult, servingG: number | null = null): Promise<void> {
   try {
     const admin  = createAdminClient()
-    const { item, brand, novaClass, additivesN, allergens, traces } = result
+    const { item, brand, novaClass, additivesN, allergens } = result
     await admin.from('barcode_cache').upsert({
       barcode,
       product_name:        item.food_name,
@@ -414,7 +379,7 @@ async function writeToCache(barcode: string, result: BarcodeResult, servingG: nu
       iodine_mcg:          item.iodine_mcg,
       selenium_mcg:        item.selenium_mcg,
       phosphorus_mg:       item.phosphorus_mg,
-      allergens:           [...allergens, ...traces.map(t => `trace:${t}`)],
+      allergens,
       last_scanned_at:     new Date().toISOString(),
       first_scanned_at:    new Date().toISOString(),
     }, { onConflict: 'barcode' })
@@ -426,7 +391,7 @@ async function writeToCache(barcode: string, result: BarcodeResult, servingG: nu
 export async function lookupBarcode(barcode: string): Promise<BarcodeResult | null> {
   const admin = createAdminClient()
 
-  // 1. Our cache first — merged data from both sources, built up over time
+  // 1. Cache first — merged data from both sources, built up over time
   const { data: cached } = await admin
     .from('barcode_cache')
     .select('*')
@@ -435,18 +400,16 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeResult | nu
 
   if (cached?.calories_kcal != null) {
     const raw = cached.allergens as string[] | null
-    const needsSafetyBackfill = raw == null || raw.length === 0
-    let { allergens, traces } = partitionCachedAllergens(raw)
-    if (needsSafetyBackfill) {
+    let allergens = Array.isArray(raw) ? raw.filter((t: string) => !t.startsWith('trace:')) : []
+    if (allergens.length === 0) {
       const off = await lookupOFF(barcode)
       allergens = off?.allergens ?? []
-      traces    = off?.traces    ?? []
     }
     admin.from('barcode_cache')
-      .update({ allergens: [...allergens, ...traces.map(t => `trace:${t}`)], last_scanned_at: new Date().toISOString(), scan_count: (cached.scan_count ?? 1) + 1 })
+      .update({ allergens, last_scanned_at: new Date().toISOString(), scan_count: (cached.scan_count ?? 1) + 1 })
       .eq('barcode', barcode)
       .then(() => {})
-    return { ...cacheRowToResult(cached), allergens, traces }
+    return { ...cacheRowToResult(cached), allergens }
   }
 
   // 2. USDA + OFF in parallel — best of both sources merged
