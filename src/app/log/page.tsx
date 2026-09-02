@@ -315,10 +315,8 @@ function LogPage() {
   const [barcodeGrams, setBarcodeGrams] = useState<string>('');
   const selectedPortion = PORTION_OPTIONS.find(o => o.id === portionSelection) ?? null;
   const activeItem = parsedData?.foodItems[0] ?? null;
-  const isBarcodePer100g = fromBarcode && (
-    !activeItem?.serving_size_description ||
-    activeItem?.serving_size_description === 'per 100g'
-  );
+  const activeDesc = activeItem?.serving_size_description ?? '';
+  const isBarcodePer100g = fromBarcode && (!activeDesc || activeDesc === '100g' || activeDesc === 'per 100g');
   const portionMultiplier = isBarcodePer100g
     ? (parseFloat(barcodeGrams) || 100) / 100
     : (selectedPortion?.value ?? 1);
