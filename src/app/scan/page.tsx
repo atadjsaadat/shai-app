@@ -386,6 +386,16 @@ export default function ScanPage() {
             onChange={handleLabelPhoto}
           />
 
+          {(() => {
+            const d = item.serving_size_description
+            const isPer100g = !d || d === '100g' || d === 'per 100g'
+            return isPer100g && item.calories_kcal != null ? (
+              <p className={styles.photoNudge}>
+                We&apos;ve got the numbers per 100g — snap the back panel and we&apos;ll save the exact serving size for every future scan of this product.
+              </p>
+            ) : null
+          })()}
+
           <div className={styles.actions}>
             <button
               className={inPantry ? styles.inPantryBtn : styles.addingBtn}
