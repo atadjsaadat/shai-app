@@ -1377,11 +1377,11 @@ function LogPage() {
                 </div>
               )}
 
-              {fromFavourite && addSideOpen ? (
+              {(fromFavourite || fromBarcode) && addSideOpen ? (
                 <div className={styles.addSideRow}>
                   <input
                     className={styles.addSideInput}
-                    placeholder="e.g. handful of broccoli"
+                    placeholder="e.g. butter, handful of broccoli"
                     value={addSideInput}
                     onChange={(e) => setAddSideInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleAddSide(); }}
@@ -1394,9 +1394,9 @@ function LogPage() {
                   </button>
                   <button className={styles.addSideCancel} onClick={() => { setAddSideOpen(false); setAddSideInput(''); }}>✕</button>
                 </div>
-              ) : fromFavourite ? (
+              ) : (fromFavourite || fromBarcode) ? (
                 <button className={styles.addSideTrigger} onClick={() => setAddSideOpen(true)} disabled={phase === 'saving'}>
-                  + Add a side
+                  + Add another item
                 </button>
               ) : null}
 
