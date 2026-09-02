@@ -96,6 +96,10 @@ export default function ProfilePage() {
   const [dobDraft, setDobDraft] = useState('');
   const [dobSaving, setDobSaving] = useState(false);
 
+  // Eating style editing state
+  const [eatingEditing, setEatingEditing] = useState(false);
+  const [eatingSaving, setEatingSaving] = useState(false);
+
   // Journal lock state
   type PinFlow = 'idle' | 'setup_enter' | 'setup_confirm' | 'disable_verify' | 'change_verify' | 'change_enter' | 'change_confirm';
   const [journalLockEnabled, setJournalLockEnabled] = useState(_profilePageCache?.journalLockEnabled ?? false);
@@ -378,6 +382,21 @@ export default function ProfilePage() {
     setGenderSaving(false);
   }
 
+  async function handleEatingSelect(is_selective_eater: boolean) {
+    if (eatingSaving) return;
+    setEatingSaving(true);
+    try {
+      await fetch('/api/children', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_selective_eater }),
+      });
+      setChild(c => c ? { ...c, is_selective_eater } : c);
+      setEatingEditing(false);
+    } catch { /* ignore */ }
+    setEatingSaving(false);
+  }
+
 
   useEffect(() => {
     const el = privacyCardRef.current;
@@ -462,8 +481,8 @@ export default function ProfilePage() {
                   onClick={() => { setDobDraft(child.date_of_birth ?? ''); setDobEditing(e => !e); }}
                   disabled={dobSaving}
                 >
-                  {formatDob(child.date_of_birth)}
-                  <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <span className={styles.genderValueText}>{formatDob(child.date_of_birth)}</span>
+                  <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                     <path d="M8 5l5 5-5 5"/>
                   </svg>
                 </button>
@@ -492,8 +511,8 @@ export default function ProfilePage() {
                   onClick={() => setGenderEditing(e => !e)}
                   disabled={genderSaving}
                 >
-                  {child.sex === 'male' ? 'Boy' : child.sex === 'female' ? 'Girl' : 'Not specified'}
-                  <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <span className={styles.genderValueText}>{child.sex === 'male' ? 'Boy' : child.sex === 'female' ? 'Girl' : 'Not specified'}</span>
+                  <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                     <path d="M8 5l5 5-5 5"/>
                   </svg>
                 </button>
@@ -513,10 +532,32 @@ export default function ProfilePage() {
                   <button className={styles.allergyCancelBtn} onClick={() => setGenderEditing(false)}>Cancel</button>
                 </div>
               )}
-              {child.is_selective_eater && (
-                <div className={styles.detailRow}>
-                  <span className={styles.detailLabel}>Eating style</span>
-                  <span className={`${styles.chip} ${styles.chipAmber}`}>Selective eater</span>
+              <div className={styles.detailRow}>
+                <span className={styles.detailLabel}>Eating style</span>
+                <button
+                  className={styles.genderValue}
+                  onClick={() => setEatingEditing(e => !e)}
+                  disabled={eatingSaving}
+                >
+                  <span className={styles.genderValueText}>{child.is_selective_eater ? 'Selective eater' : 'Eats most things'}</span>
+                  <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <path d="M8 5l5 5-5 5"/>
+                  </svg>
+                </button>
+              </div>
+              {eatingEditing && (
+                <div className={styles.genderPicker}>
+                  {([true, false] as const).map(opt => (
+                    <button
+                      key={String(opt)}
+                      className={`${styles.allergyPickerChip}${child.is_selective_eater === opt ? ` ${styles.allergyPickerChipSelected}` : ''}`}
+                      onClick={() => handleEatingSelect(opt)}
+                      disabled={eatingSaving}
+                    >
+                      {opt ? 'Selective eater' : 'Eats most things'}
+                    </button>
+                  ))}
+                  <button className={styles.allergyCancelBtn} onClick={() => setEatingEditing(false)}>Cancel</button>
                 </div>
               )}
             </div>
