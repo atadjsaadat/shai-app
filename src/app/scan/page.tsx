@@ -396,15 +396,13 @@ export default function ScanPage() {
             >
               Log it now
             </button>
-            {item.calories_kcal == null && (
-              <button
-                className={styles.photoLabelBtn}
-                onClick={() => labelPhotoInputRef.current?.click()}
-                disabled={phase === 'saving' || labelPhotoLoading}
-              >
-                {labelPhotoLoading ? 'Reading label…' : 'Photo the label for nutrition data'}
-              </button>
-            )}
+            <button
+              className={styles.photoLabelBtn}
+              onClick={() => labelPhotoInputRef.current?.click()}
+              disabled={phase === 'saving' || labelPhotoLoading}
+            >
+              {labelPhotoLoading ? 'Reading label…' : 'Photo the label'}
+            </button>
             <button
               className={styles.leavingBtn}
               onClick={() => handleOutcome('rejected')}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { extractAllergensFromIngredients } from '@/lib/barcode/lookup'
 
 const anthropic = new Anthropic()
 
@@ -65,9 +66,9 @@ export async function POST(req: NextRequest) {
   if (barcode && parsed.calories_kcal) {
     try {
       const admin = createAdminClient()
-      // Photo updates nutrients only — product_name stays as whatever OFF/USDA returned
       await admin.from('barcode_cache').upsert({
         barcode,
+        ...(parsed.product_name ? { product_name: parsed.product_name as string } : {}),
         calories_kcal:     parsed.calories_kcal     as number | null,
         protein_g:         parsed.protein_g         as number | null,
         carbs_g:           parsed.carbs_g           as number | null,
