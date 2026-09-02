@@ -70,7 +70,8 @@ export interface BarcodeResult {
   novaClass:  number | null
   additivesN: number | null
   brand:      string | null
-  allergens:  string[]
+  allergens:  string[]  // confirmed — product contains this
+  traces:     string[]  // may contain — factory cross-contamination risk
 }
 
 // ── Allergen extraction ───────────────────────────────────────────────────────
@@ -100,6 +101,13 @@ function extractAllergensFromIngredients(text: string | null | undefined): strin
     if (pattern.test(text)) found.add(tag)
   }
   return [...found]
+}
+
+function extractTracesFromText(text: string | null | undefined): string[] {
+  if (!text) return []
+  // Match "may contain [traces of] X" or "produced in a factory that handles X"
+  const match = text.match(/(?:may\s+contain(?:\s+traces?\s+of)?|factory\s+that\s+handles)\s*:?\s*(.+?)(?:\.|$)/i)
+  return match ? extractAllergensFromIngredients(match[1]) : []
 }
 
 // ── OFF lookup ────────────────────────────────────────────────────────────────
@@ -169,13 +177,22 @@ async function lookupOFF(barcode: string): Promise<BarcodeResult | null> {
     for (const tag of extractAllergensFromIngredients(product.ingredients_text as string | null)) {
       allergenSet.add(tag)
     }
-    const allergens = [...allergenSet]
+
+    const tracesSet = new Set<string>()
+    for (const t of ((product.traces_tags ?? []) as string[])) {
+      const norm = t.replace(/^[a-z]{2}:/, '').toLowerCase().trim()
+      if (norm) tracesSet.add(norm)
+    }
+    for (const tag of extractTracesFromText(product.traces as string | null)) tracesSet.add(tag)
+    for (const tag of extractTracesFromText(product.ingredients_text as string | null)) tracesSet.add(tag)
+
     return {
       item:       mapOFF(product, servingG),
       novaClass:  (product.nova_group  as number | undefined) ?? null,
       additivesN: (product.additives_n as number | undefined) ?? null,
       brand:      (product.brands      as string | undefined)?.split(',')[0]?.trim() ?? null,
-      allergens,
+      allergens:  [...allergenSet],
+      traces:     [...tracesSet],
     }
   } catch { return null }
 }
@@ -239,6 +256,7 @@ async function lookupUSDA(barcode: string): Promise<BarcodeResult | null> {
       additivesN: null,
       brand:      (food.brandOwner as string | null) ?? (food.brandName as string | null) ?? null,
       allergens:  [],
+      traces:     [],
     }
   } catch { return null }
 }
@@ -298,11 +316,23 @@ function merge(usda: BarcodeResult | null, off: BarcodeResult | null): BarcodeRe
     novaClass:  off.novaClass,   // Only OFF has NOVA
     additivesN: off.additivesN,  // Only OFF has additives count
     brand:      usda.brand ?? off.brand,
-    allergens:  off.allergens,   // Only OFF has allergen tags
+    allergens:  off.allergens,
+    traces:     off.traces,
   }
 }
 
 // ── Cache helpers ─────────────────────────────────────────────────────────────
+
+function partitionCachedAllergens(raw: unknown): { allergens: string[]; traces: string[] } {
+  const allergens: string[] = []
+  const traces: string[] = []
+  if (!Array.isArray(raw)) return { allergens, traces }
+  for (const t of raw as string[]) {
+    if (t.startsWith('trace:')) traces.push(t.slice(6))
+    else allergens.push(t)
+  }
+  return { allergens, traces }
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function cacheRowToResult(row: AnyRecord): BarcodeResult {
@@ -346,14 +376,14 @@ function cacheRowToResult(row: AnyRecord): BarcodeResult {
     novaClass:  (row.nova_classification as number | null) ?? null,
     additivesN: (row.additives_n         as number | null) ?? null,
     brand:      (row.brand               as string | null) ?? null,
-    allergens:  Array.isArray(row.allergens) ? (row.allergens as string[]) : [],
+    ...partitionCachedAllergens(row.allergens),
   }
 }
 
 async function writeToCache(barcode: string, result: BarcodeResult, servingG: number | null = null): Promise<void> {
   try {
     const admin  = createAdminClient()
-    const { item, brand, novaClass, additivesN, allergens } = result
+    const { item, brand, novaClass, additivesN, allergens, traces } = result
     await admin.from('barcode_cache').upsert({
       barcode,
       product_name:        item.food_name,
@@ -384,7 +414,7 @@ async function writeToCache(barcode: string, result: BarcodeResult, servingG: nu
       iodine_mcg:          item.iodine_mcg,
       selenium_mcg:        item.selenium_mcg,
       phosphorus_mg:       item.phosphorus_mg,
-      allergens:           allergens.length > 0 ? allergens : null,
+      allergens:           [...allergens, ...traces.map(t => `trace:${t}`)],
       last_scanned_at:     new Date().toISOString(),
       first_scanned_at:    new Date().toISOString(),
     }, { onConflict: 'barcode' })
@@ -404,16 +434,19 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeResult | nu
     .single()
 
   if (cached?.calories_kcal != null) {
-    const cachedAllergens = cached.allergens as string[] | null
-    const needsAllergenCheck = cachedAllergens == null || cachedAllergens.length === 0
-    const allergens = needsAllergenCheck
-      ? (await lookupOFF(barcode))?.allergens ?? []
-      : cachedAllergens
+    const raw = cached.allergens as string[] | null
+    const needsSafetyBackfill = raw == null || raw.length === 0
+    let { allergens, traces } = partitionCachedAllergens(raw)
+    if (needsSafetyBackfill) {
+      const off = await lookupOFF(barcode)
+      allergens = off?.allergens ?? []
+      traces    = off?.traces    ?? []
+    }
     admin.from('barcode_cache')
-      .update({ allergens, last_scanned_at: new Date().toISOString(), scan_count: (cached.scan_count ?? 1) + 1 })
+      .update({ allergens: [...allergens, ...traces.map(t => `trace:${t}`)], last_scanned_at: new Date().toISOString(), scan_count: (cached.scan_count ?? 1) + 1 })
       .eq('barcode', barcode)
       .then(() => {})
-    return { ...cacheRowToResult(cached), allergens }
+    return { ...cacheRowToResult(cached), allergens, traces }
   }
 
   // 2. USDA + OFF in parallel — best of both sources merged

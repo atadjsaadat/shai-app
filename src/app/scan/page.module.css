@@ -327,3 +327,22 @@
 .intoleranceBanner strong {
   font-weight: 800;
 }
+
+.traceBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #FFF0F0;
+  color: #7A0000;
+  border: 2px solid #7A0000;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.traceBanner strong {
+  font-weight: 800;
+}

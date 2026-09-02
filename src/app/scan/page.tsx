@@ -120,6 +120,7 @@ export default function ScanPage() {
   const childAllergiesRef = useRef<string[]>([])
   const childIntolerancesRef = useRef<string[]>([])
   const [allergyMatches, setAllergyMatches] = useState<string[]>([])
+  const [traceMatches, setTraceMatches] = useState<string[]>([])
   const [intoleranceMatches, setIntoleranceMatches] = useState<string[]>([])
 
   const [showHint, setShowHint] = useState(false)
@@ -170,7 +171,9 @@ export default function ScanPage() {
       setNovaClass(data.novaClass ?? null)
       setAdditivesN(data.additivesN ?? null)
       const productAllergens = data.allergens ?? []
+      const productTraces    = data.traces    ?? []
       setAllergyMatches(getMatchingAllergens(childAllergiesRef.current, productAllergens))
+      setTraceMatches(getMatchingAllergens(childAllergiesRef.current, productTraces))
       setIntoleranceMatches(getMatchingIntolerances(childIntolerancesRef.current, productAllergens))
       setPhase('result')
     } catch {
@@ -338,6 +341,20 @@ export default function ScanPage() {
               </svg>
               <span>
                 This product contains <strong>{allergyMatches.join(', ')}</strong>
+                {childName ? ` — ${childName} is allergic to this` : ' — child is allergic to this'}.
+              </span>
+            </div>
+          )}
+
+          {traceMatches.length > 0 && !allergyMatches.some(a => traceMatches.includes(a)) && (
+            <div className={styles.traceBanner}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <span>
+                Made in a factory that handles <strong>{traceMatches.join(', ')}</strong>
                 {childName ? ` — ${childName} is allergic to this` : ' — child is allergic to this'}.
               </span>
             </div>
