@@ -122,6 +122,7 @@ export default function ScanPage() {
   const childIntolerancesRef = useRef<string[]>([])
   const [childAllergies, setChildAllergies] = useState<string[]>([])
   const [allergyMatches, setAllergyMatches] = useState<string[]>([])
+  const [traceMatches, setTraceMatches] = useState<string[]>([])
   const [intoleranceMatches, setIntoleranceMatches] = useState<string[]>([])
 
   const [showHint, setShowHint] = useState(false)
@@ -174,7 +175,9 @@ export default function ScanPage() {
       setAdditivesN(data.additivesN ?? null)
       setInPantry(data.inPantry ?? false)
       const productAllergens = data.allergens ?? []
+      const productTraces    = data.traces    ?? []
       setAllergyMatches(getMatchingAllergens(childAllergiesRef.current, productAllergens))
+      setTraceMatches(getMatchingAllergens(childAllergiesRef.current, productTraces))
       setIntoleranceMatches(getMatchingIntolerances(childIntolerancesRef.current, productAllergens))
       setPhase('result')
     } catch {
@@ -350,6 +353,20 @@ export default function ScanPage() {
               <span>
                 This product contains <strong>{allergyMatches.join(', ')}</strong>
                 {childName ? ` — ${childName} is allergic to this` : ' — child is allergic to this'}.
+              </span>
+            </div>
+          )}
+
+          {traceMatches.length > 0 && allergyMatches.length === 0 && (
+            <div className={styles.traceBanner}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <span>
+                This product <strong>may contain {traceMatches.join(', ')}</strong>
+                {childName ? ` — ${childName} has a ${traceMatches.join('/')} allergy` : ''}. Check the physical label before giving this.
               </span>
             </div>
           )}

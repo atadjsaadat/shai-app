@@ -34,5 +34,5 @@ export async function GET(req: NextRequest) {
     inPantry = existing != null
   }
 
-  return NextResponse.json({ item: result.item, novaClass: result.novaClass, additivesN: result.additivesN, brand: result.brand, allergens: result.allergens, inPantry })
+  return NextResponse.json({ item: result.item, novaClass: result.novaClass, additivesN: result.additivesN, brand: result.brand, allergens: result.allergens, traces: result.traces, inPantry })
 }
