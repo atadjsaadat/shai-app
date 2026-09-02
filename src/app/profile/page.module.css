@@ -486,7 +486,19 @@
   line-height: 1.6;
 }
 
-/* ── Link rows ───────────────────────────────────────── */
+/* ── Account link ────────────────────────────────────── */
+.accountLink {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.accountLinkLabel {
+  font-size: 15px;
+  font-weight: 600;
+}
 
 /* ── AI disclosure ───────────────────────────────────── */
 .disclosure {

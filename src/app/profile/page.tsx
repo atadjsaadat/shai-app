@@ -799,6 +799,19 @@ export default function ProfilePage() {
             </section>
           )}
 
+          {/* Account */}
+          <section>
+          <p className={styles.sectionLabel}>Account</p>
+          <div className={`${styles.card} ${styles.cardTerra}`}>
+            <Link href="/account" className={styles.accountLink}>
+              <span className={styles.accountLinkLabel}>Account settings</span>
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8 5l5 5-5 5"/>
+              </svg>
+            </Link>
+          </div>
+          </section>
+
           {/* Community placeholder */}
           <section>
           <p className={styles.sectionLabel}>Community</p>
