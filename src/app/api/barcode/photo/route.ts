@@ -25,7 +25,11 @@ export async function POST(req: NextRequest) {
         },
         {
           type: 'text',
-          text: `Extract the nutritional information from this nutrition label. Return ONLY valid JSON — use null for any value not clearly visible. All weights must be in the units shown (g, mg, mcg). If sodium is shown in grams convert to mg. Per-serving values are preferred; if only per-100g values are visible use those.
+          text: `Extract the nutritional information from this nutrition label. Return ONLY valid JSON — use null for any value not clearly visible. All weights must be in the units shown (g, mg, mcg). If sodium is shown in grams convert to mg.
+
+IMPORTANT: Many labels have two columns — "per serving" and "per 100g". You MUST use the PER SERVING column values if it exists. Set serving_size_description to the serving size shown (e.g. "8g", "1 biscuit (8g)", "30ml"). Only use per-100g values if there is no per-serving column at all, in which case set serving_size_description to "100g".
+
+Never mix values from different columns — every nutrient value must come from the same column.
 
 {
   "product_name": null,

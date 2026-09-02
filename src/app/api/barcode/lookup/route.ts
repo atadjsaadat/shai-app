@@ -14,7 +14,10 @@ export async function GET(req: NextRequest) {
 
   const [result, childRes] = await Promise.all([
     lookupBarcode(barcode),
-    supabase.from('children').select('id').eq('user_id', user.id).single(),
+    supabase.from('children').select('id')
+      .or(`user_id.eq.${user.id},linked_user_ids.cs.{${user.id}}`)
+      .limit(1)
+      .maybeSingle(),
   ])
 
   if (!result) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
