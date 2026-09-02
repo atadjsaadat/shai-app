@@ -489,15 +489,38 @@ export default function ProfilePage() {
               </div>
               {dobEditing && (
                 <div className={styles.dobEditor}>
-                  <input
-                    type="month"
-                    className={styles.dobInput}
-                    value={dobDraft}
-                    onChange={e => setDobDraft(e.target.value)}
-                    max={new Date().toISOString().slice(0, 7)}
-                  />
+                  <div className={styles.dobPicker}>
+                    <select
+                      className={styles.dobSelect}
+                      value={dobDraft.split('-')[1] ?? ''}
+                      onChange={e => {
+                        const month = e.target.value;
+                        const year = dobDraft.split('-')[0] ?? '';
+                        setDobDraft(year && month ? `${year}-${month}` : month ? `-${month}` : '');
+                      }}
+                    >
+                      <option value="">Month</option>
+                      {['January','February','March','April','May','June','July','August','September','October','November','December'].map((m, i) => (
+                        <option key={i} value={String(i + 1).padStart(2, '0')}>{m}</option>
+                      ))}
+                    </select>
+                    <select
+                      className={styles.dobSelect}
+                      value={dobDraft.split('-')[0] ?? ''}
+                      onChange={e => {
+                        const year = e.target.value;
+                        const month = dobDraft.split('-')[1] ?? '';
+                        setDobDraft(year && month ? `${year}-${month}` : '');
+                      }}
+                    >
+                      <option value="">Year</option>
+                      {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(y => (
+                        <option key={y} value={String(y)}>{y}</option>
+                      ))}
+                    </select>
+                  </div>
                   <div className={styles.allergyPickerActions}>
-                    <button className={styles.allergyDoneBtn} onClick={handleDobSave} disabled={dobSaving || !dobDraft}>
+                    <button className={styles.allergyDoneBtn} onClick={handleDobSave} disabled={dobSaving || !/^\d{4}-\d{2}$/.test(dobDraft)}>
                       {dobSaving ? 'Saving…' : 'Done'}
                     </button>
                     <button className={styles.allergyCancelBtn} onClick={() => setDobEditing(false)}>Cancel</button>

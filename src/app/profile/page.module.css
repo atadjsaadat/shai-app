@@ -349,17 +349,25 @@
   margin-top: 8px;
 }
 
-.dobInput {
-  width: 100%;
-  background: var(--oat);
+.dobPicker {
+  display: flex;
+  gap: 8px;
+}
+
+.dobSelect {
+  flex: 1;
+  min-width: 0;
+  background: var(--cream);
   border: 1.5px solid var(--oat-dark);
   border-radius: 12px;
-  padding: 10px 14px;
+  padding: 10px 12px;
   font-family: inherit;
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
-  box-sizing: border-box;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 /* ── Tier badge ──────────────────────────────────────── */
