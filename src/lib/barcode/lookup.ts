@@ -404,9 +404,11 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeResult | nu
     .single()
 
   if (cached?.calories_kcal != null) {
-    const allergens = cached.allergens == null
+    const cachedAllergens = cached.allergens as string[] | null
+    const needsAllergenCheck = cachedAllergens == null || cachedAllergens.length === 0
+    const allergens = needsAllergenCheck
       ? (await lookupOFF(barcode))?.allergens ?? []
-      : (cached.allergens as string[])
+      : cachedAllergens
     admin.from('barcode_cache')
       .update({ allergens, last_scanned_at: new Date().toISOString(), scan_count: (cached.scan_count ?? 1) + 1 })
       .eq('barcode', barcode)
