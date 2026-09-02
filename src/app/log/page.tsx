@@ -312,8 +312,16 @@ function LogPage() {
   const [barcodeScoreData, setBarcodeScoreData] = useState<{ novaClass: number | null; additivesN: number | null } | null>(null);
   const [pendingBarcodeItem, setPendingBarcodeItem] = useState<{ item: ParsedFoodItem; novaClass: number | null; additivesN: number | null } | null>(null);
   const [portionSelection, setPortionSelection] = useState<string | null>(null);
+  const [barcodeGrams, setBarcodeGrams] = useState<string>('');
   const selectedPortion = PORTION_OPTIONS.find(o => o.id === portionSelection) ?? null;
-  const portionMultiplier = selectedPortion?.value ?? 1;
+  const activeItem = parsedData?.foodItems[0] ?? null;
+  const isBarcodePer100g = fromBarcode && (
+    !activeItem?.serving_size_description ||
+    activeItem?.serving_size_description === 'per 100g'
+  );
+  const portionMultiplier = isBarcodePer100g
+    ? (parseFloat(barcodeGrams) || 100) / 100
+    : (selectedPortion?.value ?? 1);
   const [reactions, setReactions] = useState<string[]>([]);
   const [noReaction, setNoReaction] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
@@ -562,6 +570,7 @@ function LogPage() {
       const { item, novaClass, additivesN } = JSON.parse(stored);
       if (item) {
         setPortionSelection(null);
+        setBarcodeGrams('');
         resetReactions();
         setFromBarcode(true);
         setBarcodeScoreData({ novaClass: novaClass ?? null, additivesN: additivesN ?? null });
@@ -1367,20 +1376,40 @@ function LogPage() {
                 </button>
               ) : null}
 
-              <div className={styles.portionRow}>
-                <span className={styles.portionLabel}>Meal portion</span>
-                {PORTION_OPTIONS.map(({ id, label, bg, color }) => (
-                  <button
-                    key={id}
-                    className={`${styles.portionChip}${portionSelection === id ? ` ${styles.portionChipActive}` : ''}`}
-                    style={portionSelection !== id ? { background: bg, color } : undefined}
-                    onClick={() => setPortionSelection(portionSelection === id ? null : id)}
-                    disabled={phase === 'saving'}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+              {isBarcodePer100g ? (
+                <div className={styles.portionRow}>
+                  <span className={styles.portionLabel}>How much did they have?</span>
+                  <div className={styles.gramInputWrap}>
+                    <button className={styles.gramBtn} onClick={() => setBarcodeGrams(g => String(Math.max(1, (parseInt(g) || 0) - 5)))} disabled={phase === 'saving'}>−</button>
+                    <input
+                      className={styles.gramInput}
+                      type="number"
+                      min="1"
+                      value={barcodeGrams}
+                      onChange={e => setBarcodeGrams(e.target.value)}
+                      placeholder="100"
+                      disabled={phase === 'saving'}
+                    />
+                    <span className={styles.gramUnit}>g</span>
+                    <button className={styles.gramBtn} onClick={() => setBarcodeGrams(g => String((parseInt(g) || 0) + 5))} disabled={phase === 'saving'}>+</button>
+                  </div>
+                </div>
+              ) : (
+                <div className={styles.portionRow}>
+                  <span className={styles.portionLabel}>Meal portion</span>
+                  {PORTION_OPTIONS.map(({ id, label, bg, color }) => (
+                    <button
+                      key={id}
+                      className={`${styles.portionChip}${portionSelection === id ? ` ${styles.portionChipActive}` : ''}`}
+                      style={portionSelection !== id ? { background: bg, color } : undefined}
+                      onClick={() => setPortionSelection(portionSelection === id ? null : id)}
+                      disabled={phase === 'saving'}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
               {parsedData.mealType !== 'hydration' && (
                 <>
                   <button

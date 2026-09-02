@@ -1013,6 +1013,54 @@
   cursor: default;
 }
 
+.gramInputWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gramBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid var(--oat-dark);
+  background: var(--oat);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gramBtn:disabled { opacity: 0.4; cursor: default; }
+
+.gramInput {
+  width: 72px;
+  height: 36px;
+  border: 1.5px solid var(--oat-dark);
+  border-radius: 10px;
+  background: var(--cream);
+  font-size: 16px;
+  font-weight: 700;
+  font-family: var(--font-nunito), sans-serif;
+  color: var(--text-primary);
+  text-align: center;
+  padding: 0 6px;
+}
+
+.gramInput::-webkit-inner-spin-button,
+.gramInput::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+.gramUnit {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-family: var(--font-nunito), sans-serif;
+}
+
 /* Confirm / edit buttons */
 .confirmRow {
   display: flex;
