@@ -366,7 +366,7 @@ export default function ScanPage() {
                 <line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
               <span>
-                Always check this label too — we flag what we find, but &lsquo;may contain&rsquo; statements and data gaps mean the physical label is the final word{childName ? ` for ${childName}` : ''}.
+                Always check this label too — we flag what we find, but <strong>&lsquo;may contain&rsquo;</strong> statements and data gaps mean the physical label is the final word{childName ? ` for ${childName}` : ''}.
               </span>
             </div>
           )}
