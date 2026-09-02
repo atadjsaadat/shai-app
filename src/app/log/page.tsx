@@ -80,6 +80,25 @@ const PORTION_OPTIONS = [
   { id: 'lg-plate', label: 'Large plate',  value: 2.0,  bg: '#D4E4F0', color: '#3A6080' },
 ]
 
+function deriveServingUnit(desc: string): { unit: string; context: string | null } {
+  const d = desc.toLowerCase()
+  if (/tbsp|tablespoon/.test(d))  return { unit: 'tablespoon', context: null }
+  if (/tsp|teaspoon/.test(d))     return { unit: 'teaspoon',   context: null }
+  if (/\bcup\b/.test(d))          return { unit: 'cup',        context: null }
+  if (/\bpot\b/.test(d))          return { unit: 'pot',        context: null }
+  if (/\bslice\b/.test(d))        return { unit: 'slice',      context: null }
+  if (/\bbar\b/.test(d))          return { unit: 'bar',        context: null }
+  if (/\bsachet\b/.test(d))       return { unit: 'sachet',     context: null }
+  if (/\bpouch\b/.test(d))        return { unit: 'pouch',      context: null }
+  const piece = d.match(/\b(biscuit|cracker|cookie|piece|bite|puff|wafer|stick|finger|nugget|chip|crisp|ring|ball|square|strip|cube)\b/)
+  if (piece) return { unit: piece[1], context: null }
+  const gM = desc.match(/(\d+)\s*g/i)
+  if (gM) return { unit: 'serving', context: `${gM[0]} each` }
+  const mlM = desc.match(/(\d+)\s*ml/i)
+  if (mlM) return { unit: 'serving', context: `${mlM[0]} each` }
+  return { unit: 'serving', context: desc }
+}
+
 const NUTRIENT_KEYS: (keyof ParsedFoodItem)[] = [
   'calories_kcal', 'protein_g', 'carbs_g', 'fat_g', 'fibre_g',
   'sugar_g', 'saturated_fat_g', 'sodium_mg',
@@ -312,14 +331,21 @@ function LogPage() {
   const [barcodeScoreData, setBarcodeScoreData] = useState<{ novaClass: number | null; additivesN: number | null } | null>(null);
   const [pendingBarcodeItem, setPendingBarcodeItem] = useState<{ item: ParsedFoodItem; novaClass: number | null; additivesN: number | null } | null>(null);
   const [portionSelection, setPortionSelection] = useState<string | null>(null);
-  const [barcodeGrams, setBarcodeGrams] = useState<string>('');
+  const [barcodeCount, setBarcodeCount] = useState<string>('1');
   const selectedPortion = PORTION_OPTIONS.find(o => o.id === portionSelection) ?? null;
   const activeItem = parsedData?.foodItems[0] ?? null;
   const activeDesc = activeItem?.serving_size_description ?? '';
   const isBarcodePer100g = fromBarcode && (!activeDesc || activeDesc === '100g' || activeDesc === 'per 100g');
-  const portionMultiplier = isBarcodePer100g
-    ? (parseFloat(barcodeGrams) || 100) / 100
+  const barcodeCountNum = Math.max(1, parseInt(barcodeCount) || 1);
+  const portionMultiplier = (fromBarcode && !isBarcodePer100g)
+    ? barcodeCountNum
     : (selectedPortion?.value ?? 1);
+  const { unit: barcodeUnit } = (fromBarcode && !isBarcodePer100g && activeDesc)
+    ? deriveServingUnit(activeDesc)
+    : { unit: '' };
+  const barcodePortionLabel = barcodeUnit
+    ? `${barcodeCountNum} ${barcodeCountNum === 1 ? barcodeUnit : barcodeUnit + (barcodeUnit.endsWith('s') ? '' : 's')}`
+    : null;
   const [reactions, setReactions] = useState<string[]>([]);
   const [noReaction, setNoReaction] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
@@ -568,7 +594,7 @@ function LogPage() {
       const { item, novaClass, additivesN } = JSON.parse(stored);
       if (item) {
         setPortionSelection(null);
-        setBarcodeGrams('');
+        setBarcodeCount('1');
         resetReactions();
         setFromBarcode(true);
         setBarcodeScoreData({ novaClass: novaClass ?? null, additivesN: additivesN ?? null });
@@ -1303,7 +1329,7 @@ function LogPage() {
                     key={i}
                     item={item}
                     multiplier={portionMultiplier}
-                    portionLabel={selectedPortion?.label}
+                    portionLabel={barcodePortionLabel ?? selectedPortion?.label}
                     isWin={isWin}
                     onWinToggle={() => {
                       const next = !isWin;
@@ -1374,25 +1400,28 @@ function LogPage() {
                 </button>
               ) : null}
 
-              {isBarcodePer100g ? (
-                <div className={styles.portionRow}>
-                  <span className={styles.portionLabel}>How much did they have?</span>
-                  <div className={styles.gramInputWrap}>
-                    <button className={styles.gramBtn} onClick={() => setBarcodeGrams(g => String(Math.max(1, (parseInt(g) || 0) - 5)))} disabled={phase === 'saving'}>−</button>
-                    <input
-                      className={styles.gramInput}
-                      type="number"
-                      min="1"
-                      value={barcodeGrams}
-                      onChange={e => setBarcodeGrams(e.target.value)}
-                      placeholder="100"
-                      disabled={phase === 'saving'}
-                    />
-                    <span className={styles.gramUnit}>g</span>
-                    <button className={styles.gramBtn} onClick={() => setBarcodeGrams(g => String((parseInt(g) || 0) + 5))} disabled={phase === 'saving'}>+</button>
+              {(fromBarcode && !isBarcodePer100g) ? (() => {
+                const { unit, context } = deriveServingUnit(activeDesc)
+                const plural = unit + (unit.endsWith('s') ? '' : 's')
+                return (
+                  <div className={styles.portionRow}>
+                    <span className={styles.portionLabel}>How many {plural}?{context ? ` (${context})` : ''}</span>
+                    <div className={styles.gramInputWrap}>
+                      <button className={styles.gramBtn} onClick={() => setBarcodeCount(c => String(Math.max(1, (parseInt(c) || 1) - 1)))} disabled={phase === 'saving'}>−</button>
+                      <input
+                        className={styles.gramInput}
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={barcodeCount}
+                        onChange={e => setBarcodeCount(e.target.value)}
+                        disabled={phase === 'saving'}
+                      />
+                      <button className={styles.gramBtn} onClick={() => setBarcodeCount(c => String((parseInt(c) || 1) + 1))} disabled={phase === 'saving'}>+</button>
+                    </div>
                   </div>
-                </div>
-              ) : (
+                )
+              })() : (
                 <div className={styles.portionRow}>
                   <span className={styles.portionLabel}>Meal portion</span>
                   {PORTION_OPTIONS.map(({ id, label, bg, color }) => (
