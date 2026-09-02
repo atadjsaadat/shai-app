@@ -309,3 +309,21 @@
 .allergyBanner strong {
   font-weight: 800;
 }
+
+.intoleranceBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #7A5000;
+  color: #fff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.intoleranceBanner strong {
+  font-weight: 800;
+}

@@ -81,6 +81,24 @@ function getMatchingAllergens(childAllergies: string[], productAllergens: string
   return [...matches]
 }
 
+const INTOLERANCE_TO_TAGS: Record<string, string[]> = {
+  'lactose':   ['milk'],
+  'gluten':    ['gluten'],
+  'sulphites': ['sulphites'],
+}
+
+function getMatchingIntolerances(childIntolerances: string[], productAllergens: string[]): string[] {
+  const matches = new Set<string>()
+  for (const ci of childIntolerances) {
+    const tags = INTOLERANCE_TO_TAGS[ci.toLowerCase()]
+    if (!tags) continue
+    for (const pa of productAllergens) {
+      if (tags.includes(pa.toLowerCase())) { matches.add(ci); break }
+    }
+  }
+  return [...matches]
+}
+
 type ScanPhase = 'scanning' | 'loading' | 'result' | 'saving' | 'done' | 'notfound'
 
 export default function ScanPage() {
@@ -100,7 +118,9 @@ export default function ScanPage() {
   const labelPhotoInputRef = useRef<HTMLInputElement>(null)
 
   const childAllergiesRef = useRef<string[]>([])
+  const childIntolerancesRef = useRef<string[]>([])
   const [allergyMatches, setAllergyMatches] = useState<string[]>([])
+  const [intoleranceMatches, setIntoleranceMatches] = useState<string[]>([])
 
   const [showHint, setShowHint] = useState(false)
 
@@ -132,6 +152,7 @@ export default function ScanPage() {
           }
         }
         childAllergiesRef.current = json.childAllergies ?? []
+        childIntolerancesRef.current = json.childIntolerances ?? []
       })
       .catch(() => {})
   }, [])
@@ -148,7 +169,9 @@ export default function ScanPage() {
       setBrand(data.brand ?? null)
       setNovaClass(data.novaClass ?? null)
       setAdditivesN(data.additivesN ?? null)
-      setAllergyMatches(getMatchingAllergens(childAllergiesRef.current, data.allergens ?? []))
+      const productAllergens = data.allergens ?? []
+      setAllergyMatches(getMatchingAllergens(childAllergiesRef.current, productAllergens))
+      setIntoleranceMatches(getMatchingIntolerances(childIntolerancesRef.current, productAllergens))
       setPhase('result')
     } catch {
       setPhase('notfound')
@@ -316,6 +339,19 @@ export default function ScanPage() {
               <span>
                 This product contains <strong>{allergyMatches.join(', ')}</strong>
                 {childName ? ` — ${childName} is allergic to this` : ' — child is allergic to this'}.
+              </span>
+            </div>
+          )}
+
+          {intoleranceMatches.length > 0 && (
+            <div className={styles.intoleranceBanner}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <span>
+                {childName ? `${childName} is` : 'Child is'} <strong>{intoleranceMatches.map(i => i.toLowerCase()).join(' and ')} intolerant</strong> — this product may contain related ingredients.
               </span>
             </div>
           )}
