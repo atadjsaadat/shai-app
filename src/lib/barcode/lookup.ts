@@ -185,8 +185,10 @@ function mapUSDA(food: AnyRecord): ParsedFoodItem {
                       (food.servingSizeUnit as string | null)?.toLowerCase() === 'g'
                       ? food.servingSize as number
                       : null
-  const servingDesc = (food.householdServingFullText as string | null)
-                      ?? (servingG != null ? `${servingG}g` : 'per 100g')
+  const householdText = food.householdServingFullText as string | null
+  const servingDesc = householdText != null
+    ? (servingG != null && !householdText.match(/\d+\s*g/i) ? `${householdText} (${servingG}g)` : householdText)
+    : (servingG != null ? `${servingG}g` : 'per 100g')
 
   const item = { ...emptyItem(), food_name: (food.description as string) || 'Unknown product', serving_size_description: servingDesc, confidence_score: 0.9 }
 
@@ -421,7 +423,10 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeResult | nu
   const merged = merge(usdaResult, offResult)
   if (!merged) return null
 
-  const servingG = parseServingGrams(merged.item.serving_size_description)
+  // OFF's serving_size string (e.g. "8g") is more reliably gram-parseable than USDA's
+  // householdServingFullText (e.g. "1 biscuit"). Try OFF first, fall back to merged.
+  const servingG = parseServingGrams(offResult?.item.serving_size_description)
+               ?? parseServingGrams(merged.item.serving_size_description)
   await writeToCache(barcode, merged, servingG)
 
   return merged
