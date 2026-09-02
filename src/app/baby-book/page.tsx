@@ -42,6 +42,14 @@ export default function RecordPage() {
   });
 
   useEffect(() => {
+    const CACHE_KEY = 'shai_babybook_summary';
+
+    // Restore cached data immediately so the page paints without a loading delay
+    const cached = sessionStorage.getItem(CACHE_KEY);
+    if (cached) {
+      try { setSummary(JSON.parse(cached)); } catch {}
+    }
+
     const childId = localStorage.getItem(STORAGE.ACTIVE_CHILD_ID);
 
     Promise.allSettled([
@@ -84,7 +92,7 @@ export default function RecordPage() {
         new Date(b.recorded_at).getTime() - new Date(a.recorded_at).getTime()
       )[0] ?? null;
 
-      setSummary({
+      const fresh: Summary = {
         milestones,
         lastMilestoneTitle: lastMilestone?.title ?? null,
         lastMilestoneDate: lastMilestone?.milestone_date ?? null,
@@ -97,7 +105,9 @@ export default function RecordPage() {
         lastHeight: lastRecord?.height_cm ?? null,
         allergies,
         intolerances,
-      });
+      };
+      setSummary(fresh);
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify(fresh));
     });
   }, []);
 
