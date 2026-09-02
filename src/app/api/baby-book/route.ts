@@ -11,16 +11,16 @@ export async function GET() {
   const admin = createAdminClient()
   const { data: child } = await admin
     .from('children')
-    .select('id')
+    .select('id, allergies, intolerances')
     .or(`user_id.eq.${user.id},linked_user_ids.cs.{${user.id}}`)
     .limit(1)
     .single()
 
-  if (!child) return NextResponse.json({ entries: [] })
+  if (!child) return NextResponse.json({ entries: [], allergies: [], intolerances: [] })
 
   try {
     const entries = await getMilestones(child.id)
-    return NextResponse.json({ entries })
+    return NextResponse.json({ entries, allergies: child.allergies ?? [], intolerances: child.intolerances ?? [] })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
     return NextResponse.json({ error: msg }, { status: 500 })

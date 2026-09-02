@@ -19,6 +19,8 @@ interface Summary {
   lastWeighed: string | null;
   lastWeight: number | null;
   lastHeight: number | null;
+  allergies: string[];
+  intolerances: string[];
 }
 
 const ALL_VACCINES = VACCINE_SCHEDULE.flatMap(g => g.vaccines);
@@ -35,6 +37,8 @@ export default function RecordPage() {
     lastWeighed: null,
     lastWeight: null,
     lastHeight: null,
+    allergies: [],
+    intolerances: [],
   });
 
   useEffect(() => {
@@ -46,8 +50,10 @@ export default function RecordPage() {
       fetch('/api/health-record').then(r => r.json()),
       childId ? fetch(`/api/growth?childId=${childId}`).then(r => r.json()) : Promise.resolve(null),
     ]).then(([milestoneRes, apptRes, healthRes, growthRes]) => {
-      const allEntries: { title: string; milestone_date: string }[] =
-        milestoneRes.status === 'fulfilled' ? (milestoneRes.value.entries ?? []) : [];
+      const milestoneData = milestoneRes.status === 'fulfilled' ? milestoneRes.value : {};
+      const allEntries: { title: string; milestone_date: string }[] = milestoneData.entries ?? [];
+      const allergies: string[] = (milestoneData.allergies ?? []).filter(Boolean);
+      const intolerances: string[] = (milestoneData.intolerances ?? []).filter(Boolean);
       const milestones = allEntries.length;
       const lastMilestone = [...allEntries].sort((a, b) =>
         new Date(b.milestone_date).getTime() - new Date(a.milestone_date).getTime()
@@ -89,6 +95,8 @@ export default function RecordPage() {
         lastWeighed: lastRecord?.recorded_at ?? null,
         lastWeight: lastRecord?.weight_kg ?? null,
         lastHeight: lastRecord?.height_cm ?? null,
+        allergies,
+        intolerances,
       });
     });
   }, []);
@@ -158,6 +166,26 @@ export default function RecordPage() {
       icon: (
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+        </svg>
+      ),
+    },
+    {
+      label: 'Allergies',
+      href: '/baby-book/allergies',
+      color: '#DDE4F5',
+      textColor: '#3A5B8B',
+      preview1: (() => {
+        const a = summary.allergies.length;
+        const i = summary.intolerances.length;
+        if (a === 0 && i === 0) return 'None recorded';
+        return [a > 0 ? `${a} allerg${a === 1 ? 'y' : 'ies'}` : null, i > 0 ? `${i} intolerance${i === 1 ? '' : 's'}` : null].filter(Boolean).join(' · ');
+      })(),
+      preview2: null,
+      icon: (
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
       ),
     },

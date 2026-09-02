@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import BottomNav from '@/components/BottomNav';
-import { ALLERGY_GROUPS, COMMON_INTOLERANCES } from '@/lib/allergens';
 import styles from './page.module.css';
 import AIDisclosure from '@/components/AIDisclosure';
 import { parseDob } from '@/lib/format/dates';
@@ -87,12 +86,6 @@ export default function ProfilePage() {
   const [creatingInvite, setCreatingInvite] = useState(false);
   const [activeInviteLink, setActiveInviteLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-
-  // Allergy editing state
-  const [allergyEditing, setAllergyEditing] = useState(false);
-  const [allergyDraft, setAllergyDraft] = useState<string[]>([]);
-  const [intoleranceDraft, setIntoleranceDraft] = useState<string[]>([]);
-  const [allergySaving, setAllergySaving] = useState(false);
 
   // Gender editing state
   const [genderEditing, setGenderEditing] = useState(false);
@@ -385,34 +378,6 @@ export default function ProfilePage() {
     setGenderSaving(false);
   }
 
-  function openAllergyEditor() {
-    setAllergyDraft(child?.allergies?.filter(Boolean) ?? []);
-    setIntoleranceDraft(child?.intolerances?.filter(Boolean) ?? []);
-    setAllergyEditing(true);
-  }
-
-  function handleAllergyToggle(a: string) {
-    setAllergyDraft(prev => prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a]);
-  }
-
-  function handleIntoleranceToggle(a: string) {
-    setIntoleranceDraft(prev => prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a]);
-  }
-
-  async function handleAllergyDone() {
-    if (allergySaving) return;
-    setAllergySaving(true);
-    try {
-      await fetch('/api/children', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ allergies: allergyDraft, intolerances: intoleranceDraft }),
-      });
-      setChild(c => c ? { ...c, allergies: allergyDraft, intolerances: intoleranceDraft } : c);
-      setAllergyEditing(false);
-    } catch { /* ignore */ }
-    setAllergySaving(false);
-  }
 
   useEffect(() => {
     const el = privacyCardRef.current;
@@ -439,8 +404,6 @@ export default function ProfilePage() {
     };
   }, [journalLockEnabled, pinFlow]);
 
-  const allergies = child?.allergies?.filter(Boolean) ?? [];
-  const intolerances = child?.intolerances?.filter(Boolean) ?? [];
   const age = formatAge(child?.date_of_birth);
   const relationship = capitalize(child?.relationship_to_child);
 
@@ -489,150 +452,68 @@ export default function ProfilePage() {
           {/* Child details */}
           {child && (
             <section>
-            <div className={styles.sectionHeader}>
-              <p className={styles.sectionLabel}>About {child.name}</p>
-              {!allergyEditing && (
-                <button className={styles.allergyEditBtn} onClick={openAllergyEditor}>Edit</button>
-              )}
-            </div>
+            <p className={styles.sectionLabel}>About {child.name}</p>
             <div className={`${styles.card} ${styles.cardTerra}`}>
 
-              {allergyEditing ? (
-                <div className={styles.allergyEditor}>
-                  <p className={styles.allergyEditorSectionLabel}>Allergies</p>
-                  {ALLERGY_GROUPS.map(group => (
-                    <div key={group.label}>
-                      <p className={styles.allergyGroupLabel}>{group.label}</p>
-                      <div className={styles.allergyPicker}>
-                        {group.items.map(a => {
-                          const selected = allergyDraft.includes(a.toLowerCase());
-                          return (
-                            <button
-                              key={a}
-                              className={`${styles.allergyPickerChip}${selected ? ` ${styles.allergyPickerChipSelected}` : ''}`}
-                              onClick={() => handleAllergyToggle(a.toLowerCase())}
-                            >
-                              {a}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                  <p className={styles.allergyEditorSectionLabel}>Intolerances</p>
-                  <div className={styles.allergyPicker}>
-                    {COMMON_INTOLERANCES.map(a => {
-                      const selected = intoleranceDraft.includes(a.toLowerCase());
-                      return (
-                        <button
-                          key={a}
-                          className={`${styles.allergyPickerChip}${selected ? ` ${styles.allergyPickerChipSelected}` : ''}`}
-                          onClick={() => handleIntoleranceToggle(a.toLowerCase())}
-                        >
-                          {a}
-                        </button>
-                      );
-                    })}
-                  </div>
+              <div className={styles.detailRow}>
+                <span className={styles.detailLabel}>Birthday</span>
+                <button
+                  className={styles.genderValue}
+                  onClick={() => { setDobDraft(child.date_of_birth ?? ''); setDobEditing(e => !e); }}
+                  disabled={dobSaving}
+                >
+                  {formatDob(child.date_of_birth)}
+                  <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M8 5l5 5-5 5"/>
+                  </svg>
+                </button>
+              </div>
+              {dobEditing && (
+                <div className={styles.dobEditor}>
+                  <input
+                    type="month"
+                    className={styles.dobInput}
+                    value={dobDraft}
+                    onChange={e => setDobDraft(e.target.value)}
+                    max={new Date().toISOString().slice(0, 7)}
+                  />
                   <div className={styles.allergyPickerActions}>
-                    <button className={styles.allergyDoneBtn} onClick={handleAllergyDone} disabled={allergySaving}>
-                      {allergySaving ? 'Saving…' : 'Done'}
+                    <button className={styles.allergyDoneBtn} onClick={handleDobSave} disabled={dobSaving || !dobDraft}>
+                      {dobSaving ? 'Saving…' : 'Done'}
                     </button>
-                    <button className={styles.allergyCancelBtn} onClick={() => setAllergyEditing(false)}>Cancel</button>
+                    <button className={styles.allergyCancelBtn} onClick={() => setDobEditing(false)}>Cancel</button>
                   </div>
                 </div>
-              ) : (
-                <>
-                  <div className={styles.detailRow}>
-                    <span className={styles.detailLabel}>Birthday</span>
-                    <button
-                      className={styles.genderValue}
-                      onClick={() => { setDobDraft(child.date_of_birth ?? ''); setDobEditing(e => !e); }}
-                      disabled={allergyEditing || dobSaving}
-                    >
-                      {formatDob(child.date_of_birth)}
-                      {!allergyEditing && (
-                        <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M8 5l5 5-5 5"/>
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-                  {dobEditing && (
-                    <div className={styles.dobEditor}>
-                      <input
-                        type="month"
-                        className={styles.dobInput}
-                        value={dobDraft}
-                        onChange={e => setDobDraft(e.target.value)}
-                        max={new Date().toISOString().slice(0, 7)}
-                      />
-                      <div className={styles.allergyPickerActions}>
-                        <button className={styles.allergyDoneBtn} onClick={handleDobSave} disabled={dobSaving || !dobDraft}>
-                          {dobSaving ? 'Saving…' : 'Done'}
-                        </button>
-                        <button className={styles.allergyCancelBtn} onClick={() => setDobEditing(false)}>Cancel</button>
-                      </div>
-                    </div>
-                  )}
-                  <div className={styles.detailRow}>
-                    <span className={styles.detailLabel}>Gender</span>
-                    <button
-                      className={styles.genderValue}
-                      onClick={() => setGenderEditing(e => !e)}
-                      disabled={allergyEditing || genderSaving}
-                    >
-                      {child.sex === 'male' ? 'Boy' : child.sex === 'female' ? 'Girl' : 'Not specified'}
-                      {!allergyEditing && (
-                        <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M8 5l5 5-5 5"/>
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-                  {genderEditing && (
-                    <div className={styles.genderPicker}>
-                      {(['male', 'female', 'not_specified'] as const).map(opt => (
-                        <button
-                          key={opt}
-                          className={`${styles.allergyPickerChip}${child.sex === opt ? ` ${styles.allergyPickerChipSelected}` : ''}`}
-                          onClick={() => handleGenderSelect(opt)}
-                          disabled={genderSaving}
-                        >
-                          {opt === 'male' ? 'Boy' : opt === 'female' ? 'Girl' : 'Not specified'}
-                        </button>
-                      ))}
-                      <button className={styles.allergyCancelBtn} onClick={() => setGenderEditing(false)}>Cancel</button>
-                    </div>
-                  )}
-                  <div className={styles.detailRow}>
-                    <span className={styles.detailLabel}>Allergies</span>
-                    {allergies.length > 0 ? (
-                      <div className={styles.chips}>
-                        {allergies.map(a => (
-                          <span key={a} className={styles.chip}>{capitalize(a)}</span>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className={styles.detailValue}>None recorded</span>
-                    )}
-                  </div>
-                  <div className={styles.detailRow}>
-                    <span className={styles.detailLabel}>Intolerances</span>
-                    {intolerances.length > 0 ? (
-                      <div className={styles.chips}>
-                        {intolerances.map(a => (
-                          <span key={a} className={styles.chip}>{capitalize(a)}</span>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className={styles.detailValue}>None recorded</span>
-                    )}
-                  </div>
-                </>
               )}
-
-              {child.is_selective_eater && !allergyEditing && (
+              <div className={styles.detailRow}>
+                <span className={styles.detailLabel}>Gender</span>
+                <button
+                  className={styles.genderValue}
+                  onClick={() => setGenderEditing(e => !e)}
+                  disabled={genderSaving}
+                >
+                  {child.sex === 'male' ? 'Boy' : child.sex === 'female' ? 'Girl' : 'Not specified'}
+                  <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M8 5l5 5-5 5"/>
+                  </svg>
+                </button>
+              </div>
+              {genderEditing && (
+                <div className={styles.genderPicker}>
+                  {(['male', 'female', 'not_specified'] as const).map(opt => (
+                    <button
+                      key={opt}
+                      className={`${styles.allergyPickerChip}${child.sex === opt ? ` ${styles.allergyPickerChipSelected}` : ''}`}
+                      onClick={() => handleGenderSelect(opt)}
+                      disabled={genderSaving}
+                    >
+                      {opt === 'male' ? 'Boy' : opt === 'female' ? 'Girl' : 'Not specified'}
+                    </button>
+                  ))}
+                  <button className={styles.allergyCancelBtn} onClick={() => setGenderEditing(false)}>Cancel</button>
+                </div>
+              )}
+              {child.is_selective_eater && (
                 <div className={styles.detailRow}>
                   <span className={styles.detailLabel}>Eating style</span>
                   <span className={`${styles.chip} ${styles.chipAmber}`}>Selective eater</span>
