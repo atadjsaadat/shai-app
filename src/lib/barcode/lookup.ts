@@ -130,9 +130,14 @@ async function lookupOFF(barcode: string): Promise<BarcodeResult | null> {
 
     const product  = json.product
     const servingG = parseServingGrams(product.serving_size as string | null)
-    const allergens = ((product.allergens_tags ?? []) as string[])
-      .map((t: string) => t.replace(/^[a-z]{2}:/, '').toLowerCase())
-      .filter(Boolean)
+    const allergenSet = new Set<string>()
+    for (const src of ['allergens_tags', 'allergens_from_ingredients_tags']) {
+      for (const t of ((product[src] ?? []) as string[])) {
+        const norm = t.replace(/^[a-z]{2}:/, '').toLowerCase().trim()
+        if (norm) allergenSet.add(norm)
+      }
+    }
+    const allergens = [...allergenSet]
     return {
       item:       mapOFF(product, servingG),
       novaClass:  (product.nova_group  as number | undefined) ?? null,
